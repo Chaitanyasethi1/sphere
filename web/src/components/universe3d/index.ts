@@ -8,5 +8,6 @@ export * from "./TrajectoryRibbon3D";
 export * from "./SurveyFootprint3D";
 export * from "./CameraController";
 export * from "./LayerControls3D";
+export * from "./SolarSystemOrbits3D";
 export * from "./UniverseCanvas";
 export * from "./CinematicIntro";

@@ -6,6 +6,7 @@ import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import type { MoverCandidate, EpochInfo } from "@/types";
 import { raDecToVector3, CELESTIAL_SPHERE_RADIUS } from "./coords3d";
+import { getOrbitColor } from "@/design/tokens";
 
 interface MoverObject3DProps {
   mover: MoverCandidate;
@@ -30,7 +31,8 @@ export function MoverObject3D({
   const [isHovered, setIsHovered] = useState(false);
 
   const isKnown = mover.type === "known";
-  const primaryColor = isKnown ? "#27D9D0" : "#F5A742"; // Ion cyan vs Solar amber
+  // Individual orbit color for each mover from NASA Eyes palette
+  const primaryColor = getOrbitColor(mover.object_id);
   const displayName = mover.match_name || mover.object_id;
 
   // Determine current position based on active epoch detection or fallback to base ra/dec
@@ -144,9 +146,9 @@ export function MoverObject3D({
         decay={2}
       />
 
-      {/* 3. Futuristic NASA Eyes Targeting Reticle Ring */}
+      {/* 3. Futuristic NASA Eyes Targeting Reticle Ring (Delicate and thin) */}
       <mesh ref={ringRef} position={[0, 0, 0.2]}>
-        <ringGeometry args={[0.9, 1.05, 32]} />
+        <ringGeometry args={[0.75, 0.85, 32]} />
         <meshBasicMaterial
           color={primaryColor}
           side={THREE.DoubleSide}
@@ -155,16 +157,16 @@ export function MoverObject3D({
         />
       </mesh>
 
-      {/* 4. Crosshair Tick Marks for Targeting */}
+      {/* 4. Crosshair Tick Marks for Targeting (Delicate lines) */}
       <group position={[0, 0, 0.2]}>
-        {[-1.3, 1.3].map((offset, i) => (
+        {[-1.1, 1.1].map((offset, i) => (
           <React.Fragment key={i}>
             <mesh position={[offset, 0, 0]}>
-              <boxGeometry args={[0.25, 0.04, 0.01]} />
+              <boxGeometry args={[0.18, 0.02, 0.01]} />
               <meshBasicMaterial color={primaryColor} />
             </mesh>
             <mesh position={[0, offset, 0]}>
-              <boxGeometry args={[0.04, 0.25, 0.01]} />
+              <boxGeometry args={[0.02, 0.18, 0.01]} />
               <meshBasicMaterial color={primaryColor} />
             </mesh>
           </React.Fragment>

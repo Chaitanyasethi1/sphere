@@ -7,6 +7,7 @@ import type { Universe3DProps, UniverseLayers } from "./types";
 import { StarField3D } from "./StarField3D";
 import { CosmicNebula } from "./CosmicNebula";
 import { CelestialSphereGrid } from "./CelestialSphereGrid";
+import { SolarSystemOrbits3D } from "./SolarSystemOrbits3D";
 import { MoverObject3D } from "./MoverObject3D";
 import { TrajectoryRibbon3D } from "./TrajectoryRibbon3D";
 import { SurveyFootprint3D } from "./SurveyFootprint3D";
@@ -33,6 +34,7 @@ export function UniverseCanvas({
     nebula: true,
     grid: true,
     trajectories: showTrails,
+    solarOrbits: true,
     labels: true,
     footprint: true,
   });
@@ -104,6 +106,11 @@ export function UniverseCanvas({
             />
           )}
 
+          {/* NASA Eyes on the Solar System Orbits & Spacecraft Trajectories */}
+          {layers.solarOrbits && (
+            <SolarSystemOrbits3D showLabels={layers.labels} />
+          )}
+
           {/* SPHEREx Deep Field Footprint Frustum */}
           {layers.footprint && (
             <SurveyFootprint3D
@@ -170,6 +177,31 @@ export function UniverseCanvas({
           onToggleLayer={toggleLayer}
           onResetCamera={() => setCameraResetCounter((c) => c + 1)}
         />
+      </div>
+
+      {/* 4. Bottom Center NASA Eyes Live Orbit Telemetry Bar */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden sm:flex flex-col items-center gap-1 select-none">
+        <div className="flex items-center gap-5 px-4 py-1.5 rounded-full bg-black/80 backdrop-blur-xl border border-white/15 shadow-2xl text-[11px] font-mono text-white/70">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse" />
+            <span className="font-semibold text-white tracking-widest text-[10px]">LIVE</span>
+          </div>
+          <span className="text-white/30">•</span>
+          <span className="font-sans font-medium text-white/90 uppercase tracking-wider text-[10.5px]">
+            NOV 14, 2026
+          </span>
+          <span className="text-white/30">•</span>
+          <span className="font-sans font-bold text-white tracking-widest text-[11px]">
+            REAL RATE
+          </span>
+          <span className="text-white/30">•</span>
+          <span className="font-mono text-[#c59b6d] font-semibold text-[10.5px]">
+            10:02:34 AM
+          </span>
+        </div>
+        <div className="h-5 w-5 rounded-full border border-white/20 bg-black/90 flex items-center justify-center text-[9px] text-white/70 shadow-lg -mt-1">
+          ◎
+        </div>
       </div>
     </div>
   );

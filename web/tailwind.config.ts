@@ -48,6 +48,27 @@ const config: Config = {
           900: "#78350f",
           950: "#451a03",
         },
+        nasa: {
+          gold: "#c59b6d",         // Signature warm golden bronze / desert sand from NASA Eyes
+          "gold-light": "#d4a373",
+          "gold-dark": "#946f48",
+          panel: "rgba(10, 12, 18, 0.88)",
+          card: "rgba(16, 18, 24, 0.82)",
+          "card-hover": "rgba(24, 27, 36, 0.9)",
+          border: "rgba(255, 255, 255, 0.08)",
+        },
+        orbit: {
+          mars: "#d96b43",
+          jupiter: "#cca06a",
+          earth: "#68a8cf",
+          mercury: "#a278b5",
+          venus: "#e8d5a3",
+          parker: "#cbd5e1",
+          psyche: "#e09f5a",
+          biosentinel: "#4ecdc4",
+          stereo: "#5da5c5",
+          voyager: "#d4a373",
+        },
       },
       fontFamily: {
         sans: [

@@ -8,6 +8,29 @@ import { Slider } from "@/components/ui/Slider";
 import { ConfidenceBar } from "./ConfidenceBar";
 import { GlossaryTooltip } from "@/components/beginner/GlossaryTooltip";
 import { computeTotalRate, computePositionAngle, positionAngleToCompass } from "@/lib/motion";
+import { getOrbitColor } from "@/design/tokens";
+
+function formatCardDate(dateStr?: string, fallback = "NOVEMBER 14TH, 2026"): string {
+  if (!dateStr) return fallback;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return fallback;
+    const month = d.toLocaleDateString("en-US", { month: "long" }).toUpperCase();
+    const day = d.getDate();
+    const year = d.getFullYear();
+    const suffix =
+      day % 10 === 1 && day !== 11
+        ? "ST"
+        : day % 10 === 2 && day !== 12
+        ? "ND"
+        : day % 10 === 3 && day !== 13
+        ? "RD"
+        : "TH";
+    return `${month} ${day}${suffix}, ${year}`;
+  } catch {
+    return fallback;
+  }
+}
 
 export type MoverFilterType = "all" | "known" | "unknown";
 export type MoverSortKey = "confidence_desc" | "confidence_asc" | "rate_desc" | "name_asc" | "detections_desc";
@@ -106,14 +129,14 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-xl overflow-hidden shadow-xl text-slate-100 ${className}`}>
-      {/* Minimal Header Controls */}
-      <div className="p-3 border-b border-white/5 bg-transparent flex flex-col gap-2.5">
+    <div className={`flex flex-col h-full bg-[#0a0c12]/92 backdrop-blur-2xl border border-white/[0.08] rounded-xl overflow-hidden shadow-2xl text-slate-100 ${className}`}>
+      {/* Minimal Header Controls (NASA Eyes Style) */}
+      <div className="p-3.5 border-b border-white/[0.08] bg-black/30 flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
               aria-live="polite"
-              className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 text-white/60 border border-white/10"
+              className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-[#c59b6d] border border-white/[0.08] font-semibold tracking-wider"
             >
               {filteredMovers.length} of {movers.length}
             </span>
@@ -121,7 +144,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
           </div>
 
           {/* Quick Filter Tabs */}
-          <div className="flex items-center rounded-lg bg-black/40 border border-white/10 p-0.5 text-xs">
+          <div className="flex items-center rounded-lg bg-black/60 border border-white/10 p-0.5 text-xs">
             <button
               type="button"
               onClick={() => setFilterType("all")}
@@ -137,7 +160,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
               onClick={() => setFilterType("known")}
               aria-pressed={filterType === "known"}
               className={`px-2.5 py-0.5 rounded text-xs transition-colors ${
-                filterType === "known" ? "bg-cyan-500/20 text-cyan-300 font-medium" : "text-white/40 hover:text-white"
+                filterType === "known" ? "bg-[#68a8cf]/25 text-[#68a8cf] font-medium border border-[#68a8cf]/30" : "text-white/40 hover:text-white"
               }`}
             >
               Known
@@ -147,7 +170,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
               onClick={() => setFilterType("unknown")}
               aria-pressed={filterType === "unknown"}
               className={`px-2.5 py-0.5 rounded text-xs transition-colors ${
-                filterType === "unknown" ? "bg-amber-500/20 text-amber-300 font-medium" : "text-white/40 hover:text-white"
+                filterType === "unknown" ? "bg-[#d96b43]/25 text-[#d96b43] font-medium border border-[#d96b43]/30" : "text-white/40 hover:text-white"
               }`}
             >
               Unknown
@@ -164,7 +187,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter by ID or name..."
               aria-label="Filter movers by ID or name"
-              className="w-full bg-black/40 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white placeholder-white/30 focus:outline-none focus:border-cyan-400"
+              className="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#c59b6d] focus:ring-1 focus:ring-[#c59b6d]/40 transition-colors"
             />
             {searchQuery && (
               <button
@@ -182,7 +205,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as MoverSortKey)}
             aria-label="Sort movers list by"
-            className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white/80 focus:outline-none focus:border-cyan-400"
+            className="w-full bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white/80 focus:outline-none focus:border-[#c59b6d] focus:ring-1 focus:ring-[#c59b6d]/40 transition-colors"
           >
             <option value="confidence_desc">Confidence (High)</option>
             <option value="confidence_asc">Confidence (Low)</option>
@@ -195,7 +218,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
         {/* Minimum Confidence Slider */}
         <div className="flex flex-col gap-1 pt-1">
           <div className="flex items-center justify-between text-[11px] text-slate-400">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-[#c59b6d]">
               Min Confidence: {Math.round(minConfidence * 100)}%
               <GlossaryTooltip termKey="confidence" beginnerMode={beginnerMode} />
             </span>
@@ -203,7 +226,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
               <button
                 type="button"
                 onClick={() => setMinConfidence(0)}
-                className="text-[10px] text-cyan-400 hover:underline"
+                className="text-[10px] text-[#c59b6d] hover:underline"
               >
                 Reset
               </button>
@@ -246,6 +269,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
             const firstDet = m.detections?.[0];
             const rawCutout = firstDet?.cutout_url || "";
             const cutoutSrc = rawCutout.startsWith("/") ? rawCutout : `/${rawCutout}`;
+            const orbitColor = getOrbitColor(m.object_id, idx);
 
             const totalRate = computeTotalRate(
               m.motion?.ra_rate_arcsec_per_day ?? 0,
@@ -256,6 +280,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
               m.motion?.dec_rate_arcsec_per_day ?? 0
             );
             const compass = positionAngleToCompass(pa);
+            const eventDateStr = formatCardDate(firstDet?.date, isKnown ? "OCTOBER 15TH, 2026" : "NOVEMBER 14TH, 2026");
 
             return (
               <article
@@ -268,20 +293,21 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                 )}%, motion ${totalRate.toFixed(1)} arcseconds per day`}
                 onClick={() => onSelectMover(m)}
                 onKeyDown={(e) => handleCardKeyDown(e, idx, m)}
-                className={`group relative flex items-center justify-between gap-3 p-3.5 rounded-xl border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 select-none ${
+                className={`group relative flex items-center justify-between gap-3.5 p-4 rounded-xl border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#c59b6d] select-none ${
                   isSelected
-                    ? "border-cyan-400 bg-cyan-950/50 shadow-xl shadow-cyan-950/70 ring-1 ring-cyan-400/60"
-                    : "border-white/10 bg-black/50 hover:bg-white/[0.07] hover:border-white/20"
+                    ? "border-[#c59b6d] bg-[#1a1714]/95 shadow-xl shadow-[#c59b6d]/15 ring-1 ring-[#c59b6d]/60"
+                    : "border-white/[0.08] bg-[#10131a]/85 hover:bg-[#181c26]/90 hover:border-white/20"
                 }`}
               >
-                {/* Left Card Info */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between gap-1.5">
+                {/* Left Card Info with NASA Eyes editorial typography */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex flex-col min-w-0">
-                      <span className="font-sans text-sm font-bold text-white tracking-wide truncate group-hover:text-cyan-200">
+                      {/* NASA Eyes clean, elegant light-to-regular title */}
+                      <span className="font-sans font-light md:font-normal text-base md:text-[17px] text-white tracking-normal leading-snug truncate group-hover:text-white">
                         {m.object_id}
                       </span>
-                      <span className="text-xs text-cyan-300/90 font-medium truncate">
+                      <span className="text-xs text-[#c59b6d] font-medium truncate">
                         {m.match_name || "Catalog-Unmatched Candidate"}
                       </span>
                     </div>
@@ -298,9 +324,19 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                     </div>
                   </div>
 
-                  {/* NASA Eyes style wide tracking uppercase metadata */}
-                  <div className="text-[10px] font-mono tracking-widest uppercase text-space-300 flex flex-wrap items-center gap-2">
-                    <span className={isKnown ? "text-cyan-400 font-semibold" : "text-amber-400 font-semibold"}>
+                  {/* NASA Eyes signature warm golden bronze uppercase subtitle / date */}
+                  <div className="flex items-center gap-1.5 font-sans font-semibold text-[10.5px] tracking-[0.22em] uppercase text-[#c59b6d]">
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full shrink-0 shadow-sm"
+                      style={{ backgroundColor: orbitColor }}
+                      title={`Orbit Color: ${orbitColor}`}
+                    />
+                    <span className="truncate">{eventDateStr}</span>
+                  </div>
+
+                  {/* Secondary metadata with individual orbit styling */}
+                  <div className="text-[10px] font-mono tracking-wider uppercase text-white/60 flex flex-wrap items-center gap-2">
+                    <span className={isKnown ? "text-[#68a8cf] font-semibold" : "text-[#d96b43] font-semibold"}>
                       {isKnown ? "CATALOG MATCH" : "NEW CANDIDATE"}
                     </span>
                     <span className="text-white/20">·</span>
@@ -313,7 +349,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                 </div>
 
                 {/* Right Thumbnail Cutout styled like NASA Eyes spacecraft previews */}
-                <div className="relative w-16 h-16 shrink-0 rounded-lg bg-black/80 overflow-hidden border border-white/10 flex items-center justify-center shadow-inner group-hover:border-cyan-500/40 transition-colors">
+                <div className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-lg bg-black/90 overflow-hidden border border-white/10 flex items-center justify-center shadow-inner group-hover:border-[#c59b6d]/40 transition-colors">
                   {rawCutout ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
@@ -326,9 +362,9 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                     <span className="text-2xl">☄️</span>
                   )}
 
-                  {/* Motion direction vector overlay */}
+                  {/* Motion direction vector overlay tinted with distinct orbit color */}
                   <div
-                    className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/75 flex items-center justify-center pointer-events-none border border-white/10"
+                    className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/80 flex items-center justify-center pointer-events-none border border-white/15"
                     title={`Angle ${Math.round(pa)}°`}
                   >
                     <svg
@@ -343,8 +379,8 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                       style={{
                         transform: `rotate(${pa}deg)`,
                         transformOrigin: "center center",
+                        color: orbitColor,
                       }}
-                      className={isKnown ? "text-cyan-400" : "text-amber-400"}
                     >
                       <line x1="12" y1="19" x2="12" y2="5" />
                       <polyline points="5 12 12 5 19 12" />

@@ -115,10 +115,10 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
       <section
         role="region"
         aria-label={`Detailed dossier for ${mover.object_id}`}
-        className={`flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-800 text-slate-100 rounded-xl overflow-hidden shadow-2xl h-full ${className}`}
+        className={`flex flex-col bg-[#0a0c12]/95 backdrop-blur-2xl border border-white/[0.08] text-slate-100 rounded-xl overflow-hidden shadow-2xl h-full ${className}`}
       >
         {/* Navigation & Action Bar */}
-        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-slate-800">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-black/40 border-b border-white/[0.08]">
           <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
@@ -126,7 +126,7 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
               disabled={!hasPrevious}
               onClick={onPrevious}
               aria-label="Prev mover candidate"
-              className="px-2 py-1 text-slate-400 disabled:opacity-30"
+              className="px-2 py-1 text-slate-400 hover:text-white disabled:opacity-30"
             >
               ← Prev
             </Button>
@@ -136,7 +136,7 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
               disabled={!hasNext}
               onClick={onNext}
               aria-label="Next mover candidate"
-              className="px-2 py-1 text-slate-400 disabled:opacity-30"
+              className="px-2 py-1 text-slate-400 hover:text-white disabled:opacity-30"
             >
               Next →
             </Button>
@@ -147,7 +147,7 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
               variant="outline"
               size="sm"
               onClick={() => setIsShareOpen(true)}
-              className="text-xs gap-1 border-slate-700 hover:border-cyan-400 py-1"
+              className="text-xs gap-1 border-white/10 hover:border-[#c59b6d] py-1"
             >
               <span>🔗</span>
               <span>Share</span>
@@ -156,26 +156,26 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close detail view"
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400"
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#c59b6d]"
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* Header Block */}
-        <div className="p-4 border-b border-slate-800/80 flex flex-col gap-2 bg-gradient-to-b from-slate-900 to-slate-950">
+        {/* Header Block with NASA Eyes typography */}
+        <div className="p-4 border-b border-white/[0.08] flex flex-col gap-2 bg-[#0e1219]/90">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col">
-              <h2 className="text-xl font-bold font-mono text-white tracking-wide">
+              <h2 className="text-xl font-light font-sans text-white tracking-normal">
                 {mover.object_id}
               </h2>
               {mover.match_name ? (
-                <div className="text-sm font-semibold text-cyan-300">
+                <div className="text-sm font-medium text-[#c59b6d]">
                   {mover.match_name}
                 </div>
               ) : (
-                <div className="text-xs text-amber-400/90 font-mono">
+                <div className="text-xs text-[#c59b6d] font-mono">
                   Unmatched Solar System Candidate
                 </div>
               )}
@@ -221,10 +221,10 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
         </div>
 
         {/* Key Facts Block (Metric Grid) */}
-        <div className="p-4 border-b border-slate-800/80 grid grid-cols-2 gap-3 text-xs bg-slate-950/40">
+        <div className="p-4 border-b border-white/[0.08] grid grid-cols-2 gap-3 text-xs bg-black/40">
           {/* Coordinates */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+            <span className="text-[10.5px] uppercase tracking-wider font-semibold text-[#c59b6d] flex items-center gap-1">
               Coordinates (J2000)
               <GlossaryTooltip termKey="fov" beginnerMode={beginnerMode} />
             </span>
@@ -238,11 +238,11 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
 
           {/* Proper Motion */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+            <span className="text-[10.5px] uppercase tracking-wider font-semibold text-[#c59b6d] flex items-center gap-1">
               Motion Rate
               <GlossaryTooltip termKey="motionTrail" beginnerMode={beginnerMode} />
             </span>
-            <span className="font-mono text-cyan-300 font-semibold">
+            <span className="font-mono text-white font-semibold">
               {totalRate.toFixed(2)} &quot;/day ({compass})
             </span>
             <span className="text-[10px] font-mono text-slate-400">
@@ -252,21 +252,21 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
 
           {/* Detections & Epoch Count */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+            <span className="text-[10.5px] uppercase tracking-wider font-semibold text-[#c59b6d] flex items-center gap-1">
               Observations
               <GlossaryTooltip termKey="epoch" beginnerMode={beginnerMode} />
             </span>
             <span className="font-mono text-slate-200 font-semibold">
               {mover.detections?.length || 0} detections
             </span>
-            <span className="text-[10px] text-slate-400 truncate" title={timeSpanStr}>
+            <span className="text-[10px] font-mono text-slate-400 truncate" title={timeSpanStr}>
               {timeSpanStr}
             </span>
           </div>
 
           {/* Confidence Score */}
           <div className="flex flex-col gap-0.5">
-            <span className="text-[11px] text-slate-400 flex items-center gap-1">
+            <span className="text-[10.5px] uppercase tracking-wider font-semibold text-[#c59b6d] flex items-center gap-1">
               Confidence Score
               <GlossaryTooltip termKey="confidence" beginnerMode={beginnerMode} />
             </span>
@@ -278,16 +278,16 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
         <div
           role="tablist"
           aria-label="Object details sections"
-          className="flex border-b border-slate-800 bg-slate-950/60 px-4 pt-1 gap-2"
+          className="flex border-b border-white/[0.08] bg-black/60 px-4 pt-1 gap-2"
         >
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === "cutouts"}
             onClick={() => setActiveTab("cutouts")}
-            className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors focus:outline-none focus:ring-1 focus:ring-cyan-400 ${
+            className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors focus:outline-none focus:ring-1 focus:ring-[#c59b6d] ${
               activeTab === "cutouts"
-                ? "border-cyan-400 text-cyan-300"
+                ? "border-[#c59b6d] text-[#c59b6d]"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -298,9 +298,9 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
             role="tab"
             aria-selected={activeTab === "spectrum"}
             onClick={() => setActiveTab("spectrum")}
-            className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors focus:outline-none focus:ring-1 focus:ring-cyan-400 ${
+            className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors focus:outline-none focus:ring-1 focus:ring-[#c59b6d] ${
               activeTab === "spectrum"
-                ? "border-cyan-400 text-cyan-300"
+                ? "border-[#c59b6d] text-[#c59b6d]"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -311,9 +311,9 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
             role="tab"
             aria-selected={activeTab === "json"}
             onClick={() => setActiveTab("json")}
-            className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors focus:outline-none focus:ring-1 focus:ring-cyan-400 ${
+            className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors focus:outline-none focus:ring-1 focus:ring-[#c59b6d] ${
               activeTab === "json"
-                ? "border-cyan-400 text-cyan-300"
+                ? "border-[#c59b6d] text-[#c59b6d]"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >

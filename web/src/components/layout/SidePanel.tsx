@@ -65,12 +65,12 @@ export function SidePanel({
             setDesktopCollapsed(false);
             setMobileExpanded(true);
           }}
-          className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-black/80 hover:bg-black/95 backdrop-blur-xl border border-cyan-500/30 hover:border-cyan-400 text-white shadow-2xl transition-all group cursor-pointer"
-          title="Expand Featured Movers & Targets"
+          className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#0c0e14]/90 hover:bg-[#141822] backdrop-blur-xl border border-white/10 hover:border-[#c59b6d]/60 text-white shadow-2xl transition-all group cursor-pointer"
+          title="Expand Featured Stories & Movers"
         >
-          <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400 animate-pulse" />
-          <span className="text-xs font-sans tracking-widest uppercase font-bold text-cyan-300">
-            MOVERS ({movers.length})
+          <span className="h-2 w-2 rounded-full bg-[#c59b6d] shadow-sm shadow-[#c59b6d] animate-pulse" />
+          <span className="text-[11px] font-sans tracking-[0.18em] uppercase font-semibold text-[#c59b6d]">
+            FEATURED ({movers.length})
           </span>
           <span className="text-xs font-mono text-white/50 group-hover:text-white group-hover:translate-x-0.5 transition-transform">
             »
@@ -82,19 +82,19 @@ export function SidePanel({
 
   return (
     <aside
-      className={`glass-panel border-t md:border-t-0 md:border-r border-white/10 flex flex-col transition-all duration-300 z-30 ${
+      className={`nasa-eyes-panel border-t md:border-t-0 md:border-r border-white/10 flex flex-col transition-all duration-300 z-30 ${
         mobileExpanded
           ? "fixed inset-x-0 bottom-0 h-[85vh] md:relative md:h-full md:w-[420px] lg:w-[460px]"
           : "fixed inset-x-0 bottom-0 h-16 md:relative md:h-full md:w-[420px] lg:w-[460px]"
       }`}
     >
-      {/* Desktop NASA Eyes Panel Header */}
-      <div className="hidden md:flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/40">
+      {/* Desktop NASA Eyes Panel Header (Featured Stories and Events style) */}
+      <div className="hidden md:flex items-center justify-between px-5 py-3.5 border-b border-white/[0.08] bg-black/40">
         <div className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-widest text-space-300 font-semibold font-sans">
-            {selectedMover ? "Mover Analysis & SED" : "Featured Movers & Targets"}
+          <span className="text-[13px] text-white/80 font-normal tracking-wide font-sans">
+            {selectedMover ? "Mover Analysis & Spectrophotometry" : "Featured Stories and Events"}
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-cyan-300 font-bold">
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-[#c59b6d] font-semibold border border-white/5">
             {movers.length}
           </span>
         </div>
@@ -104,11 +104,11 @@ export function SidePanel({
             setDesktopCollapsed(true);
             setMobileExpanded(false);
           }}
-          className="text-space-400 hover:text-white text-xs px-2.5 py-1 rounded-lg hover:bg-white/10 transition-colors font-mono flex items-center gap-1 cursor-pointer"
+          className="w-7 h-7 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.1] hover:border-white/20 text-white/60 hover:text-white transition-all flex items-center justify-center text-xs font-mono cursor-pointer"
           title="Collapse Panel"
+          aria-label="Collapse panel"
         >
-          <span>«</span>
-          <span className="text-[10px] uppercase font-sans tracking-wider">Dock</span>
+          «
         </button>
       </div>
 

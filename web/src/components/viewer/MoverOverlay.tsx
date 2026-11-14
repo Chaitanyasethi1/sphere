@@ -3,6 +3,7 @@
 import React from "react";
 import type { MoverCandidate, EpochInfo, Detection } from "@/types";
 import { computeTotalRate, computePositionAngle, positionAngleToCompass } from "@/lib/motion";
+import { getOrbitColor } from "@/design/tokens";
 
 export interface MoverOverlayProps {
   movers: MoverCandidate[];
@@ -90,9 +91,10 @@ export function MoverOverlay({
             </marker>
           </defs>
 
-          {movers.map((mover) => {
+          {movers.map((mover, mIdx) => {
             const isKnown = mover.type === "known";
             const isSelected = selectedObjectId === mover.object_id;
+            const orbitColor = getOrbitColor(mover.object_id, mIdx);
 
             // Collect historical detections up to current epoch
             const pastDetections = (mover.detections || []).slice(0, currentEpochIndex + 1);
@@ -105,23 +107,22 @@ export function MoverOverlay({
 
             return (
               <g key={`trail-group-${mover.object_id}`}>
-                {/* Glow backdrop path */}
+                {/* Glow backdrop path (thinner "littler" stroke) */}
                 <path
                   d={pathData}
                   fill="none"
-                  stroke={isKnown ? "#06b6d4" : "#f59e0b"}
-                  strokeWidth={isSelected ? 5 : 3}
-                  strokeOpacity={0.2}
+                  stroke={orbitColor}
+                  strokeWidth={isSelected ? 3 : 2}
+                  strokeOpacity={0.25}
                 />
-                {/* Core trajectory path */}
+                {/* Core trajectory path (crisp and delicate) */}
                 <path
                   d={pathData}
                   fill="none"
-                  stroke={isKnown ? "#22d3ee" : "#fbbf24"}
-                  strokeWidth={isSelected ? 2 : 1.5}
-                  strokeDasharray={isKnown ? "none" : "5 3"}
+                  stroke={orbitColor}
+                  strokeWidth={isSelected ? 1.5 : 1.0}
+                  strokeDasharray={isKnown ? "none" : "4 2"}
                   strokeOpacity={isSelected ? 0.95 : 0.75}
-                  markerEnd={isKnown ? "url(#arrow-cyan)" : "url(#arrow-amber)"}
                 />
                 {/* Numbered epoch node dots along trajectory */}
                 {points.map((pt, pIdx) => (
@@ -129,10 +130,10 @@ export function MoverOverlay({
                     key={`node-${mover.object_id}-${pIdx}`}
                     cx={pt.x}
                     cy={pt.y}
-                    r={pIdx === currentEpochIndex ? 3.5 : 2}
-                    fill={isKnown ? "#22d3ee" : "#fbbf24"}
+                    r={pIdx === currentEpochIndex ? 2.5 : 1.5}
+                    fill={pIdx === currentEpochIndex ? "#ffffff" : orbitColor}
                     stroke="#050814"
-                    strokeWidth={1}
+                    strokeWidth={0.8}
                   />
                 ))}
               </g>

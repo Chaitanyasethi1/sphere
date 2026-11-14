@@ -24,10 +24,11 @@ export function LayerControls3D({
     icon: string;
     active: boolean;
   }> = [
+    { id: "solarOrbits", label: "Solar System Orbits", icon: "🪐", active: layers.solarOrbits },
+    { id: "trajectories", label: "Mover Trajectories", icon: "〰️", active: layers.trajectories },
     { id: "grid", label: "Celestial Grid", icon: "🌐", active: layers.grid },
     { id: "nebula", label: "Cosmic Nebula", icon: "🌌", active: layers.nebula },
     { id: "stars", label: "Starfield", icon: "✨", active: layers.stars },
-    { id: "trajectories", label: "Trajectories", icon: "〰️", active: layers.trajectories },
     { id: "labels", label: "Labels & HUD", icon: "🏷️", active: layers.labels },
     { id: "footprint", label: "Survey Footprint", icon: "🔭", active: layers.footprint },
   ];
@@ -52,7 +53,7 @@ export function LayerControls3D({
             LAYERS
           </span>
           <span className="text-[9px] font-mono px-1 rounded bg-white/15">
-            {Object.values(layers).filter(Boolean).length}/6
+            {Object.values(layers).filter(Boolean).length}/7
           </span>
         </button>
 

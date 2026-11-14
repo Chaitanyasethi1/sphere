@@ -5,6 +5,7 @@ export interface UniverseLayers {
   nebula: boolean;
   grid: boolean;
   trajectories: boolean;
+  solarOrbits: boolean;
   labels: boolean;
   footprint: boolean;
 }
