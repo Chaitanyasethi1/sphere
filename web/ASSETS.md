@@ -15,3 +15,4 @@ All visual assets and code in this repository comply with open-source licensing 
 - **SPHEREx Mission**: NASA Jet Propulsion Laboratory / Caltech.
 - **IMCCE SkyBoT / NASA Horizons**: Solar System ephemerides.
 - **NASA Eyes on the Solar System**: Visual reference and UI layout inspiration.
+

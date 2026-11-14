@@ -6,6 +6,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+export type AppViewMode = "solar" | "survey" | "viewer" | "blink";
+
 export interface ViewerUrlState {
   ra: number;
   dec: number;
@@ -13,7 +15,7 @@ export interface ViewerUrlState {
   epoch: number;
   object: string | null;
   trails: boolean;
-  mode: "viewer" | "blink";
+  mode: AppViewMode;
   embed: boolean;
   demo: boolean;
   fallbackNotice: string | null;
@@ -26,7 +28,7 @@ export const DEFAULT_VIEWER_STATE: ViewerUrlState = {
   epoch: 0,
   object: null,
   trails: true,
-  mode: "viewer",
+  mode: "solar",
   embed: false,
   demo: false,
   fallbackNotice: null,
@@ -93,9 +95,12 @@ export function parseUrlParams(search: string): ViewerUrlState {
     trails = tVal === "1" || tVal === "true";
   }
 
-  // Mode
+  // Mode: "solar" | "survey" | "viewer" | "blink"
   const mVal = params.get("mode");
-  const mode = mVal === "blink" ? "blink" : "viewer";
+  let mode: AppViewMode = DEFAULT_VIEWER_STATE.mode;
+  if (mVal === "solar" || mVal === "survey" || mVal === "viewer" || mVal === "blink") {
+    mode = mVal;
+  }
 
   // Embed
   const eVal = params.get("embed");
@@ -128,7 +133,7 @@ export function serializeUrlState(state: Partial<ViewerUrlState>): string {
   if (state.epoch !== undefined && state.epoch > 0) params.set("epoch", state.epoch.toString());
   if (state.object) params.set("object", state.object);
   if (state.trails !== undefined) params.set("trails", state.trails ? "1" : "0");
-  if (state.mode && state.mode !== "viewer") params.set("mode", state.mode);
+  if (state.mode) params.set("mode", state.mode);
   if (state.embed) params.set("embed", "1");
   if (state.demo) params.set("demo", "1");
 

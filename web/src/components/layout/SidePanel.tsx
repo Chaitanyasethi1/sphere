@@ -5,6 +5,8 @@ import type { MoverCandidate } from "@/types";
 import { MoversPanel } from "@/components/movers/MoversPanel";
 import { ObjectDetail } from "@/components/movers/ObjectDetail";
 import { Badge } from "@/components/ui/Badge";
+import type { PlanetKey, ScaleMode } from "@/lib/solarEphemeris";
+import type { TargetMetadata } from "@/data/targets";
 
 export interface SidePanelProps {
   movers: MoverCandidate[];
@@ -14,6 +16,15 @@ export interface SidePanelProps {
   selectedEpochId?: string | null;
   onSelectEpoch?: (epochId: string) => void;
   regionName?: string;
+  activeSection?: "solar" | "targets";
+  onSectionChange?: (section: "solar" | "targets") => void;
+  selectedBodyKey?: PlanetKey | "spherex" | null;
+  onSelectBody?: (bodyKey: PlanetKey | "spherex") => void;
+  currentDate?: Date;
+  onSelectChallengeTarget?: (target: TargetMetadata) => void;
+  scaleMode?: ScaleMode;
+  onToggleScaleMode?: () => void;
+  onResetView?: () => void;
 }
 
 export function SidePanel({
@@ -24,6 +35,15 @@ export function SidePanel({
   selectedEpochId,
   onSelectEpoch,
   regionName = "SPHEREx Deep Field",
+  activeSection,
+  onSectionChange,
+  selectedBodyKey,
+  onSelectBody,
+  currentDate,
+  onSelectChallengeTarget,
+  scaleMode,
+  onToggleScaleMode,
+  onResetView,
 }: SidePanelProps) {
   const [mobileExpanded, setMobileExpanded] = useState<boolean>(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState<boolean>(false);
@@ -156,6 +176,15 @@ export function SidePanel({
             selectedId={null}
             onSelectMover={(mover) => onSelectMover(mover)}
             beginnerMode={beginnerMode}
+            activeSection={activeSection}
+            onSectionChange={onSectionChange}
+            selectedBodyKey={selectedBodyKey}
+            onSelectBody={onSelectBody}
+            currentDate={currentDate}
+            onSelectChallengeTarget={onSelectChallengeTarget}
+            scaleMode={scaleMode}
+            onToggleScaleMode={onToggleScaleMode}
+            onResetView={onResetView}
             className="h-full"
           />
         )}

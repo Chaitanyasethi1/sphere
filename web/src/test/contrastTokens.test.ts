@@ -67,3 +67,4 @@ describe("WCAG AA Contrast Ratios for NASA Eyes Tokens", () => {
     expect(ratio).toBeGreaterThanOrEqual(3.0);
   });
 });
+

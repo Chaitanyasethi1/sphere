@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { ControlRail } from "@/components/layout/ControlRail";
 import { MenuDrawer } from "@/components/layout/MenuDrawer";
 import { SearchBox, FovControl } from "@/components/viewer";
-import { TimeBar, BlinkComparator } from "@/components/time";
+import { TimeBar, BlinkComparator, SolarTimeBar } from "@/components/time";
 import { Button, Card, TestDataBadge, ErrorBoundary } from "@/components/ui";
 import { BeginnerTour, DemoTourBar } from "@/components/beginner";
 import { ShareModal } from "@/components/share";
 import { useCandidateCatalog } from "@/lib/client";
 import { useUrlState } from "@/lib/useUrlState";
+import type { PlanetKey, ScaleMode } from "@/lib/solarEphemeris";
+import { NASA_FEATURED_STORIES, storyToCandidate } from "@/data/nasaStories";
+import { ArrowLeft } from "lucide-react";
 
 // Dynamically import SkyViewer with ssr: false (Aladin Lite is browser-only)
 const DynamicSkyViewer = dynamic(
@@ -33,18 +36,17 @@ const DynamicUniverseCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-[#050816] text-xs font-mono text-cyan-300">
+      <div className="w-full h-full flex items-center justify-center bg-black text-xs font-mono text-cyan-300">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-          <span className="tracking-widest uppercase text-[11px]">Generating 3D Celestial Universe...</span>
+          <span className="tracking-widest uppercase text-[11px] font-sans">
+            Calibrating 3D Solar System Ephemeris...
+          </span>
         </div>
       </div>
     ),
   }
 );
-
-import { CinematicIntro } from "@/components/universe3d/CinematicIntro";
-import { NASA_FEATURED_STORIES, storyToCandidate } from "@/data/nasaStories";
 
 export default function SkyDiaryApp() {
   const [urlState, setUrlState] = useUrlState();
@@ -55,8 +57,16 @@ export default function SkyDiaryApp() {
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [is3DMode, setIs3DMode] = useState<boolean>(true);
-  const [showIntro, setShowIntro] = useState<boolean>(true);
+
+  // Solar system ephemeris state
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [scaleMode, setScaleMode] = useState<ScaleMode>("schematic");
+  const [selectedBodyKey, setSelectedBodyKey] = useState<PlanetKey | "spherex" | null>(null);
+  const [sidePanelSection, setSidePanelSection] = useState<"solar" | "targets">("solar");
+
+  // Determine active view mode (Solar System 3D vs 2D Survey)
+  const isSolarMode = urlState.mode === "solar";
+  const is2DSurvey = urlState.mode === "survey" || urlState.mode === "viewer";
 
   // Keyboard shortcut '/' to trigger search dialog
   useEffect(() => {
@@ -107,15 +117,38 @@ export default function SkyDiaryApp() {
       ra: coords.ra,
       dec: coords.dec,
       ...(coords.fov ? { fov: coords.fov } : {}),
+      mode: "survey",
     });
   };
+
+  // Dive from 3D solar system into 2D survey
+  const handleDiveToSurvey = useCallback(
+    (coords: { ra: number; dec: number; objectId?: string | null }) => {
+      setUrlState({
+        mode: "survey",
+        ra: coords.ra,
+        dec: coords.dec,
+        object: coords.objectId || null,
+      });
+      setSidePanelSection("targets");
+    },
+    [setUrlState]
+  );
+
+  // Return to 3D Solar System from 2D Survey
+  const handleBackToSolar = useCallback(() => {
+    setUrlState({
+      mode: "solar",
+    });
+    setSidePanelSection("solar");
+  }, [setUrlState]);
 
   /* =========================================================
      LOADING STATE
      ========================================================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-space-950 flex flex-col items-center justify-center p-6 text-center space-y-6">
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center space-y-6">
         <div className="relative">
           <div className="h-20 w-20 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin" />
           <div className="absolute inset-3 rounded-full border-2 border-amber-500/20 border-b-amber-400 animate-spin [animation-direction:reverse]" />
@@ -125,11 +158,11 @@ export default function SkyDiaryApp() {
         </div>
 
         <div className="space-y-2 max-w-sm">
-          <h2 className="text-xl font-bold text-white font-sans">
-            Calibrating SPHEREx Sky Diary
+          <h2 className="text-xl font-light text-white font-sans tracking-wide">
+            EYES ON SPHEREx: SKY DIARY
           </h2>
-          <p className="text-xs text-space-400 font-mono">
-            Loading multi-epoch cutouts, 102-channel spectrophotometry, and trajectory catalogs...
+          <p className="text-xs text-white/50 font-mono">
+            Computing planetary ephemeris, orbital samples, and multi-epoch candidate catalogs...
           </p>
         </div>
       </div>
@@ -141,24 +174,23 @@ export default function SkyDiaryApp() {
      ========================================================= */
   if (error || !catalog) {
     return (
-      <div className="min-h-screen bg-space-950 flex flex-col items-center justify-center p-6 text-center">
-        <Card className="max-w-md w-full border-slate-800 p-6 space-y-4 bg-slate-950/90">
-          <div className="h-12 w-12 rounded-full bg-slate-900 border border-slate-700 mx-auto flex items-center justify-center text-slate-300 text-xl font-medium">
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <Card className="max-w-md w-full border-white/10 p-6 space-y-4 bg-[rgba(20,20,22,0.95)]">
+          <div className="h-12 w-12 rounded-full bg-white/[0.04] border border-white/10 mx-auto flex items-center justify-center text-amber-400 text-xl font-medium">
             !
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-base font-semibold text-white">
+            <h2 className="text-base font-light text-white font-sans tracking-wide">
               Data Pipeline Error
             </h2>
-            <p className="text-xs text-slate-400 font-mono">
+            <p className="text-xs text-white/50 font-mono">
               {error || "Could not load candidate data catalog"}
             </p>
           </div>
 
-          <p className="text-xs text-space-400">
-            Verify that the offline pipeline or mock generator has executed and generated
-            a valid schema v1.0 candidate catalog.
+          <p className="text-xs text-white/40">
+            Verify that candidate data exists in public/data or run the mock generator.
           </p>
 
           <Button variant="primary" onClick={reload} className="w-full">
@@ -174,8 +206,7 @@ export default function SkyDiaryApp() {
      ========================================================= */
   if (urlState.embed) {
     return (
-      <div className="h-screen w-screen relative overflow-hidden bg-space-950">
-        {/* Global TEST DATA Badge in embed view */}
+      <div className="h-screen w-screen relative overflow-hidden bg-black">
         {isSynthetic && (
           <div className="absolute top-3 left-3 z-30">
             <TestDataBadge />
@@ -198,7 +229,6 @@ export default function SkyDiaryApp() {
           />
         </ErrorBoundary>
 
-        {/* Embedded Time-lapse footer */}
         <div className="absolute bottom-3 inset-x-3 z-30">
           <TimeBar
             epochs={epochs}
@@ -211,10 +241,10 @@ export default function SkyDiaryApp() {
   }
 
   /* =========================================================
-     FULL APPLICATION SHELL (Ultra-Minimal NASA Eyes Style)
+     FULL APPLICATION SHELL (NASA Eyes Minimalist Visual Language)
      ========================================================= */
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-black text-white select-none relative">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-black text-white select-none relative font-sans">
       {/* 1. NASA Eyes Top Minimalist Header */}
       <AppHeader
         isSynthetic={isSynthetic}
@@ -228,13 +258,18 @@ export default function SkyDiaryApp() {
         activeTargetName={catalog?.region?.name || "SPHEREx Deep Field North"}
         isDemo={urlState.demo}
         onToggleDemo={() => setUrlState({ demo: !urlState.demo })}
-        mode3D={is3DMode}
-        onToggleMode3D={() => setIs3DMode(!is3DMode)}
+        mode3D={isSolarMode}
+        onToggleMode3D={() =>
+          setUrlState({
+            mode: isSolarMode ? "survey" : "solar",
+          })
+        }
         onSelectTarget={(target) => {
           setUrlState({
             ra: target.ra,
             dec: target.dec,
             fov: target.fov,
+            mode: "survey",
           });
         }}
       />
@@ -285,6 +320,22 @@ export default function SkyDiaryApp() {
               }
             }}
             regionName={catalog?.region?.name}
+            activeSection={sidePanelSection}
+            onSectionChange={setSidePanelSection}
+            selectedBodyKey={selectedBodyKey}
+            onSelectBody={(bodyKey) => {
+              setSelectedBodyKey(bodyKey);
+            }}
+            currentDate={currentDate}
+            onSelectChallengeTarget={(target) => {
+              handleDiveToSurvey({
+                ra: target.ra,
+                dec: target.dec,
+              });
+            }}
+            scaleMode={scaleMode}
+            onToggleScaleMode={() => setScaleMode((s) => (s === "schematic" ? "true" : "schematic"))}
+            onResetView={() => setSelectedBodyKey(null)}
           />
         </ErrorBoundary>
 
@@ -297,21 +348,37 @@ export default function SkyDiaryApp() {
             </div>
           )}
 
-          {/* Interactive Celestial Sky Canvas: 3D Universe vs 2D Sky Survey */}
+          {/* Mode Switch Floating Pill (When in 2D survey, one-click back to 3D Solar System) */}
+          {is2DSurvey && (
+            <div className="absolute top-4 left-4 z-30 pointer-events-auto">
+              <button
+                type="button"
+                onClick={handleBackToSolar}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-[3px] bg-[rgba(20,20,22,0.92)] hover:bg-[rgba(30,32,40,0.98)] backdrop-blur-md border border-white/[0.16] hover:border-[#22D3EE]/60 text-white shadow-2xl transition-all cursor-pointer group"
+                title="Return to 3D Solar System"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#22D3EE] group-hover:-translate-x-0.5 transition-transform" />
+                <span className="text-[11px] font-sans font-medium tracking-[0.18em] uppercase text-white/90">
+                  Solar System
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* Interactive Celestial Sky Canvas: 3D Solar System vs 2D Survey */}
           <div className="flex-1 relative w-full h-full overflow-hidden">
-            {is3DMode ? (
-              <ErrorBoundary fallbackTitle="3D Celestial Universe Error">
+            {isSolarMode ? (
+              <ErrorBoundary fallbackTitle="3D Solar System Error">
                 <DynamicUniverseCanvas
+                  currentDate={currentDate}
                   movers={movers}
                   selectedObjectId={urlState.object}
                   onSelectObject={handleSelectObjectId}
-                  epochIndex={urlState.epoch}
-                  epochs={epochs}
-                  centerRa={urlState.ra}
-                  centerDec={urlState.dec}
+                  onDiveToSurvey={handleDiveToSurvey}
+                  scaleMode={scaleMode}
+                  onToggleScaleMode={() => setScaleMode((s) => (s === "schematic" ? "true" : "schematic"))}
                   showTrails={urlState.trails}
                   isDemo={urlState.demo}
-                  onSwitchTo2D={() => setIs3DMode(false)}
                 />
               </ErrorBoundary>
             ) : (
@@ -332,9 +399,9 @@ export default function SkyDiaryApp() {
               </ErrorBoundary>
             )}
 
-            {/* Field of View Floating Preset Overlay (in 2D mode) */}
-            {!is3DMode && (
-              <div className="absolute top-3 left-3 z-30 max-w-xs">
+            {/* Field of View Floating Preset Overlay (in 2D survey mode) */}
+            {is2DSurvey && (
+              <div className="absolute top-4 right-20 z-30 max-w-xs">
                 <FovControl
                   fov={urlState.fov}
                   onFovChange={(newFov) => setUrlState({ fov: newFov })}
@@ -369,15 +436,30 @@ export default function SkyDiaryApp() {
                   }
                 }}
                 isFullscreen={isFullscreen}
-                mode3D={is3DMode}
-                onToggleMode3D={() => setIs3DMode(!is3DMode)}
-                onResetView={() => setUrlState({ ra: 269.45, dec: 66.6, fov: 0.8, object: null })}
+                mode3D={isSolarMode}
+                onToggleMode3D={() =>
+                  setUrlState({
+                    mode: isSolarMode ? "survey" : "solar",
+                  })
+                }
+                onResetView={() => {
+                  if (isSolarMode) {
+                    setSelectedBodyKey(null);
+                  } else {
+                    setUrlState({ ra: 269.45, dec: 66.6, fov: 0.8, object: null });
+                  }
+                }}
               />
             </div>
 
             {/* 4. Bottom-Center Time Bar (NASA Eyes layout) */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 w-[94vw] max-w-2xl pointer-events-auto">
-              {urlState.mode === "blink" ? (
+              {isSolarMode ? (
+                <SolarTimeBar
+                  currentDate={currentDate}
+                  onDateChange={setCurrentDate}
+                />
+              ) : urlState.mode === "blink" ? (
                 <BlinkComparator
                   epochs={epochs}
                   currentEpochIndex={urlState.epoch}
@@ -391,6 +473,14 @@ export default function SkyDiaryApp() {
                   isSynthetic={isSynthetic}
                 />
               )}
+            </div>
+
+            {/* 5. Visible Build Stamp in Footer Corner (Requirement: verify latest build) */}
+            <div
+              className="absolute bottom-1 right-2 z-20 pointer-events-none text-[10px] font-mono text-white/30 tracking-widest uppercase select-none"
+              title="SPHEREx Sky Diary - NASA Eyes Solar System Landing. Press Ctrl+F5 for hard refresh."
+            >
+              v0.1.0 · BUILD 2026-11-14 · EYES ON SOLAR SYSTEM
             </div>
           </div>
         </div>
@@ -457,11 +547,6 @@ export default function SkyDiaryApp() {
         mover={selectedMover}
         regionName={catalog?.region?.name}
       />
-
-      {/* Cinematic Intro Animation on Initial Load */}
-      {showIntro && (
-        <CinematicIntro onComplete={() => setShowIntro(false)} />
-      )}
     </div>
   );
 }
