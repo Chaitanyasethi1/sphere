@@ -9,6 +9,8 @@ import { ConfidenceBar } from "./ConfidenceBar";
 import { GlossaryTooltip } from "@/components/beginner/GlossaryTooltip";
 import { computeTotalRate, computePositionAngle, positionAngleToCompass } from "@/lib/motion";
 import { getOrbitColor } from "@/design/tokens";
+import { NasaCraftThumbnail } from "./NasaCraftThumbnail";
+import { getMoverDescription } from "@/data/nasaStories";
 
 function formatCardDate(dateStr?: string, fallback = "NOVEMBER 14TH, 2026"): string {
   if (!dateStr) return fallback;
@@ -129,9 +131,9 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-[#0a0c12]/92 backdrop-blur-2xl border border-white/[0.08] rounded-xl overflow-hidden shadow-2xl text-slate-100 ${className}`}>
-      {/* Minimal Header Controls (NASA Eyes Style) */}
-      <div className="p-3.5 border-b border-white/[0.08] bg-black/30 flex flex-col gap-2.5">
+    <div className={`flex flex-col h-full bg-[#0c0e14]/94 backdrop-blur-2xl border border-white/[0.08] rounded-xl overflow-hidden shadow-2xl text-slate-100 ${className}`}>
+      {/* Sleek Minimal NASA Eyes Control Bar (Compact and Unobtrusive) */}
+      <div className="px-4 py-3 border-b border-white/[0.08] bg-black/40 flex flex-col gap-2 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
@@ -215,10 +217,10 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
           </select>
         </div>
 
-        {/* Minimum Confidence Slider */}
-        <div className="flex flex-col gap-1 pt-1">
-          <div className="flex items-center justify-between text-[11px] text-slate-400">
-            <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-wider text-[#c59b6d]">
+        {/* Minimum Confidence Threshold (Slim) */}
+        <div className="flex flex-col gap-0.5 pt-0.5">
+          <div className="flex items-center justify-between text-[10px] text-slate-400">
+            <span className="flex items-center gap-1 font-mono uppercase tracking-wider text-[#c59b6d]">
               Min Confidence: {Math.round(minConfidence * 100)}%
               <GlossaryTooltip termKey="confidence" beginnerMode={beginnerMode} />
             </span>
@@ -280,7 +282,12 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
               m.motion?.dec_rate_arcsec_per_day ?? 0
             );
             const compass = positionAngleToCompass(pa);
-            const eventDateStr = formatCardDate(firstDet?.date, isKnown ? "OCTOBER 15TH, 2026" : "NOVEMBER 14TH, 2026");
+            const desc = getMoverDescription(m);
+            const isFeatured = desc.craftType !== "candidate";
+            const eventDateStr = formatCardDate(
+              firstDet?.date,
+              isFeatured ? (m.object_id.includes("voyager") ? "NOVEMBER 18TH, 2026" : m.object_id.includes("clipper") ? "DECEMBER 3RD, 2026" : m.object_id.includes("roman") ? "AUGUST 30TH, 2026" : "OCTOBER 15TH, 2026") : (isKnown ? "OCTOBER 15TH, 2026" : "NOVEMBER 14TH, 2026")
+            );
 
             return (
               <article
@@ -293,39 +300,41 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                 )}%, motion ${totalRate.toFixed(1)} arcseconds per day`}
                 onClick={() => onSelectMover(m)}
                 onKeyDown={(e) => handleCardKeyDown(e, idx, m)}
-                className={`group relative flex items-center justify-between gap-3.5 p-4 rounded-xl border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#c59b6d] select-none ${
+                className={`group relative flex items-center justify-between gap-4 p-4 md:p-5 rounded-2xl border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#c59b6d] select-none ${
                   isSelected
-                    ? "border-[#c59b6d] bg-[#1a1714]/95 shadow-xl shadow-[#c59b6d]/15 ring-1 ring-[#c59b6d]/60"
-                    : "border-white/[0.08] bg-[#10131a]/85 hover:bg-[#181c26]/90 hover:border-white/20"
+                    ? "border-[#c59b6d] bg-gradient-to-b from-[#2a241e] to-[#14120e] shadow-2xl shadow-[#c59b6d]/20 ring-1 ring-[#c59b6d]/60"
+                    : "border-white/[0.08] bg-gradient-to-b from-[#222630]/90 via-[#161822]/95 to-[#10121a]/98 hover:from-[#2a2f3d] hover:to-[#161922] hover:border-white/25"
                 }`}
               >
                 {/* Left Card Info with NASA Eyes editorial typography */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex flex-col min-w-0">
-                      {/* NASA Eyes clean, elegant light-to-regular title */}
-                      <span className="font-sans font-light md:font-normal text-base md:text-[17px] text-white tracking-normal leading-snug truncate group-hover:text-white">
+                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2.5">
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      {/* Primary Title: Large NASA Light Font */}
+                      <h3 className="font-sans font-light text-base md:text-[18px] text-white tracking-normal leading-snug truncate group-hover:text-white">
                         {m.object_id}
-                      </span>
-                      <span className="text-xs text-[#c59b6d] font-medium truncate">
-                        {m.match_name || "Catalog-Unmatched Candidate"}
-                      </span>
+                      </h3>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Badge variant={isKnown ? "known" : "unknown"} size="sm">
+                          {isKnown ? "Known" : "Unknown"}
+                        </Badge>
+                        {m.is_synthetic && (
+                          <Badge variant="test-data" size="sm">
+                            TEST
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Badge variant={isKnown ? "known" : "unknown"} size="sm">
-                        {isKnown ? "Known" : "Unknown"}
-                      </Badge>
-                      {m.is_synthetic && (
-                        <Badge variant="test-data" size="sm">
-                          TEST
-                        </Badge>
-                      )}
+                    {/* Secondary designation or match name */}
+                    <div className="text-xs text-[#c59b6d] font-medium truncate">
+                      {m.match_name || "Catalog-Unmatched Candidate"}
                     </div>
                   </div>
 
                   {/* NASA Eyes signature warm golden bronze uppercase subtitle / date */}
-                  <div className="flex items-center gap-1.5 font-sans font-semibold text-[10.5px] tracking-[0.22em] uppercase text-[#c59b6d]">
+                  <div className="flex items-center gap-1.5 font-sans font-semibold text-[10.5px] md:text-[11px] tracking-[0.22em] uppercase text-[#c59b6d]">
                     <span
                       className="inline-block h-1.5 w-1.5 rounded-full shrink-0 shadow-sm"
                       style={{ backgroundColor: orbitColor }}
@@ -335,7 +344,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                   </div>
 
                   {/* Secondary metadata with individual orbit styling */}
-                  <div className="text-[10px] font-mono tracking-wider uppercase text-white/60 flex flex-wrap items-center gap-2">
+                  <div className="text-[10px] font-mono tracking-wider uppercase text-white/50 flex flex-wrap items-center gap-2">
                     <span className={isKnown ? "text-[#68a8cf] font-semibold" : "text-[#d96b43] font-semibold"}>
                       {isKnown ? "CATALOG MATCH" : "NEW CANDIDATE"}
                     </span>
@@ -348,44 +357,51 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                   <ConfidenceBar value={m.confidence} size="sm" showLabel={true} />
                 </div>
 
-                {/* Right Thumbnail Cutout styled like NASA Eyes spacecraft previews */}
-                <div className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-lg bg-black/90 overflow-hidden border border-white/10 flex items-center justify-center shadow-inner group-hover:border-[#c59b6d]/40 transition-colors">
-                  {rawCutout ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={cutoutSrc}
-                      alt={`Thumbnail for ${m.object_id}`}
-                      className="w-full h-full object-cover filter contrast-125 brightness-110"
-                      loading="lazy"
-                    />
+                {/* Right Artwork / Cutout Preview */}
+                <div className="relative shrink-0 flex items-center justify-center">
+                  {isFeatured ? (
+                    <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-[#c59b6d]/40 transition-colors p-1">
+                      <NasaCraftThumbnail type={desc.craftType} size={76} />
+                    </div>
+                  ) : rawCutout ? (
+                    <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl bg-black/90 overflow-hidden border border-white/10 flex items-center justify-center shadow-inner group-hover:border-[#c59b6d]/40 transition-colors">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={cutoutSrc}
+                        alt={`Thumbnail for ${m.object_id}`}
+                        className="w-full h-full object-cover filter contrast-125 brightness-110"
+                        loading="lazy"
+                      />
+                      {/* Motion direction vector overlay */}
+                      <div
+                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/80 flex items-center justify-center pointer-events-none border border-white/15"
+                        title={`Angle ${Math.round(pa)}°`}
+                      >
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{
+                            transform: `rotate(${pa}deg)`,
+                            transformOrigin: "center center",
+                            color: orbitColor,
+                          }}
+                        >
+                          <line x1="12" y1="19" x2="12" y2="5" />
+                          <polyline points="5 12 12 5 19 12" />
+                        </svg>
+                      </div>
+                    </div>
                   ) : (
-                    <span className="text-2xl">☄️</span>
+                    <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-[#c59b6d]/40 transition-colors p-1">
+                      <NasaCraftThumbnail type="candidate" size={76} />
+                    </div>
                   )}
-
-                  {/* Motion direction vector overlay tinted with distinct orbit color */}
-                  <div
-                    className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/80 flex items-center justify-center pointer-events-none border border-white/15"
-                    title={`Angle ${Math.round(pa)}°`}
-                  >
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{
-                        transform: `rotate(${pa}deg)`,
-                        transformOrigin: "center center",
-                        color: orbitColor,
-                      }}
-                    >
-                      <line x1="12" y1="19" x2="12" y2="5" />
-                      <polyline points="5 12 12 5 19 12" />
-                    </svg>
-                  </div>
                 </div>
               </article>
             );

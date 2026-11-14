@@ -42,6 +42,7 @@ const DynamicUniverseCanvas = dynamic(
 );
 
 import { CinematicIntro } from "@/components/universe3d/CinematicIntro";
+import { NASA_FEATURED_STORIES, storyToCandidate } from "@/data/nasaStories";
 
 export default function SkyDiaryApp() {
   const [urlState, setUrlState] = useUrlState();
@@ -73,7 +74,13 @@ export default function SkyDiaryApp() {
   const { data: catalog, loading, error, isSynthetic, reload } = useCandidateCatalog(dataUrl);
 
   const epochs = catalog?.epochs || [];
-  const movers = catalog?.movers || [];
+  const movers = React.useMemo(() => {
+    const catalogMovers = catalog?.movers || [];
+    const featured = NASA_FEATURED_STORIES.map(storyToCandidate);
+    const existing = new Set(catalogMovers.map((m) => m.object_id.toLowerCase()));
+    const additionalStories = featured.filter((s) => !existing.has(s.object_id.toLowerCase()));
+    return [...additionalStories, ...catalogMovers];
+  }, [catalog?.movers]);
 
   // Find selected mover from URL state or null
   const selectedMover = urlState.object

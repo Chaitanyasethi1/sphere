@@ -16,6 +16,8 @@ import {
   positionAngleToCompass,
   formatSexagesimalCoords,
 } from "@/lib/motion";
+import { getMoverDescription } from "@/data/nasaStories";
+import { NasaCraftThumbnail } from "./NasaCraftThumbnail";
 
 export interface ObjectDetailProps {
   mover: MoverCandidate | null;
@@ -97,11 +99,11 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
     };
   }, [mover]);
 
+  const description = useMemo(() => (mover ? getMoverDescription(mover) : null), [mover]);
+
   if (!mover) return null;
 
   const isKnown = mover.type === "known";
-  // Check if offline catalog marker exists in raw data
-  const isOfflineCatalog = (mover as unknown as { catalog_offline?: boolean }).catalog_offline;
 
   const handleCopyJson = () => {
     navigator.clipboard.writeText(JSON.stringify(mover, null, 2));
@@ -163,25 +165,22 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
           </div>
         </div>
 
-        {/* Header Block with NASA Eyes typography */}
-        <div className="p-4 border-b border-white/[0.08] flex flex-col gap-2 bg-[#0e1219]/90">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col">
-              <h2 className="text-xl font-light font-sans text-white tracking-normal">
-                {mover.object_id}
-              </h2>
-              {mover.match_name ? (
-                <div className="text-sm font-medium text-[#c59b6d]">
-                  {mover.match_name}
-                </div>
-              ) : (
-                <div className="text-xs text-[#c59b6d] font-mono">
-                  Unmatched Solar System Candidate
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5 justify-end">
+        {/* Header Block with NASA Eyes typography & 3D Thumbnail */}
+        <div className="p-4 border-b border-white/[0.08] flex items-center justify-between gap-3 bg-[#0e1219]/90">
+          <div className="flex flex-col min-w-0">
+            <h2 className="text-xl font-light font-sans text-white tracking-normal truncate">
+              {mover.object_id}
+            </h2>
+            {mover.match_name ? (
+              <div className="text-sm font-medium text-[#c59b6d] truncate">
+                {mover.match_name}
+              </div>
+            ) : (
+              <div className="text-xs text-[#c59b6d] font-mono">
+                Unmatched Solar System Candidate
+              </div>
+            )}
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <GlossaryTooltip
                 termKey={isKnown ? "known" : "unknown"}
                 beginnerMode={beginnerMode}
@@ -198,27 +197,57 @@ export const ObjectDetail: React.FC<ObjectDetailProps> = ({
                   </Badge>
                 </GlossaryTooltip>
               )}
-
-              {isOfflineCatalog && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900/90 text-slate-300 border border-slate-800">
-                  Offline Catalog
-                </span>
-              )}
             </div>
           </div>
 
-          {/* Honest Label Note for Unknowns */}
-          {!isKnown && (
-            <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-900/60 text-xs text-amber-200 flex items-start gap-2">
-              <span className="text-amber-400 text-sm mt-0.5">ℹ</span>
-              <p className="leading-relaxed">
-                <span className="font-semibold text-amber-300">Honest Science Label: </span>
-                No catalog match, candidate for follow-up. Not matched to asteroid or comet catalogs queried (IMCCE SkyBoT / JPL Horizons).
-                This does <em>not</em> guarantee a new discovery; it could be an uncatalogued asteroid, an imaging artifact, or a variable star residual.
-              </p>
-            </div>
+          {/* 3D Craft / Body Artwork Thumbnail */}
+          {description && (
+            <NasaCraftThumbnail
+              type={description.craftType}
+              size={68}
+              className="shrink-0 bg-black/60 rounded-xl p-1 border border-white/10"
+            />
           )}
         </div>
+
+        {/* NASA Eyes "WHAT IS IT?" and "WHAT IS IT DOING?" In-depth Dossier */}
+        {description && (
+          <div className="p-4 border-b border-white/[0.08] flex flex-col gap-3 bg-[#0a0c12]/80">
+            {/* 1. WHAT IS IT? */}
+            <div className="flex flex-col gap-1.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="text-[10px] font-sans font-bold tracking-[0.24em] uppercase text-[#c59b6d] flex items-center gap-1.5">
+                <span>🔭</span>
+                <span>WHAT IS IT?</span>
+              </div>
+              <p className="text-xs md:text-[13px] font-sans text-white/90 leading-relaxed font-light">
+                {description.whatIsIt}
+              </p>
+            </div>
+
+            {/* 2. WHAT IS IT DOING? */}
+            <div className="flex flex-col gap-1.5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="text-[10px] font-sans font-bold tracking-[0.24em] uppercase text-[#c59b6d] flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>WHAT IS IT DOING?</span>
+              </div>
+              <p className="text-xs md:text-[13px] font-sans text-white/90 leading-relaxed font-light">
+                {description.whatIsItDoing}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Honest Label Note for Unknowns */}
+        {!isKnown && (
+          <div className="px-4 py-3 border-b border-amber-900/40 bg-amber-950/30 text-xs text-amber-200 flex items-start gap-2">
+            <span className="text-amber-400 text-sm mt-0.5">ℹ</span>
+            <p className="leading-relaxed">
+              <span className="font-semibold text-amber-300">Honest Science Label: </span>
+              No catalog match, candidate for follow-up. Not matched to asteroid or comet catalogs queried (IMCCE SkyBoT / JPL Horizons).
+              This does <em>not</em> guarantee a new discovery; it could be an uncatalogued asteroid, an imaging artifact, or a variable star residual.
+            </p>
+          </div>
+        )}
 
         {/* Key Facts Block (Metric Grid) */}
         <div className="p-4 border-b border-white/[0.08] grid grid-cols-2 gap-3 text-xs bg-black/40">

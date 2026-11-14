@@ -16,14 +16,12 @@ interface CameraControllerProps {
 
 export function CameraController({
   selectedMover,
-  targetRa,
-  targetDec,
 }: CameraControllerProps) {
   const { camera } = useThree();
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
-  // Desired camera target and position for smooth slerp transitions
-  const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
+  // Desired camera target and position for smooth transitions
+  const targetLookAt = useRef(new THREE.Vector3(0, 0, 0)); // Center on Sun by default
   const isTransitioning = useRef(false);
 
   // When selected mover changes, trigger smooth cinematic camera transition
@@ -31,7 +29,7 @@ export function CameraController({
     if (!controlsRef.current) return;
 
     if (selectedMover) {
-      // Calculate object 3D position on sphere
+      // Calculate object 3D position on sphere or in system
       const objPos = raDecToVector3(
         selectedMover.ra,
         selectedMover.dec,
@@ -54,7 +52,6 @@ export function CameraController({
       const step = (now: number) => {
         const elapsed = now - startTime;
         const t = Math.min(1.0, elapsed / duration);
-        // Smooth ease-out cubic
         const ease = 1 - Math.pow(1 - t, 3);
 
         camera.position.lerpVectors(startCamPos, desiredCamPos, ease);
@@ -68,13 +65,13 @@ export function CameraController({
       };
 
       requestAnimationFrame(step);
-    } else if (typeof targetRa === "number" && typeof targetDec === "number") {
-      // Focus on coordinate region
-      const centerPos = raDecToVector3(targetRa, targetDec, CELESTIAL_SPHERE_RADIUS * 0.985);
-      const dir = centerPos.clone().normalize();
-      const desiredCamPos = dir.clone().multiplyScalar(CELESTIAL_SPHERE_RADIUS * 0.55);
+    } else {
+      // DEFAULT: When opening website, camera directly faces the SUN at (0, 0, 0)
+      // showing all concentric revolving orbits (Mercury, Venus, Earth, Mars, Jupiter)
+      const sunTarget = new THREE.Vector3(0, 0, 0);
+      const desiredCamPos = new THREE.Vector3(0, 24, 60);
 
-      targetLookAt.current.copy(centerPos);
+      targetLookAt.current.copy(sunTarget);
       isTransitioning.current = true;
 
       const startCamPos = camera.position.clone();
@@ -99,7 +96,7 @@ export function CameraController({
 
       requestAnimationFrame(step);
     }
-  }, [selectedMover, targetRa, targetDec, camera]);
+  }, [selectedMover, camera]);
 
   useFrame(() => {
     if (controlsRef.current && !isTransitioning.current) {

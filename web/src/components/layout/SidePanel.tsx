@@ -88,16 +88,27 @@ export function SidePanel({
           : "fixed inset-x-0 bottom-0 h-16 md:relative md:h-full md:w-[420px] lg:w-[460px]"
       }`}
     >
-      {/* Desktop NASA Eyes Panel Header (Featured Stories and Events style) */}
-      <div className="hidden md:flex items-center justify-between px-5 py-3.5 border-b border-white/[0.08] bg-black/40">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] text-white/80 font-normal tracking-wide font-sans">
-            {selectedMover ? "Mover Analysis & Spectrophotometry" : "Featured Stories and Events"}
-          </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-[#c59b6d] font-semibold border border-white/5">
-            {movers.length}
+      {/* 1. NASA Top Brand Header (from Image 2) */}
+      <div className="hidden md:flex items-center gap-3 px-5 pt-4 pb-1.5 shrink-0">
+        <div className="h-7 w-7 rounded-full bg-[#0b3d91] relative overflow-hidden flex items-center justify-center border border-blue-400/30 shrink-0">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" fill="none">
+            <ellipse cx="50" cy="50" rx="42" ry="18" stroke="white" strokeWidth="2.5" strokeOpacity="0.8" transform="rotate(-25 50 50)" />
+            <path d="M18 68 L50 22 L65 52 L54 52 L48 38 L30 68 Z" fill="#fc3d21" />
+          </svg>
+          <span className="relative z-10 text-[7.5px] font-black tracking-tighter text-white font-sans">
+            NASA
           </span>
         </div>
+        <span className="font-sans text-[11px] md:text-xs font-semibold tracking-[0.22em] text-white/95 uppercase">
+          EYES ON THE SOLAR SYSTEM
+        </span>
+      </div>
+
+      {/* 2. Section Header: Featured Stories and Events with « dock button */}
+      <div className="hidden md:flex items-center justify-between px-5 pb-3 pt-1 border-b border-white/[0.08] shrink-0">
+        <span className="text-[13px] text-white/70 font-light tracking-wide font-sans">
+          {selectedMover ? "Mission Telemetry & Dossier" : "Featured Stories and Events"}
+        </span>
         <button
           type="button"
           onClick={() => {
