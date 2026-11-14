@@ -70,7 +70,7 @@ export function Modal({
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-space-950/80 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -78,16 +78,16 @@ export function Modal({
       {/* Modal Dialog Card */}
       <div
         ref={modalRef}
-        className={`relative w-full ${sizeClasses[size]} glass-panel border border-white/15 rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col my-auto`}
+        className={`relative w-full ${sizeClasses[size]} bg-[rgba(20,20,22,0.94)] backdrop-blur-md border border-white/[0.12] rounded-[3px] shadow-2xl overflow-hidden z-10 flex flex-col my-auto`}
       >
         {/* Header */}
-        <header className="px-6 py-5 border-b border-white/10 flex items-start justify-between gap-4 bg-space-900/60">
+        <header className="px-6 py-4 border-b border-white/[0.10] flex items-center justify-between gap-4 bg-white/[0.02]">
           <div>
-            <h2 id={titleId} className="text-lg font-semibold text-space-50">
+            <h2 id={titleId} className="text-base font-light tracking-wide text-white uppercase">
               {title}
             </h2>
             {description && (
-              <p id={descId} className="text-xs text-space-400 font-mono mt-1">
+              <p id={descId} className="text-xs text-[#B8BCC4] font-mono mt-0.5">
                 {description}
               </p>
             )}
@@ -97,14 +97,14 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="h-10 w-10 -mr-2 -mt-1 rounded-lg flex items-center justify-center text-space-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+            className="h-8 w-8 rounded-[2px] flex items-center justify-center text-[#B8BCC4] hover:text-white hover:bg-white/10 transition-colors focus-visible:ring-1 focus-visible:ring-[#22D3EE] focus-visible:outline-none"
           >
             <svg
-              className="h-5 w-5"
+              className="h-4 w-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="1.5"
               aria-hidden="true"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -113,13 +113,13 @@ export function Modal({
         </header>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[70vh] text-space-200 text-sm leading-relaxed">
+        <div className="p-6 overflow-y-auto max-h-[70vh] text-[#B8BCC4] text-xs leading-relaxed font-sans">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <footer className="px-6 py-4 border-t border-white/10 bg-space-950/50 flex items-center justify-end gap-3">
+          <footer className="px-6 py-3 border-t border-white/[0.10] bg-black/40 flex items-center justify-end gap-3">
             {footer}
           </footer>
         )}

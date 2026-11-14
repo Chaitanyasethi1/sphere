@@ -41,7 +41,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         ref={ref}
         tabIndex={interactive ? 0 : undefined}
         role={interactive ? "button" : undefined}
-        className={`glass-panel rounded-xl overflow-hidden border ${accentBorders[accent]} ${selectedStyles} ${interactiveStyles} ${className}`}
+        className={`bg-[rgba(26,28,34,0.72)] backdrop-blur-md rounded-[3px] overflow-hidden border ${accentBorders[accent]} ${selectedStyles} ${interactiveStyles} ${className}`}
         {...props}
       >
         {children}

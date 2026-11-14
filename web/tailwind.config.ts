@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { DESIGN_TOKENS } from "./src/design/tokens";
 
 const config: Config = {
   content: [
@@ -9,91 +10,103 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // NASA Eyes 3D Universe Sophisticated Palette
-        cosmic: {
-          black: "#050816",
-          indigo: "#101B46",
-          violet: "#39216F",
-          blue: "#087EAC",
-          cyan: "#27D9D0",
-          amber: "#F5A742",
+        // NASA Eyes Authentic Minimalist Void & Surfaces
+        eyes: {
+          void: "#010206",
+          panel: "rgba(20, 20, 22, 0.72)",
+          card: "rgba(26, 28, 34, 0.72)",
+          "card-hover": "rgba(38, 42, 50, 0.85)",
+          "card-selected": "rgba(255, 255, 255, 0.14)",
+          gold: "#E0A526",
+          "gold-hover": "#F5B83D",
+          cyan: "#22D3EE",
+          secondary: "#B8BCC4",
+          muted: "#7E8492",
+          hairline: "rgba(255, 255, 255, 0.12)",
+          "hairline-subtle": "rgba(255, 255, 255, 0.06)",
         },
+        // Mapped Space & Semantic Palettes
         space: {
-          950: "#050816", // Deepest astronomical void black
-          900: "#101B46", // Primary HUD panel background / deep indigo
-          850: "#15204e", // Glass panel surface
-          800: "#1d2b63", // Active borders / elevated cards
-          700: "#27387a", // Subtle borders
-          600: "#39216F", // Accent lines / nebula violet
-          500: "#087EAC", // Cosmic blue
-          400: "#7084cc", // Muted telemetry labels
-          300: "#9fb0eb", // Secondary text
-          200: "#cad5fa", // Primary body text
-          100: "#e8eeff",
-          50: "#f8fafc",  // Crisp high-contrast titles
+          950: "#010206", // Near-pure void black
+          900: "#101217", // Primary HUD panel base
+          850: "#141720",
+          800: "#1a1e28",
+          700: "#242a38",
+          600: "#323b4e",
+          500: "#22D3EE", // Electric cyan
+          400: "#7E8492", // Muted telemetry labels
+          300: "#B8BCC4", // Secondary text (WCAG AA > 10.5:1)
+          200: "#E2E8F0",
+          100: "#F1F5F9",
+          50: "#FFFFFF",  // Crisp high-contrast titles
         },
         cyan: {
-          300: "#67e8f9",
-          400: "#27D9D0", // Ion cyan
-          500: "#06b6d4",
-          600: "#0891b2",
-          900: "#164e63",
-          950: "#082f49",
+          300: "#67E8F9",
+          400: "#22D3EE", // Ion cyan / known bodies
+          500: "#06B6D4",
+          600: "#0891B2",
+          900: "#164E63",
+          950: "#082F49",
         },
         amber: {
-          300: "#fcd34d",
-          400: "#F5A742", // Solar amber
-          500: "#f59e0b",
-          600: "#d97706",
-          900: "#78350f",
-          950: "#451a03",
+          300: "#FCD34D",
+          400: "#E0A526", // Solar amber / warm gold unknown candidates
+          500: "#F59E0B",
+          600: "#D97706",
+          900: "#78350F",
+          950: "#451A03",
         },
         nasa: {
-          gold: "#c59b6d",         // Signature warm golden bronze / desert sand from NASA Eyes
-          "gold-light": "#d4a373",
-          "gold-dark": "#946f48",
-          panel: "rgba(10, 12, 18, 0.88)",
-          card: "rgba(16, 18, 24, 0.82)",
-          "card-hover": "rgba(24, 27, 36, 0.9)",
-          border: "rgba(255, 255, 255, 0.08)",
+          gold: "#E0A526",
+          "gold-light": "#F5B83D",
+          "gold-dark": "#B47C11",
+          panel: "rgba(20, 20, 22, 0.72)",
+          card: "rgba(26, 28, 34, 0.72)",
+          "card-hover": "rgba(38, 42, 50, 0.85)",
+          border: "rgba(255, 255, 255, 0.12)",
         },
         orbit: {
-          mars: "#d96b43",
-          jupiter: "#cca06a",
-          earth: "#68a8cf",
-          mercury: "#a278b5",
-          venus: "#e8d5a3",
-          parker: "#cbd5e1",
-          psyche: "#e09f5a",
-          biosentinel: "#4ecdc4",
-          stereo: "#5da5c5",
-          voyager: "#d4a373",
+          mars: "#D96B43",
+          jupiter: "#CCA06A",
+          earth: "#22D3EE",
+          mercury: "#A278B5",
+          venus: "#E8D5A3",
+          parker: "#CBD5E1",
+          psyche: "#E09F5A",
+          biosentinel: "#4ECDC4",
+          stereo: "#5DA5C5",
+          voyager: "#D4A373",
         },
+      },
+      borderRadius: {
+        eyes: "3px", // Spec: panels and cards nearly square (radius 2-4px)
+        card: "3px",
+        btn: "3px",
       },
       fontFamily: {
         sans: [
+          "var(--font-barlow)",
+          "Barlow",
           "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
-          "'SF Pro Text'",
-          "'SF Pro Display'",
           "'Segoe UI'",
           "Roboto",
-          "'Helvetica Neue'",
-          "Arial",
           "sans-serif",
         ],
         mono: [
-          "ui-monospace",
-          "'SF Mono'",
+          "var(--font-mono)",
           "'JetBrains Mono'",
-          "Menlo",
-          "Monaco",
+          "'IBM Plex Mono'",
+          "ui-monospace",
           "Consolas",
-          "'Liberation Mono'",
-          "'Courier New'",
           "monospace",
         ],
+      },
+      letterSpacing: {
+        "eyes-wide": "0.22em",
+        "eyes-wider": "0.26em",
+        "eyes-widest": "0.3em",
       },
       minHeight: {
         touch: "44px",
@@ -101,14 +114,9 @@ const config: Config = {
       minWidth: {
         touch: "44px",
       },
-      boxShadow: {
-        glass: "0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)",
-        "glow-cyan": "0 0 25px -4px rgba(56, 189, 248, 0.35)",
-        "glow-amber": "0 0 25px -4px rgba(251, 191, 36, 0.35)",
-        hud: "0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.1)",
-      },
     },
   },
   plugins: [],
 };
+
 export default config;

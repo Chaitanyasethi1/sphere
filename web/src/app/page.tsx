@@ -4,9 +4,11 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { SidePanel } from "@/components/layout/SidePanel";
+import { ControlRail } from "@/components/layout/ControlRail";
+import { MenuDrawer } from "@/components/layout/MenuDrawer";
 import { SearchBox, FovControl } from "@/components/viewer";
 import { TimeBar, BlinkComparator } from "@/components/time";
-import { Button, Card, TestDataBadge, ErrorBoundary, Tooltip } from "@/components/ui";
+import { Button, Card, TestDataBadge, ErrorBoundary } from "@/components/ui";
 import { BeginnerTour, DemoTourBar } from "@/components/beginner";
 import { ShareModal } from "@/components/share";
 import { useCandidateCatalog } from "@/lib/client";
@@ -50,8 +52,9 @@ export default function SkyDiaryApp() {
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
   const [isDemoTourOpen, setIsDemoTourOpen] = useState<boolean>(false);
   const [isGlobalShareOpen, setIsGlobalShareOpen] = useState<boolean>(false);
-  const [isTimeControlsOpen, setIsTimeControlsOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [is3DMode, setIs3DMode] = useState<boolean>(true);
   const [showIntro, setShowIntro] = useState<boolean>(true);
 
@@ -221,6 +224,7 @@ export default function SkyDiaryApp() {
         onOpenTour={() => setIsTourOpen(true)}
         onOpenShare={() => setIsGlobalShareOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenMenu={() => setIsMenuOpen(true)}
         activeTargetName={catalog?.region?.name || "SPHEREx Deep Field North"}
         isDemo={urlState.demo}
         onToggleDemo={() => setUrlState({ demo: !urlState.demo })}
@@ -338,180 +342,73 @@ export default function SkyDiaryApp() {
               </div>
             )}
 
-            {/* Right Vertical Minimal Tool Strip (NASA Eyes Palette) */}
-            <div className="absolute right-4 bottom-24 z-30 flex flex-col gap-2.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white/70 shadow-2xl">
-              <Tooltip content={selectedMover ? "Close Details" : "Mover Details"} position="left">
-                <button
-                  type="button"
-                  onClick={() => setUrlState({ object: selectedMover ? null : movers[0]?.object_id })}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                    selectedMover ? "text-cyan-400 font-bold bg-white/10" : "hover:text-white hover:bg-white/10"
-                  }`}
-                  aria-label="Object Info"
-                >
-                  <span className="text-xs font-serif italic">ⓘ</span>
-                </button>
-              </Tooltip>
-
-              <Tooltip content={urlState.trails ? "Hide Trails" : "Show Trails"} position="left">
-                <button
-                  type="button"
-                  onClick={() => setUrlState({ trails: !urlState.trails })}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                    urlState.trails ? "text-cyan-400 bg-white/10" : "hover:text-white hover:bg-white/10"
-                  }`}
-                  aria-label="Toggle Trails"
-                >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                  </svg>
-                </button>
-              </Tooltip>
-
-              <Tooltip content="Zoom In" position="left">
-                <button
-                  type="button"
-                  onClick={() => setUrlState({ fov: Math.max(0.02, +(urlState.fov * 0.7).toFixed(3)) })}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-colors font-mono font-bold text-sm cursor-pointer"
-                  aria-label="Zoom In"
-                >
-                  +
-                </button>
-              </Tooltip>
-
-              <Tooltip content="Zoom Out" position="left">
-                <button
-                  type="button"
-                  onClick={() => setUrlState({ fov: Math.min(5.0, +(urlState.fov * 1.4).toFixed(3)) })}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-colors font-mono font-bold text-sm cursor-pointer"
-                  aria-label="Zoom Out"
-                >
-                  −
-                </button>
-              </Tooltip>
-
-              <Tooltip content={urlState.mode === "viewer" ? "Blink Mode" : "Sky Mode"} position="left">
-                <button
-                  type="button"
-                  onClick={() => setUrlState({ mode: urlState.mode === "viewer" ? "blink" : "viewer" })}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                    urlState.mode === "blink" ? "text-cyan-400 bg-white/10" : "hover:text-white hover:bg-white/10"
-                  }`}
-                  aria-label="Toggle Blink Mode"
-                >
-                  ⚡
-                </button>
-              </Tooltip>
-
-              <Tooltip content={is3DMode ? "Switch to 2D Sky Survey" : "Switch to 3D Universe"} position="left">
-                <button
-                  type="button"
-                  onClick={() => setIs3DMode(!is3DMode)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
-                    is3DMode ? "text-cyan-400 bg-white/10" : "hover:text-white hover:bg-white/10"
-                  }`}
-                  aria-label="Toggle 3D Universe and 2D Survey"
-                >
-                  <span className="text-xs">{is3DMode ? "🌌" : "🔭"}</span>
-                </button>
-              </Tooltip>
-
-              <Tooltip content="Fullscreen" position="left">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (typeof document !== "undefined") {
-                      if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(() => {});
-                      } else {
-                        document.exitFullscreen().catch(() => {});
-                      }
+            {/* 3. Right-Hand Control Rail (NASA Eyes Vertical Rail) */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 z-30 pointer-events-auto">
+              <ControlRail
+                onToggleInfo={() => {
+                  if (selectedMover) {
+                    setUrlState({ object: null });
+                  } else if (movers.length > 0) {
+                    setUrlState({ object: movers[0].object_id });
+                  }
+                }}
+                isInfoOpen={Boolean(selectedMover)}
+                onToggleLayers={() => setUrlState({ trails: !urlState.trails })}
+                isLayersOpen={Boolean(urlState.trails)}
+                onZoomIn={() => setUrlState({ fov: Math.max(0.02, +(urlState.fov * 0.7).toFixed(3)) })}
+                onZoomOut={() => setUrlState({ fov: Math.min(5.0, +(urlState.fov * 1.4).toFixed(3)) })}
+                onToggleInvert={() => setUrlState({ mode: urlState.mode === "viewer" ? "blink" : "viewer" })}
+                isInverted={urlState.mode === "blink"}
+                onToggleFullscreen={() => {
+                  if (typeof document !== "undefined") {
+                    if (!document.fullscreenElement) {
+                      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+                    } else {
+                      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
                     }
-                  }}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:text-white hover:bg-white/10 transition-colors text-xs cursor-pointer"
-                  aria-label="Toggle Fullscreen"
-                >
-                  ⤢
-                </button>
-              </Tooltip>
+                  }
+                }}
+                isFullscreen={isFullscreen}
+                mode3D={is3DMode}
+                onToggleMode3D={() => setIs3DMode(!is3DMode)}
+                onResetView={() => setUrlState({ ra: 269.45, dec: 66.6, fov: 0.8, object: null })}
+              />
             </div>
 
-            {/* Bottom-Left NASA Eyes "● LIVE" Status Pill (2D Mode) */}
-            {!is3DMode && (
-              <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/10 select-none pointer-events-none shadow-2xl">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse" />
-                <span className="text-[10px] md:text-xs font-sans font-bold tracking-widest text-emerald-400 uppercase">
-                  LIVE
-                </span>
-                <span className="text-white/20">•</span>
-                <span className="text-[10px] font-mono text-white/70">
-                  EPOCH {urlState.epoch + 1}/{epochs.length}
-                </span>
-              </div>
-            )}
-
-            {/* Bottom-Center Minimal TIME CONTROLS (NASA Eyes Command Ribbon) */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-col-reverse items-center pointer-events-auto">
-              <button
-                type="button"
-                onClick={() => setIsTimeControlsOpen(!isTimeControlsOpen)}
-                className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/80 hover:bg-black/95 backdrop-blur-md border border-white/15 hover:border-cyan-400/50 text-white/80 hover:text-white transition-all cursor-pointer select-none shadow-2xl"
-                aria-expanded={isTimeControlsOpen}
-                aria-label="Toggle Time Controls Drawer"
-              >
-                <svg
-                  className={`w-3.5 h-3.5 text-cyan-400 transition-transform ${isTimeControlsOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                </svg>
-                <span className="text-[10px] md:text-xs font-sans tracking-widest uppercase font-semibold text-white/90">
-                  TIME CONTROLS
-                </span>
-                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-cyan-300">
-                  {urlState.mode === "blink" ? "BLINK" : "SCRUB"}
-                </span>
-              </button>
-
-              {/* Sliding Drawer Container (Opens upward cleanly above the toggle pill) */}
-              {isTimeControlsOpen && (
-                <div className="mb-2 w-[92vw] max-w-3xl p-3 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/15 shadow-2xl">
-                  {urlState.mode === "viewer" ? (
-                    <TimeBar
-                      epochs={epochs}
-                      currentEpochIndex={urlState.epoch}
-                      onEpochChange={(epoch) => setUrlState({ epoch })}
-                    />
-                  ) : (
-                    <BlinkComparator
-                      epochs={epochs}
-                      currentEpochIndex={urlState.epoch}
-                      onEpochChange={(epoch) => setUrlState({ epoch })}
-                    />
-                  )}
-                </div>
+            {/* 4. Bottom-Center Time Bar (NASA Eyes layout) */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 w-[94vw] max-w-2xl pointer-events-auto">
+              {urlState.mode === "blink" ? (
+                <BlinkComparator
+                  epochs={epochs}
+                  currentEpochIndex={urlState.epoch}
+                  onEpochChange={(epoch) => setUrlState({ epoch })}
+                />
+              ) : (
+                <TimeBar
+                  epochs={epochs}
+                  currentEpochIndex={urlState.epoch}
+                  onEpochChange={(epoch) => setUrlState({ epoch })}
+                  isSynthetic={isSynthetic}
+                />
               )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* Floating Spotlight Search Dialog (Hotkeyed to / or Q) */}
+      {/* Inline / Spotlight Search Expansion (NASA Eyes style) */}
       {isSearchOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/75 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 bg-black/75 backdrop-blur-sm">
           <div className="absolute inset-0" onClick={() => setIsSearchOpen(false)} />
-          <div className="relative w-full max-w-xl p-4 rounded-2xl bg-[#0a0f1d] border border-white/15 shadow-2xl z-10 space-y-3">
-            <div className="flex items-center justify-between border-b border-white/10 pb-2">
-              <span className="text-xs uppercase tracking-widest text-space-300 font-mono font-semibold">
-                Target &amp; Coordinate Search
+          <div className="relative w-full max-w-xl p-4 rounded-[3px] bg-[rgba(20,20,22,0.96)] border border-white/[0.12] shadow-2xl z-10 space-y-3">
+            <div className="flex items-center justify-between border-b border-white/[0.10] pb-2">
+              <span className="text-[11px] uppercase tracking-[0.2em] text-[#B8BCC4] font-medium font-sans">
+                Search Targets &amp; Celestial Coordinates
               </span>
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(false)}
-                className="text-white/40 hover:text-white font-mono text-xs px-2 cursor-pointer"
+                className="text-[#B8BCC4] hover:text-white font-mono text-xs px-2 cursor-pointer"
               >
                 ESC
               </button>
@@ -526,6 +423,19 @@ export default function SkyDiaryApp() {
           </div>
         </div>
       )}
+
+      {/* NASA Eyes Full-Height Menu Drawer */}
+      <MenuDrawer
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        beginnerMode={beginnerMode}
+        onToggleBeginnerMode={() => setBeginnerMode(!beginnerMode)}
+        onOpenTour={() => {
+          setIsMenuOpen(false);
+          setIsTourOpen(true);
+        }}
+        isSynthetic={isSynthetic}
+      />
 
       {/* Guided Tour Walkthrough Dialog */}
       <BeginnerTour

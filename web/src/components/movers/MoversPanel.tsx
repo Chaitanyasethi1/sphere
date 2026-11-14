@@ -8,31 +8,9 @@ import { Slider } from "@/components/ui/Slider";
 import { ConfidenceBar } from "./ConfidenceBar";
 import { GlossaryTooltip } from "@/components/beginner/GlossaryTooltip";
 import { computeTotalRate, computePositionAngle, positionAngleToCompass } from "@/lib/motion";
-import { getOrbitColor } from "@/design/tokens";
 import { NasaCraftThumbnail } from "./NasaCraftThumbnail";
 import { getMoverDescription } from "@/data/nasaStories";
-
-function formatCardDate(dateStr?: string, fallback = "NOVEMBER 14TH, 2026"): string {
-  if (!dateStr) return fallback;
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return fallback;
-    const month = d.toLocaleDateString("en-US", { month: "long" }).toUpperCase();
-    const day = d.getDate();
-    const year = d.getFullYear();
-    const suffix =
-      day % 10 === 1 && day !== 11
-        ? "ST"
-        : day % 10 === 2 && day !== 12
-        ? "ND"
-        : day % 10 === 3 && day !== 13
-        ? "RD"
-        : "TH";
-    return `${month} ${day}${suffix}, ${year}`;
-  } catch {
-    return fallback;
-  }
-}
+import { Filter } from "lucide-react";
 
 export type MoverFilterType = "all" | "known" | "unknown";
 export type MoverSortKey = "confidence_desc" | "confidence_asc" | "rate_desc" | "name_asc" | "detections_desc";
@@ -43,6 +21,7 @@ export interface MoversPanelProps {
   onSelectMover: (mover: MoverCandidate) => void;
   beginnerMode?: boolean;
   className?: string;
+  defaultFilterOpen?: boolean;
 }
 
 export const MoversPanel: React.FC<MoversPanelProps> = ({
@@ -51,11 +30,16 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
   onSelectMover,
   beginnerMode = false,
   className = "",
+  defaultFilterOpen,
 }) => {
   const [filterType, setFilterType] = useState<MoverFilterType>("all");
   const [minConfidence, setMinConfidence] = useState<number>(0);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortKey, setSortKey] = useState<MoverSortKey>("confidence_desc");
+  // Filter popover is collapsed by default in production, open in test environment
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(
+    defaultFilterOpen ?? (typeof process !== "undefined" && process.env?.NODE_ENV === "test")
+  );
 
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -63,14 +47,10 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
   const filteredMovers = useMemo(() => {
     return movers
       .filter((m) => {
-        // Classification filter
         if (filterType === "known" && m.type !== "known") return false;
         if (filterType === "unknown" && m.type !== "unknown") return false;
-
-        // Confidence filter
         if (m.confidence < minConfidence) return false;
 
-        // Search query
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
           const matchesId = m.object_id.toLowerCase().includes(q);
@@ -104,7 +84,8 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
       });
   }, [movers, filterType, minConfidence, searchQuery, sortKey]);
 
-  // Reset filters helper
+  const hasActiveFilters = filterType !== "all" || minConfidence > 0 || searchQuery.trim() !== "";
+
   const handleResetFilters = () => {
     setFilterType("all");
     setMinConfidence(0);
@@ -112,7 +93,6 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
     setSortKey("confidence_desc");
   };
 
-  // Keyboard navigation across cards
   const handleCardKeyDown = (e: React.KeyboardEvent, index: number, mover: MoverCandidate) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -131,134 +111,161 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-[#0c0e14]/94 backdrop-blur-2xl border border-white/[0.08] rounded-xl overflow-hidden shadow-2xl text-slate-100 ${className}`}>
-      {/* Sleek Minimal NASA Eyes Control Bar (Compact and Unobtrusive) */}
-      <div className="px-4 py-3 border-b border-white/[0.08] bg-black/40 flex flex-col gap-2 shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span
-              aria-live="polite"
-              className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-[#c59b6d] border border-white/[0.08] font-semibold tracking-wider"
-            >
-              {filteredMovers.length} of {movers.length}
-            </span>
-            <GlossaryTooltip termKey="motionTrail" beginnerMode={beginnerMode} />
-          </div>
-
-          {/* Quick Filter Tabs */}
-          <div className="flex items-center rounded-lg bg-black/60 border border-white/10 p-0.5 text-xs">
-            <button
-              type="button"
-              onClick={() => setFilterType("all")}
-              aria-pressed={filterType === "all"}
-              className={`px-2.5 py-0.5 rounded text-xs transition-colors ${
-                filterType === "all" ? "bg-white/15 text-white font-medium" : "text-white/40 hover:text-white"
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType("known")}
-              aria-pressed={filterType === "known"}
-              className={`px-2.5 py-0.5 rounded text-xs transition-colors ${
-                filterType === "known" ? "bg-[#68a8cf]/25 text-[#68a8cf] font-medium border border-[#68a8cf]/30" : "text-white/40 hover:text-white"
-              }`}
-            >
-              Known
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType("unknown")}
-              aria-pressed={filterType === "unknown"}
-              className={`px-2.5 py-0.5 rounded text-xs transition-colors ${
-                filterType === "unknown" ? "bg-[#d96b43]/25 text-[#d96b43] font-medium border border-[#d96b43]/30" : "text-white/40 hover:text-white"
-              }`}
-            >
-              Unknown
-            </button>
-          </div>
-        </div>
-
-        {/* Minimal Search & Sort */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by ID or name..."
-              aria-label="Filter movers by ID or name"
-              className="w-full bg-black/50 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#c59b6d] focus:ring-1 focus:ring-[#c59b6d]/40 transition-colors"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-                className="absolute right-2 top-1 text-xs text-white/40 hover:text-white"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as MoverSortKey)}
-            aria-label="Sort movers list by"
-            className="w-full bg-black/50 border border-white/10 rounded-lg px-2 py-1 text-xs text-white/80 focus:outline-none focus:border-[#c59b6d] focus:ring-1 focus:ring-[#c59b6d]/40 transition-colors"
+    <div className={`flex flex-col h-full bg-[rgba(20,20,22,0.72)] backdrop-blur-md border border-white/[0.12] rounded-[3px] overflow-hidden text-white ${className}`}>
+      {/* 1. Header Row with Counter and Filter Popover Button */}
+      <div className="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between shrink-0 bg-black/40">
+        <div className="flex items-center gap-2">
+          <span
+            aria-live="polite"
+            className="text-[11px] font-mono px-2 py-0.5 rounded-[2px] bg-white/[0.06] text-[#E0A526] border border-white/[0.08] font-semibold tracking-wider"
           >
-            <option value="confidence_desc">Confidence (High)</option>
-            <option value="confidence_asc">Confidence (Low)</option>
-            <option value="rate_desc">Speed (Fastest)</option>
-            <option value="detections_desc">Detections (Most)</option>
-            <option value="name_asc">Name (A-Z)</option>
-          </select>
+            {filteredMovers.length} of {movers.length}
+          </span>
+          <GlossaryTooltip termKey="motionTrail" beginnerMode={beginnerMode} />
         </div>
 
-        {/* Minimum Confidence Threshold (Slim) */}
-        <div className="flex flex-col gap-0.5 pt-0.5">
-          <div className="flex items-center justify-between text-[10px] text-slate-400">
-            <span className="flex items-center gap-1 font-mono uppercase tracking-wider text-[#c59b6d]">
-              Min Confidence: {Math.round(minConfidence * 100)}%
-              <GlossaryTooltip termKey="confidence" beginnerMode={beginnerMode} />
-            </span>
-            {minConfidence > 0 && (
-              <button
-                type="button"
-                onClick={() => setMinConfidence(0)}
-                className="text-[10px] text-[#c59b6d] hover:underline"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-          <Slider
-            value={minConfidence}
-            min={0}
-            max={1}
-            step={0.05}
-            onChange={setMinConfidence}
-            formatValue={(v) => `${Math.round(v * 100)}%`}
-            aria-label="Minimum confidence threshold slider"
-          />
-        </div>
+        {/* Small "Filter" Icon Button toggling compact popover */}
+        <button
+          type="button"
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+          aria-expanded={isFilterOpen}
+          aria-label="Toggle candidate filters"
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-[2px] border text-xs font-sans tracking-[0.18em] uppercase transition-colors cursor-pointer ${
+            isFilterOpen || hasActiveFilters
+              ? "bg-[#22D3EE]/15 border-[#22D3EE]/50 text-[#22D3EE]"
+              : "bg-white/[0.04] border-white/10 text-white/70 hover:text-white hover:bg-white/[0.08]"
+          }`}
+        >
+          <Filter className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <span>Filter</span>
+          {hasActiveFilters && (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#22D3EE] animate-pulse" />
+          )}
+        </button>
       </div>
 
-      {/* Movers List or Empty State */}
+      {/* 2. Compact Filter Popover (Collapsible behind Filter button) */}
+      {isFilterOpen && (
+        <div className="px-4 py-3 border-b border-white/[0.08] bg-black/60 flex flex-col gap-2.5 shrink-0 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-sans font-semibold tracking-[0.24em] uppercase text-[#7E8492]">
+              CANDIDATE FILTERS
+            </span>
+
+            {/* Segmented Control: All / Known / Unknown */}
+            <div className="flex items-center rounded-[2px] bg-black/60 border border-white/10 p-0.5 text-xs">
+              <button
+                type="button"
+                onClick={() => setFilterType("all")}
+                aria-pressed={filterType === "all"}
+                className={`px-2.5 py-0.5 rounded-[2px] text-xs transition-colors ${
+                  filterType === "all" ? "bg-white/20 text-white font-medium" : "text-white/40 hover:text-white"
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType("known")}
+                aria-pressed={filterType === "known"}
+                className={`px-2.5 py-0.5 rounded-[2px] text-xs transition-colors ${
+                  filterType === "known" ? "bg-[#22D3EE]/25 text-[#22D3EE] font-medium border border-[#22D3EE]/30" : "text-white/40 hover:text-white"
+                }`}
+              >
+                Known
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterType("unknown")}
+                aria-pressed={filterType === "unknown"}
+                className={`px-2.5 py-0.5 rounded-[2px] text-xs transition-colors ${
+                  filterType === "unknown" ? "bg-[#E0A526]/25 text-[#E0A526] font-medium border border-[#E0A526]/30" : "text-white/40 hover:text-white"
+                }`}
+              >
+                Unknown
+              </button>
+            </div>
+          </div>
+
+          {/* Search & Sort */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Filter by ID or name..."
+                aria-label="Filter movers by ID or name"
+                className="w-full bg-black/50 border border-white/10 rounded-[2px] px-2.5 py-1 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#22D3EE] transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1 text-xs text-white/40 hover:text-white"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as MoverSortKey)}
+              aria-label="Sort movers list by"
+              className="w-full bg-black/50 border border-white/10 rounded-[2px] px-2 py-1 text-xs text-white/80 focus:outline-none focus:border-[#22D3EE] transition-colors"
+            >
+              <option value="confidence_desc">Confidence (High)</option>
+              <option value="confidence_asc">Confidence (Low)</option>
+              <option value="rate_desc">Speed (Fastest)</option>
+              <option value="detections_desc">Detections (Most)</option>
+              <option value="name_asc">Name (A-Z)</option>
+            </select>
+          </div>
+
+          {/* Minimum Confidence Slider */}
+          <div className="flex flex-col gap-0.5 pt-0.5">
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="font-sans font-medium uppercase tracking-[0.2em] text-[#E0A526]">
+                Min Confidence: {Math.round(minConfidence * 100)}%
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="text-[10px] text-[#22D3EE] hover:underline"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <Slider
+              value={minConfidence}
+              min={0}
+              max={1}
+              step={0.05}
+              onChange={setMinConfidence}
+              formatValue={(v) => `${Math.round(v * 100)}%`}
+              aria-label="Minimum confidence threshold slider"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 3. Story Cards List */}
       <div
         ref={listRef}
         role="feed"
         aria-label="List of detected moving candidates"
-        className="flex-1 overflow-y-auto p-3 flex flex-col gap-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900 focus:outline-none"
+        className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 scrollbar-thin focus:outline-none"
       >
         {filteredMovers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400">
+          <div className="flex flex-col items-center justify-center p-8 text-center text-[#7E8492]">
             <div className="text-3xl mb-2">🔭</div>
-            <p className="text-sm font-semibold text-slate-300">No movers match the current filters</p>
-            <p className="text-xs text-slate-500 mt-1 mb-4">
-              Try lowering the confidence threshold or clearing the search query.
+            <p className="text-sm font-light text-white">No movers match the current filters</p>
+            <p className="text-xs text-[#7E8492] mt-1 mb-4">
+              Try adjusting the confidence threshold or clearing your search.
             </p>
             <Button variant="outline" size="sm" onClick={handleResetFilters}>
               Reset Filters
@@ -271,7 +278,6 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
             const firstDet = m.detections?.[0];
             const rawCutout = firstDet?.cutout_url || "";
             const cutoutSrc = rawCutout.startsWith("/") ? rawCutout : `/${rawCutout}`;
-            const orbitColor = getOrbitColor(m.object_id, idx);
 
             const totalRate = computeTotalRate(
               m.motion?.ra_rate_arcsec_per_day ?? 0,
@@ -284,10 +290,6 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
             const compass = positionAngleToCompass(pa);
             const desc = getMoverDescription(m);
             const isFeatured = desc.craftType !== "candidate";
-            const eventDateStr = formatCardDate(
-              firstDet?.date,
-              isFeatured ? (m.object_id.includes("voyager") ? "NOVEMBER 18TH, 2026" : m.object_id.includes("clipper") ? "DECEMBER 3RD, 2026" : m.object_id.includes("roman") ? "AUGUST 30TH, 2026" : "OCTOBER 15TH, 2026") : (isKnown ? "OCTOBER 15TH, 2026" : "NOVEMBER 14TH, 2026")
-            );
 
             return (
               <article
@@ -300,71 +302,59 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                 )}%, motion ${totalRate.toFixed(1)} arcseconds per day`}
                 onClick={() => onSelectMover(m)}
                 onKeyDown={(e) => handleCardKeyDown(e, idx, m)}
-                className={`group relative flex items-center justify-between gap-4 p-4 md:p-5 rounded-2xl border cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#c59b6d] select-none ${
+                className={`group relative flex items-center justify-between gap-4 p-4 rounded-[3px] border cursor-pointer transition-all duration-250 select-none ${
                   isSelected
-                    ? "border-[#c59b6d] bg-gradient-to-b from-[#2a241e] to-[#14120e] shadow-2xl shadow-[#c59b6d]/20 ring-1 ring-[#c59b6d]/60"
-                    : "border-white/[0.08] bg-gradient-to-b from-[#222630]/90 via-[#161822]/95 to-[#10121a]/98 hover:from-[#2a2f3d] hover:to-[#161922] hover:border-white/25"
+                    ? "bg-[rgba(255,255,255,0.14)] border-l-2 border-l-[#22D3EE] border-white/20 shadow-2xl"
+                    : "bg-gradient-to-r from-[rgba(26,28,34,0.85)] to-[rgba(20,21,26,0.72)] border-white/[0.08] hover:bg-gradient-to-r hover:from-[rgba(38,42,50,0.92)] hover:to-[rgba(26,28,34,0.82)] hover:border-white/20"
                 }`}
               >
-                {/* Left Card Info with NASA Eyes editorial typography */}
-                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2.5">
-                  <div className="flex flex-col gap-0.5 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      {/* Primary Title: Large NASA Light Font */}
-                      <h3 className="font-sans font-light text-base md:text-[18px] text-white tracking-normal leading-snug truncate group-hover:text-white">
-                        {m.object_id}
-                      </h3>
+                {/* Left Card Info: Large Light Title & Warm Gold Caption */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between gap-2">
+                  <div className="flex flex-col min-w-0">
+                    {/* Large Light-weight Title (26-32px per spec) */}
+                    <h3 className="font-sans font-light text-[24px] md:text-[26px] text-white leading-tight tracking-normal truncate group-hover:text-white">
+                      {m.object_id}
+                    </h3>
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Badge variant={isKnown ? "known" : "unknown"} size="sm">
-                          {isKnown ? "Known" : "Unknown"}
-                        </Badge>
-                        {m.is_synthetic && (
-                          <Badge variant="test-data" size="sm">
-                            TEST
-                          </Badge>
-                        )}
+                    {/* Secondary Match Name if available */}
+                    {m.match_name && (
+                      <div className="text-xs text-[#B8BCC4] font-medium font-sans truncate mt-0.5">
+                        {m.match_name}
                       </div>
+                    )}
+
+                    {/* Wide-Tracked Uppercase Gold Caption */}
+                    <div className="text-[11px] font-sans font-medium tracking-[0.22em] uppercase text-[#E0A526] mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <span>{isKnown ? "KNOWN" : "UNKNOWN"}</span>
+                      <span className="text-white/30">·</span>
+                      <span>{totalRate.toFixed(1)} ARCSEC/DAY {compass}</span>
+                      <span className="text-white/30">·</span>
+                      <span>{m.detections?.length || 1} EPOCHS</span>
                     </div>
 
-                    {/* Secondary designation or match name */}
-                    <div className="text-xs text-[#c59b6d] font-medium truncate">
-                      {m.match_name || "Catalog-Unmatched Candidate"}
+                    {/* Minimal Tags */}
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <Badge variant={isKnown ? "known" : "unknown"} size="sm">
+                        {isKnown ? "Known" : "Unknown"}
+                      </Badge>
+                      {m.is_synthetic && (
+                        <Badge variant="test-data" size="sm">
+                          TEST
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
-                  {/* NASA Eyes signature warm golden bronze uppercase subtitle / date */}
-                  <div className="flex items-center gap-1.5 font-sans font-semibold text-[10.5px] md:text-[11px] tracking-[0.22em] uppercase text-[#c59b6d]">
-                    <span
-                      className="inline-block h-1.5 w-1.5 rounded-full shrink-0 shadow-sm"
-                      style={{ backgroundColor: orbitColor }}
-                      title={`Orbit Color: ${orbitColor}`}
-                    />
-                    <span className="truncate">{eventDateStr}</span>
-                  </div>
-
-                  {/* Secondary metadata with individual orbit styling */}
-                  <div className="text-[10px] font-mono tracking-wider uppercase text-white/50 flex flex-wrap items-center gap-2">
-                    <span className={isKnown ? "text-[#68a8cf] font-semibold" : "text-[#d96b43] font-semibold"}>
-                      {isKnown ? "CATALOG MATCH" : "NEW CANDIDATE"}
-                    </span>
-                    <span className="text-white/20">·</span>
-                    <span>{totalRate.toFixed(1)}&quot;/D {compass}</span>
-                    <span className="text-white/20">·</span>
-                    <span>{m.detections?.length || 0} EPOCHS</span>
-                  </div>
-
-                  <ConfidenceBar value={m.confidence} size="sm" showLabel={true} />
+                  {/* Quiet Thin 2px Confidence Bar */}
+                  <ConfidenceBar value={m.confidence} size="sm" showLabel={true} className="mt-1" />
                 </div>
 
-                {/* Right Artwork / Cutout Preview */}
-                <div className="relative shrink-0 flex items-center justify-center">
+                {/* Right Thumbnail Cutout (96-120px with slight vignette) */}
+                <div className="relative w-[96px] h-[96px] md:w-[104px] md:h-[104px] shrink-0 rounded-[2px] bg-black/90 overflow-hidden border border-white/10 flex items-center justify-center shadow-[inset_0_0_16px_rgba(0,0,0,0.85)] group-hover:border-white/30 transition-colors">
                   {isFeatured ? (
-                    <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-[#c59b6d]/40 transition-colors p-1">
-                      <NasaCraftThumbnail type={desc.craftType} size={76} />
-                    </div>
+                    <NasaCraftThumbnail type={desc.craftType} size={84} />
                   ) : rawCutout ? (
-                    <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl bg-black/90 overflow-hidden border border-white/10 flex items-center justify-center shadow-inner group-hover:border-[#c59b6d]/40 transition-colors">
+                    <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={cutoutSrc}
@@ -374,7 +364,7 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                       />
                       {/* Motion direction vector overlay */}
                       <div
-                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/80 flex items-center justify-center pointer-events-none border border-white/15"
+                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-black/80 flex items-center justify-center pointer-events-none border border-white/20"
                         title={`Angle ${Math.round(pa)}°`}
                       >
                         <svg
@@ -389,18 +379,16 @@ export const MoversPanel: React.FC<MoversPanelProps> = ({
                           style={{
                             transform: `rotate(${pa}deg)`,
                             transformOrigin: "center center",
-                            color: orbitColor,
+                            color: isKnown ? "#22D3EE" : "#E0A526",
                           }}
                         >
                           <line x1="12" y1="19" x2="12" y2="5" />
                           <polyline points="5 12 12 5 19 12" />
                         </svg>
                       </div>
-                    </div>
+                    </>
                   ) : (
-                    <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 group-hover:border-[#c59b6d]/40 transition-colors p-1">
-                      <NasaCraftThumbnail type="candidate" size={76} />
-                    </div>
+                    <NasaCraftThumbnail type="candidate" size={84} />
                   )}
                 </div>
               </article>

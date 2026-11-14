@@ -37,10 +37,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    // Base styles: touch-friendly minimum height (44px for md/lg), WCAG visible focus
+    // Base styles: touch-friendly minimum height (44px for md/lg), WCAG visible focus, square corners (2-4px)
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 select-none " +
-      "focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-space-950 focus-visible:outline-none " +
+      "inline-flex items-center justify-center font-medium rounded-[3px] transition-all duration-200 select-none " +
+      "focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:ring-offset-2 focus-visible:ring-offset-[#010206] focus-visible:outline-none " +
       "disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none active:scale-[0.98]";
 
     // Variant color mappings

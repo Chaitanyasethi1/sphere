@@ -1,175 +1,163 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #050816;
-  --foreground: #f8fafc;
+  --font-barlow: "Barlow", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --background: #010206;
+  --foreground: #FFFFFF;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-feature-settings: "rlig" 1, "calt" 1, "cv02" 1, "cv03" 1, "cv04" 1, "cv11" 1;
-  letter-spacing: -0.011em;
+  font-family: var(--font-barlow), "Barlow", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: -0.005em;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Minimal professional typography rules */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
-  font-weight: 600;
+/* Subtle procedural star-field backdrop (no heavy navy gradient slabs) */
+.space-stars-bg {
+  background-color: #010206;
+  background-image: 
+    radial-gradient(1px 1px at 24px 35px, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 145px 120px, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 280px 75px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 390px 220px, rgba(255, 255, 255, 0.25), transparent),
+    radial-gradient(1px 1px at 520px 160px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 670px 310px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 810px 90px, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1px 1px at 940px 260px, rgba(255, 255, 255, 0.45), transparent);
+  background-size: 1000px 400px;
 }
 
 /* Tabular figures for coordinates, rates, and telemetry */
 code, kbd, samp, pre, .font-mono {
-  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: var(--font-mono), "JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   font-feature-settings: "tnum" 1, "zero" 1;
-  letter-spacing: -0.005em;
 }
 
-/* Custom dark scrollbar */
+/* Custom dark slim scrollbar (NASA Eyes minimal) */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(5, 8, 22, 0.7);
+  background: rgba(10, 10, 12, 0.8);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(39, 217, 208, 0.2);
-  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(39, 217, 208, 0.5);
+  background: rgba(255, 255, 255, 0.32);
 }
 
 /* Universal accessible focus outline */
 :focus-visible {
-  outline: 2px solid #27D9D0;
+  outline: 2px solid #22D3EE;
   outline-offset: 2px;
 }
 
-/* NASA Eyes Premium Floating Glass Panels with Deep Indigo & Nebula Gradients */
-.glass-panel {
-  background: linear-gradient(135deg, rgba(16, 27, 70, 0.75) 0%, rgba(5, 8, 22, 0.85) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(39, 217, 208, 0.15);
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 20px -5px rgba(57, 33, 111, 0.25);
-}
-
-.glass-panel-subtle {
-  background: linear-gradient(135deg, rgba(16, 27, 70, 0.55) 0%, rgba(5, 8, 22, 0.75) 100%);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-panel-elevated {
-  background: linear-gradient(140deg, rgba(20, 34, 88, 0.85) 0%, rgba(5, 8, 22, 0.95) 100%);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(39, 217, 208, 0.25);
-  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.85), 0 0 35px -5px rgba(39, 217, 208, 0.15);
-}
-
-.glass-panel-3d {
-  background: rgba(16, 27, 70, 0.65);
+/* NASA Eyes Authentic Dark Translucent Panels */
+.nasa-eyes-panel {
+  background: rgba(20, 20, 22, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(39, 217, 208, 0.2);
-  box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-}
-
-/* NASA Eyes on the Solar System Authentic Left Panel & Card Styling */
-.nasa-eyes-panel {
-  background: rgba(10, 12, 18, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .nasa-eyes-card {
-  background: rgba(16, 18, 24, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: linear-gradient(90deg, rgba(26, 28, 34, 0.85) 0%, rgba(20, 21, 26, 0.72) 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 3px;
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nasa-eyes-card:hover {
-  background: rgba(24, 28, 38, 0.88);
-  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(90deg, rgba(38, 42, 50, 0.95) 0%, rgba(28, 30, 38, 0.85) 100%);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
-.nasa-eyes-card.selected {
-  background: rgba(30, 26, 22, 0.92);
-  border-color: #c59b6d;
-  box-shadow: 0 0 20px -3px rgba(197, 155, 109, 0.25);
+.nasa-eyes-card-selected {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-left: 2px solid #22D3EE !important;
+  border-color: rgba(255, 255, 255, 0.22);
+  border-radius: 3px;
 }
 
-.nasa-eyes-title {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+/* Hairline border utility */
+.border-hairline {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.border-hairline-b {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.border-hairline-t {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.border-hairline-r {
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.border-hairline-l {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Typography Classes matching NASA Eyes Type Scale */
+.text-eyes-display {
+  font-size: 32px;
   font-weight: 300;
+  line-height: 1.05;
   letter-spacing: -0.01em;
-  color: #ffffff;
 }
 
-.nasa-eyes-subtitle {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: uppercase;
+.text-eyes-title {
+  font-size: 26px;
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+.text-eyes-card-title {
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 1.12;
+}
+
+.text-eyes-label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
   letter-spacing: 0.22em;
-  color: #c59b6d;
-}
-
-/* NASA HUD Reticle & Telemetry Styling */
-.hud-label {
-  font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: rgba(255, 255, 255, 0.5);
 }
 
-.hud-value {
-  font-family: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
-  font-feature-settings: "tnum" 1, "zero" 1;
+.text-eyes-caption {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
 }
 
-/* Subtle holographic targeting pulse */
-@keyframes reticle-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.9;
+/* Motion Respecting prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  50% {
-    transform: scale(1.04);
-    opacity: 1;
-  }
-}
-
-.animate-reticle-pulse {
-  animation: reticle-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Star twinkle animation */
-@keyframes star-twinkle {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-.animate-twinkle {
-  animation: star-twinkle 3s ease-in-out infinite;
 }

@@ -1,0 +1,16 @@
+<svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="50" cy="50" r="48" fill="#0B3D91" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+  <!-- Constellation stars -->
+  <circle cx="26" cy="30" r="2" fill="white" opacity="0.9"/>
+  <circle cx="74" cy="28" r="1.6" fill="white" opacity="0.8"/>
+  <circle cx="34" cy="74" r="2" fill="white" opacity="0.7"/>
+  <circle cx="68" cy="68" r="1.8" fill="white" opacity="0.9"/>
+  <circle cx="50" cy="18" r="1.8" fill="white" opacity="0.85"/>
+  <circle cx="82" cy="50" r="1.6" fill="white" opacity="0.8"/>
+  <!-- Orbital Ellipse -->
+  <ellipse cx="50" cy="50" rx="42" ry="18" stroke="white" stroke-width="2.5" stroke-opacity="0.85" transform="rotate(-25 50 50)"/>
+  <!-- Red supersonic vector chevron -->
+  <path d="M18 68 L50 22 L65 52 L54 52 L48 38 L30 68 Z" fill="#FC3D21"/>
+  <!-- Wordmark -->
+  <text x="50" y="55" font-family="'Barlow', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="14" fill="white" text-anchor="middle" letter-spacing="-0.04em">NASA</text>
+</svg>

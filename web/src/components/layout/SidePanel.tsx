@@ -28,7 +28,7 @@ export function SidePanel({
   const [mobileExpanded, setMobileExpanded] = useState<boolean>(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState<boolean>(false);
 
-  // If a mover is selected, automatically expand drawer so user sees details
+  // Auto-expand drawer when an object is selected
   useEffect(() => {
     if (selectedMover) {
       setMobileExpanded(true);
@@ -36,7 +36,6 @@ export function SidePanel({
     }
   }, [selectedMover]);
 
-  // Compute navigation indices for Next/Previous
   const currentIndex = selectedMover
     ? movers.findIndex((m) => m.object_id === selectedMover.object_id)
     : -1;
@@ -55,22 +54,23 @@ export function SidePanel({
     }
   };
 
-  // If desktop is collapsed, show sleek NASA Eyes floating tab
+  // Re-open tab when collapsed
   if (desktopCollapsed) {
     return (
-      <div className="absolute top-16 left-4 z-40 pointer-events-auto">
+      <div className="fixed top-16 left-3 z-40 pointer-events-auto">
         <button
           type="button"
           onClick={() => {
             setDesktopCollapsed(false);
             setMobileExpanded(true);
           }}
-          className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-[#0c0e14]/90 hover:bg-[#141822] backdrop-blur-xl border border-white/10 hover:border-[#c59b6d]/60 text-white shadow-2xl transition-all group cursor-pointer"
-          title="Expand Featured Stories & Movers"
+          className="flex items-center gap-2 px-3 py-2 rounded-[3px] bg-[rgba(20,20,22,0.85)] hover:bg-[rgba(30,32,40,0.95)] backdrop-blur-md border border-white/[0.12] hover:border-[#22D3EE]/50 text-white shadow-2xl transition-all cursor-pointer group"
+          title="Open Featured Movers and Targets"
+          aria-label="Open Featured Movers and Targets"
         >
-          <span className="h-2 w-2 rounded-full bg-[#c59b6d] shadow-sm shadow-[#c59b6d] animate-pulse" />
-          <span className="text-[11px] font-sans tracking-[0.18em] uppercase font-semibold text-[#c59b6d]">
-            FEATURED ({movers.length})
+          <span className="w-1.5 h-1.5 rounded-full bg-[#E0A526] shadow-sm shadow-[#E0A526] animate-pulse" />
+          <span className="text-[11px] font-sans tracking-[0.2em] uppercase font-medium text-[#E0A526]">
+            MOVERS ({movers.length})
           </span>
           <span className="text-xs font-mono text-white/50 group-hover:text-white group-hover:translate-x-0.5 transition-transform">
             »
@@ -82,32 +82,16 @@ export function SidePanel({
 
   return (
     <aside
-      className={`nasa-eyes-panel border-t md:border-t-0 md:border-r border-white/10 flex flex-col transition-all duration-300 z-30 ${
+      className={`nasa-eyes-panel border-t md:border-t-0 md:border-r border-white/[0.12] flex flex-col transition-all duration-250 z-30 ${
         mobileExpanded
-          ? "fixed inset-x-0 bottom-0 h-[85vh] md:relative md:h-full md:w-[420px] lg:w-[460px]"
-          : "fixed inset-x-0 bottom-0 h-16 md:relative md:h-full md:w-[420px] lg:w-[460px]"
+          ? "fixed inset-x-0 bottom-0 h-[85vh] md:relative md:h-full md:w-[440px]"
+          : "fixed inset-x-0 bottom-0 h-16 md:relative md:h-full md:w-[440px]"
       }`}
     >
-      {/* 1. NASA Top Brand Header (from Image 2) */}
-      <div className="hidden md:flex items-center gap-3 px-5 pt-4 pb-1.5 shrink-0">
-        <div className="h-7 w-7 rounded-full bg-[#0b3d91] relative overflow-hidden flex items-center justify-center border border-blue-400/30 shrink-0">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" fill="none">
-            <ellipse cx="50" cy="50" rx="42" ry="18" stroke="white" strokeWidth="2.5" strokeOpacity="0.8" transform="rotate(-25 50 50)" />
-            <path d="M18 68 L50 22 L65 52 L54 52 L48 38 L30 68 Z" fill="#fc3d21" />
-          </svg>
-          <span className="relative z-10 text-[7.5px] font-black tracking-tighter text-white font-sans">
-            NASA
-          </span>
-        </div>
-        <span className="font-sans text-[11px] md:text-xs font-semibold tracking-[0.22em] text-white/95 uppercase">
-          EYES ON THE SOLAR SYSTEM
-        </span>
-      </div>
-
-      {/* 2. Section Header: Featured Stories and Events with « dock button */}
-      <div className="hidden md:flex items-center justify-between px-5 pb-3 pt-1 border-b border-white/[0.08] shrink-0">
-        <span className="text-[13px] text-white/70 font-light tracking-wide font-sans">
-          {selectedMover ? "Mission Telemetry & Dossier" : "Featured Stories and Events"}
+      {/* 1. Header Row (Desktop): Plain grey title text in sentence case + square collapse button « */}
+      <div className="hidden md:flex items-center justify-between px-5 py-3.5 border-b border-white/[0.08] shrink-0 bg-black/40">
+        <span className="text-sm font-sans font-light text-[#B8BCC4] tracking-wide">
+          {selectedMover ? "Mission Telemetry & Dossier" : "Featured Movers and Targets"}
         </span>
         <button
           type="button"
@@ -115,7 +99,7 @@ export function SidePanel({
             setDesktopCollapsed(true);
             setMobileExpanded(false);
           }}
-          className="w-7 h-7 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.1] hover:border-white/20 text-white/60 hover:text-white transition-all flex items-center justify-center text-xs font-mono cursor-pointer"
+          className="w-7 h-7 rounded-[3px] border border-white/10 bg-white/[0.04] hover:bg-white/[0.1] hover:border-white/25 text-white/70 hover:text-white transition-colors flex items-center justify-center text-xs font-mono cursor-pointer"
           title="Collapse Panel"
           aria-label="Collapse panel"
         >
@@ -123,14 +107,14 @@ export function SidePanel({
         </button>
       </div>
 
-      {/* Mobile drag handle & toggle bar */}
+      {/* Mobile drag handle & toggle bar (Min 44px touch target) */}
       <div
-        className="md:hidden flex items-center justify-between px-4 py-2 bg-space-900 border-b border-white/10 cursor-pointer select-none shrink-0 min-h-[44px]"
+        className="md:hidden flex items-center justify-between px-4 py-2 bg-[rgba(20,20,22,0.95)] border-b border-white/10 cursor-pointer select-none shrink-0 min-h-[44px]"
         onClick={() => setMobileExpanded(!mobileExpanded)}
       >
         <div className="flex items-center gap-2">
-          <div className="h-1.5 w-10 bg-white/20 rounded-full mx-auto" />
-          <span className="text-xs font-mono font-bold text-space-100">
+          <div className="h-1 w-8 bg-white/20 rounded-full mx-auto" />
+          <span className="text-xs font-mono font-medium text-white">
             {selectedMover
               ? selectedMover.match_name || selectedMover.object_id
               : `${movers.length} Movers Detected`}
@@ -144,7 +128,7 @@ export function SidePanel({
         <button
           type="button"
           aria-label={mobileExpanded ? "Collapse mover panel" : "Expand mover panel"}
-          className="text-xs font-mono text-cyan-400 min-h-[44px] px-2 flex items-center"
+          className="text-xs font-mono text-[#22D3EE] min-h-[44px] px-2 flex items-center"
         >
           {mobileExpanded ? "▼ Minimize" : "▲ Expand"}
         </button>

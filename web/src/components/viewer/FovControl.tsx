@@ -58,7 +58,7 @@ export function FovControl({
 
       {/* Preset Buttons */}
       <div className="flex items-center gap-1">
-        {presets.map((preset) => {
+        {presets.map((preset: number) => {
           const isSelected = Math.abs(fov - preset) < 0.001;
           return (
             <button

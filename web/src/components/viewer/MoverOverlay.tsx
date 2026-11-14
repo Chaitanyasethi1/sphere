@@ -3,7 +3,6 @@
 import React from "react";
 import type { MoverCandidate, EpochInfo, Detection } from "@/types";
 import { computeTotalRate, computePositionAngle, positionAngleToCompass } from "@/lib/motion";
-import { getOrbitColor } from "@/design/tokens";
 
 export interface MoverOverlayProps {
   movers: MoverCandidate[];
@@ -91,10 +90,10 @@ export function MoverOverlay({
             </marker>
           </defs>
 
-          {movers.map((mover, mIdx) => {
+          {movers.map((mover) => {
             const isKnown = mover.type === "known";
             const isSelected = selectedObjectId === mover.object_id;
-            const orbitColor = getOrbitColor(mover.object_id, mIdx);
+            const lineColor = isKnown ? "#22D3EE" : "#E0A526";
 
             // Collect historical detections up to current epoch
             const pastDetections = (mover.detections || []).slice(0, currentEpochIndex + 1);
@@ -107,22 +106,14 @@ export function MoverOverlay({
 
             return (
               <g key={`trail-group-${mover.object_id}`}>
-                {/* Glow backdrop path (thinner "littler" stroke) */}
+                {/* Thin 1px trajectory path without heavy glows */}
                 <path
                   d={pathData}
                   fill="none"
-                  stroke={orbitColor}
-                  strokeWidth={isSelected ? 3 : 2}
-                  strokeOpacity={0.25}
-                />
-                {/* Core trajectory path (crisp and delicate) */}
-                <path
-                  d={pathData}
-                  fill="none"
-                  stroke={orbitColor}
+                  stroke={lineColor}
                   strokeWidth={isSelected ? 1.5 : 1.0}
-                  strokeDasharray={isKnown ? "none" : "4 2"}
-                  strokeOpacity={isSelected ? 0.95 : 0.75}
+                  strokeDasharray={isKnown ? "none" : "3 2"}
+                  strokeOpacity={isSelected ? 0.95 : 0.65}
                 />
                 {/* Numbered epoch node dots along trajectory */}
                 {points.map((pt, pIdx) => (
@@ -130,10 +121,10 @@ export function MoverOverlay({
                     key={`node-${mover.object_id}-${pIdx}`}
                     cx={pt.x}
                     cy={pt.y}
-                    r={pIdx === currentEpochIndex ? 2.5 : 1.5}
-                    fill={pIdx === currentEpochIndex ? "#ffffff" : orbitColor}
-                    stroke="#050814"
-                    strokeWidth={0.8}
+                    r={pIdx === currentEpochIndex ? 2 : 1.2}
+                    fill={pIdx === currentEpochIndex ? "#ffffff" : lineColor}
+                    stroke="#010206"
+                    strokeWidth={0.5}
                   />
                 ))}
               </g>
@@ -200,78 +191,76 @@ export function MoverOverlay({
               aria-label={`${isKnown ? "Known object" : "Unknown mover candidate"} ${
                 mover.match_name || mover.object_id
               }${isPredicted ? " (Predicted position)" : ""}`}
-              className={`relative flex items-center justify-center transition-all duration-200 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none cursor-pointer ${
-                isSelected ? "scale-125 z-30" : "hover:scale-110 z-10"
+              className={`relative flex items-center gap-2 transition-all duration-200 focus-visible:ring-1 focus-visible:ring-[#22D3EE] focus-visible:outline-none cursor-pointer ${
+                isSelected ? "z-30 scale-105" : "hover:scale-105 z-10"
               }`}
             >
-              {/* Outer NASA Eyes Targeting Brackets [ + ] on selected/hover */}
+              {/* Outer targeting indicator on hover/select */}
               <div
-                className={`absolute -inset-2.5 pointer-events-none transition-opacity duration-200 ${
+                className={`absolute -inset-1.5 pointer-events-none transition-opacity duration-150 ${
                   isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                 }`}
               >
-                {/* 4 corner bracket ticks */}
                 <span
-                  className={`absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 ${
-                    isKnown ? "border-cyan-400" : "border-amber-400"
+                  className={`absolute top-0 left-0 w-1.5 h-1.5 border-t border-l ${
+                    isKnown ? "border-[#22D3EE]" : "border-[#E0A526]"
                   }`}
                 />
                 <span
-                  className={`absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 ${
-                    isKnown ? "border-cyan-400" : "border-amber-400"
+                  className={`absolute top-0 right-0 w-1.5 h-1.5 border-t border-r ${
+                    isKnown ? "border-[#22D3EE]" : "border-[#E0A526]"
                   }`}
                 />
                 <span
-                  className={`absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 ${
-                    isKnown ? "border-cyan-400" : "border-amber-400"
+                  className={`absolute bottom-0 left-0 w-1.5 h-1.5 border-b border-l ${
+                    isKnown ? "border-[#22D3EE]" : "border-[#E0A526]"
                   }`}
                 />
                 <span
-                  className={`absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 ${
-                    isKnown ? "border-cyan-400" : "border-amber-400"
+                  className={`absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r ${
+                    isKnown ? "border-[#22D3EE]" : "border-[#E0A526]"
                   }`}
                 />
               </div>
 
-              {/* Core Reticle: Circle for Known vs Diamond for Unknown */}
+              {/* Core Ring Marker: Cyan Circle for Known vs Gold Diamond for Unknown */}
               {isKnown ? (
-                /* Circle for Known Asteroid / Comet */
                 <div
-                  className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  className={`h-4 w-4 rounded-full border flex items-center justify-center transition-all ${
                     isPredicted
-                      ? "border-dashed border-cyan-400/50 bg-cyan-950/40 opacity-70"
-                      : "border-cyan-400 bg-cyan-950/80 shadow-[0_0_12px_rgba(6,182,212,0.6)]"
-                  } ${isSelected ? "ring-2 ring-white shadow-[0_0_16px_rgba(6,182,212,0.9)]" : ""}`}
+                      ? "border-dashed border-[#22D3EE]/50 bg-black/40"
+                      : "border-[#22D3EE] bg-black/60 shadow-[0_0_8px_rgba(34,211,238,0.5)]"
+                  } ${isSelected ? "ring-1 ring-white" : ""}`}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                  <span className="h-1 w-1 rounded-full bg-[#22D3EE]" />
                 </div>
               ) : (
-                /* Diamond for Unknown Candidate / Planet X */
                 <div
-                  className={`h-6 w-6 rotate-45 border-2 flex items-center justify-center transition-all ${
+                  className={`h-3.5 w-3.5 rotate-45 border flex items-center justify-center transition-all ${
                     isPredicted
-                      ? "border-dashed border-amber-400/50 bg-amber-950/40 opacity-70"
-                      : "border-amber-400 bg-amber-950/80 shadow-[0_0_14px_rgba(245,158,11,0.7)] animate-pulse"
-                  } ${isSelected ? "ring-2 ring-white shadow-[0_0_18px_rgba(245,158,11,0.9)]" : ""}`}
+                      ? "border-dashed border-[#E0A526]/50 bg-black/40"
+                      : "border-[#E0A526] bg-black/60 shadow-[0_0_8px_rgba(224,165,38,0.5)]"
+                  } ${isSelected ? "ring-1 ring-white" : ""}`}
                 >
-                  <span className="h-1.5 w-1.5 bg-amber-300 -rotate-45" />
+                  <span className="h-1 w-1 bg-[#E0A526] -rotate-45" />
                 </div>
               )}
 
+              {/* Object label: wide-tracked uppercase white text */}
+              <span className="text-[11px] font-sans font-normal uppercase tracking-[0.22em] text-white select-none whitespace-nowrap drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                {mover.match_name || mover.object_id}
+              </span>
+
               {/* Synthetic TEST Badge */}
               {mover.is_synthetic && (
-                <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded text-[7px] font-mono font-bold bg-slate-900/90 text-slate-300 border border-slate-700 leading-none tracking-widest shadow-sm">
+                <span className="px-1 py-0.2 rounded-[2px] text-[7px] font-mono font-medium bg-black/80 text-[#B8BCC4] border border-white/20 tracking-wider">
                   TEST
                 </span>
               )}
 
-              {/* Floating NASA Eyes Telemetry HUD Card on Hover / Selection */}
+              {/* Floating Telemetry HUD on Hover / Select */}
               <div
-                className={`absolute left-full ml-3 top-1/2 -translate-y-1/2 p-2.5 rounded-xl text-left bg-black/85 backdrop-blur-md border transition-all duration-150 pointer-events-none shadow-2xl space-y-1 min-w-[170px] ${
-                  isKnown
-                    ? "border-cyan-500/40 text-cyan-200 shadow-cyan-950/50"
-                    : "border-amber-500/40 text-amber-200 shadow-amber-950/50"
-                } ${
+                className={`absolute left-full ml-3 top-1/2 -translate-y-1/2 p-2.5 rounded-[3px] text-left bg-[rgba(20,20,22,0.95)] backdrop-blur-md border border-white/[0.12] transition-all duration-150 pointer-events-none shadow-2xl space-y-1 min-w-[170px] ${
                   isSelected
                     ? "opacity-100 scale-100 z-30"
                     : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 z-20"
@@ -279,35 +268,35 @@ export function MoverOverlay({
               >
                 <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] leading-none">{isKnown ? "●" : "◆"}</span>
-                    <span className="font-bold font-sans text-xs text-white">
+                    <span className="text-[9px] leading-none text-[#E0A526]">{isKnown ? "●" : "◆"}</span>
+                    <span className="font-light text-xs text-white uppercase tracking-wider">
                       {mover.match_name || mover.object_id}
                     </span>
                   </div>
                   <span
-                    className={`text-[8px] font-mono uppercase px-1 rounded ${
-                      isKnown ? "bg-cyan-500/20 text-cyan-300" : "bg-amber-500/20 text-amber-300"
+                    className={`text-[8px] font-mono uppercase px-1 rounded-[2px] ${
+                      isKnown ? "bg-[#22D3EE]/20 text-[#22D3EE]" : "bg-[#E0A526]/20 text-[#E0A526]"
                     }`}
                   >
                     {mover.type}
                   </span>
                 </div>
 
-                <div className="space-y-0.5 text-[10px] font-mono text-white/70">
+                <div className="space-y-0.5 text-[10px] font-mono text-[#B8BCC4]">
                   <div className="flex items-center justify-between">
                     <span className="text-white/40">Rate:</span>
-                    <span className="font-semibold text-white">
+                    <span className="text-white font-mono">
                       {totalRate.toFixed(1)}&quot;/d ({compass})
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-white/40">Confidence:</span>
-                    <span className="font-semibold text-white">
+                    <span className="text-white font-mono">
                       {(mover.confidence * 100).toFixed(0)}%
                     </span>
                   </div>
                   {isPredicted && (
-                    <div className="text-[9px] text-amber-400 font-semibold pt-0.5">
+                    <div className="text-[9px] text-[#E0A526] font-mono pt-0.5">
                       [PREDICTED] Position extrapolated
                     </div>
                   )}

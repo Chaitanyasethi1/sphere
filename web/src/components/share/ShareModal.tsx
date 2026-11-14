@@ -97,7 +97,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       title={mover ? `Share ${mover.object_id}` : "Share Sky Diary View"}
       size="lg"
     >
-      <div className="flex flex-col gap-5 text-slate-200">
+      <div className="flex flex-col gap-5 text-[#B8BCC4]">
         {/* Screen reader live region */}
         <div aria-live="polite" className="sr-only">
           {announcement}
@@ -105,7 +105,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
         {/* 1. Direct Link */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="share-link-input" className="text-xs font-semibold text-slate-300">
+          <label htmlFor="share-link-input" className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#B8BCC4]">
             Direct Link (Includes Coordinates & Selected Target)
           </label>
           <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               type="text"
               readOnly
               value={shareUrl}
-              className="flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs font-mono text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 select-all"
+              className="flex-1 bg-black/60 border border-white/[0.12] rounded-[2px] px-3 py-2 text-xs font-mono text-[#22D3EE] focus:outline-none focus:ring-1 focus:ring-[#22D3EE] select-all"
             />
             <Button
               variant={copiedUrl ? "primary" : "secondary"}
@@ -128,19 +128,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
         {/* 2. Web Share API */}
         {canWebShare && (
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-950/60 border border-slate-800">
-            <span className="text-xs text-slate-300">Share directly via system apps:</span>
+          <div className="flex items-center justify-between p-3 rounded-[2px] bg-black/40 border border-white/[0.10]">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-[#B8BCC4]">Share directly via system apps:</span>
             <Button variant="outline" size="sm" onClick={handleWebShare}>
-              📤 Share with Device...
+              Share with Device...
             </Button>
           </div>
         )}
 
         {/* 3. Image Share Card (if mover selected) */}
         {mover && (
-          <div className="flex flex-col gap-2 p-3.5 rounded-lg bg-slate-950/70 border border-slate-800">
+          <div className="flex flex-col gap-2 p-3.5 rounded-[2px] bg-black/40 border border-white/[0.10]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-200">
+              <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-white">
                 Social Media Share Card (PNG)
               </span>
               <Button
@@ -148,13 +148,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 size="sm"
                 onClick={handleDownloadPng}
                 disabled={isGeneratingPng}
-                className="gap-1.5"
+                className="gap-1.5 text-xs"
               >
-                <span>🖼</span>
                 <span>{isGeneratingPng ? "Rendering..." : "Download Card (PNG)"}</span>
               </Button>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-[#B8BCC4]/80">
               Generates a client-side 1200×630px social card with motion rate, coordinates, classification, and test data transparency badge.
             </p>
           </div>
@@ -162,7 +161,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
         {/* 4. Embed Snippet */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="embed-snippet-input" className="text-xs font-semibold text-slate-300">
+          <label htmlFor="embed-snippet-input" className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#B8BCC4]">
             Embed in Website or Blog (Iframe)
           </label>
           <div className="flex items-center gap-2">
@@ -171,7 +170,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               type="text"
               readOnly
               value={embedCode}
-              className="flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs font-mono text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 select-all"
+              className="flex-1 bg-black/60 border border-white/[0.12] rounded-[2px] px-3 py-2 text-xs font-mono text-[#B8BCC4] focus:outline-none focus:ring-1 focus:ring-[#22D3EE] select-all"
             />
             <Button
               variant={copiedEmbed ? "primary" : "secondary"}
@@ -184,11 +183,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         </div>
 
         {/* 5. Animated GIF Export (Documented TODO placeholder) */}
-        <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800/80 text-xs text-slate-400 flex items-start gap-2.5">
-          <span className="text-amber-400 text-base">ℹ</span>
+        <div className="p-3 rounded-[2px] bg-black/40 border border-white/[0.10] text-xs text-[#B8BCC4] flex items-start gap-2.5">
+          <span className="text-[#E0A526] text-sm">◆</span>
           <div>
-            <span className="font-semibold text-slate-300">Animated Blink GIF: </span>
-            <span>
+            <span className="font-medium uppercase tracking-[0.18em] text-[#B8BCC4]">Animated Blink GIF: </span>
+            <span className="text-[11px]">
               {/* TODO(VERIFY): Client-side GIF generation requires a web-worker GIF encoder (e.g. gifshot / omggif).
                   Users can currently use the interactive Blink Comparator in the browser or screen-record time-lapses. */}
               Multi-epoch animated GIF export is planned for the v1.1 release. For live animations, toggle the Blink Comparator in the Time Bar.

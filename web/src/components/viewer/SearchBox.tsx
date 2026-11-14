@@ -80,16 +80,16 @@ export function SearchBox({
   };
 
   return (
-    <div className={`flex flex-col gap-2 w-full ${className}`}>
+    <div className={`flex flex-col gap-2.5 w-full ${className}`}>
       {/* Search Input Form */}
       <form onSubmit={handleSubmit} className="relative flex items-center w-full" role="search">
         <label htmlFor="searchbox-input" className="sr-only">
           Search celestial coordinates or object name
         </label>
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-space-400">
+        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/40">
           {loading ? (
             <svg
-              className="animate-spin h-4 w-4 text-cyan-400"
+              className="animate-spin h-4 w-4 text-[#22D3EE]"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -102,7 +102,7 @@ export function SearchBox({
               />
             </svg>
           ) : (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           )}
@@ -116,8 +116,8 @@ export function SearchBox({
             setQuery(e.target.value);
             if (errorMsg) setErrorMsg(null);
           }}
-          placeholder="Target or RA/Dec (e.g. WISE 0855, 133.79 -7.24)..."
-          className="w-full min-h-[44px] pl-10 pr-20 py-2 text-xs md:text-sm font-mono rounded-xl bg-black/80 border border-white/15 text-white placeholder-white/40 transition-all focus:border-cyan-400 focus:bg-space-950 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+          placeholder="Target or RA/Dec coordinates (e.g. 1 Ceres, 269.45 +66.56)..."
+          className="w-full min-h-[44px] pl-10 pr-20 py-2 text-xs md:text-sm font-mono rounded-[2px] bg-black/90 border border-white/15 text-white placeholder-white/40 transition-all focus:border-[#22D3EE] focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:outline-none"
         />
 
         <div className="absolute inset-y-0 right-1 flex items-center pr-1.5 gap-1">
@@ -137,24 +137,24 @@ export function SearchBox({
           <button
             type="submit"
             disabled={loading || !query.trim()}
-            className="min-h-[34px] px-3.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-space-950 font-bold text-xs font-mono disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-md shadow-cyan-500/20"
+            className="min-h-[34px] px-3.5 rounded-[2px] bg-[#22D3EE] hover:bg-[#38BDF8] active:bg-[#0284C7] text-black font-semibold text-xs font-mono disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
           >
-            Go
+            GO
           </button>
         </div>
       </form>
 
-      {/* Quick-Pick Target Chips for Challenge Targets */}
+      {/* Quick-Pick Target Chips for Challenge Targets (Plain text suggestions) */}
       <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-        <span className="text-[10px] font-mono uppercase text-space-400 mr-1 shrink-0">
-          Targets:
+        <span className="text-[10px] font-sans font-medium uppercase tracking-[0.2em] text-[#7E8492] mr-1 shrink-0">
+          SUGGESTIONS:
         </span>
         {CHALLENGE_TARGETS.map((t) => (
           <button
             key={t.name}
             type="button"
             onClick={() => handleChipSelect(t)}
-            className="min-h-[32px] px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-space-850 hover:bg-space-800 text-space-200 border border-white/10 hover:border-cyan-400/50 hover:text-cyan-300 transition-colors focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+            className="min-h-[32px] px-2.5 py-1 rounded-[2px] text-[11px] font-mono bg-white/[0.04] hover:bg-white/[0.1] text-[#B8BCC4] hover:text-white border border-white/10 hover:border-[#22D3EE]/50 transition-colors focus-visible:ring-2 focus-visible:ring-[#22D3EE] focus-visible:outline-none cursor-pointer"
             title={`${t.name} (RA ${t.ra.toFixed(4)}°, Dec ${t.dec.toFixed(4)}°) - ${t.description}`}
           >
             {t.name}
@@ -171,9 +171,9 @@ export function SearchBox({
       {infoMsg && (
         <div
           role="status"
-          className="p-2 rounded-lg bg-sky-950/70 border border-sky-500/40 text-xs text-sky-200 font-mono flex items-start gap-2 animate-in fade-in"
+          className="p-2 rounded-[2px] bg-sky-950/70 border border-sky-500/40 text-xs text-sky-200 font-mono flex items-start gap-2"
         >
-          <span className="text-cyan-400 font-bold shrink-0">ℹ</span>
+          <span className="text-[#22D3EE] font-bold shrink-0">ℹ</span>
           <span>{infoMsg}</span>
         </div>
       )}
@@ -182,7 +182,7 @@ export function SearchBox({
       {errorMsg && (
         <div
           role="alert"
-          className="p-2 rounded-lg bg-slate-900/90 border border-red-500/30 text-xs text-slate-300 font-mono flex items-start gap-2 animate-in fade-in"
+          className="p-2 rounded-[2px] bg-slate-900/90 border border-red-500/30 text-xs text-slate-300 font-mono flex items-start gap-2"
         >
           <span className="text-red-400 font-bold shrink-0">!</span>
           <span>{errorMsg}</span>
@@ -191,4 +191,3 @@ export function SearchBox({
     </div>
   );
 }
-
