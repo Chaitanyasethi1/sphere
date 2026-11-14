@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
+<title>SOL — Solar System & SPHEREx Sky Diary</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="css/nasa_eyes.css">
+<style>
+html {
+  -webkit-text-size-adjust:none;
+  text-size-adjust:none;
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000;
+  overflow:hidden;
+  overflow-x:hidden;
+  width:100%;
+  max-width:100%;
+  font-family:'Courier New',monospace;
+  color:#fff;
+}
+canvas { display:block; }
+
+body.intro-active #timeline-wrap,
+body.intro-active #focus-bar,
+body.intro-active #view-btns,
+body.intro-active #hud-top,
+body.intro-active #controls,
+body.intro-active #search-wrap,
+body.intro-active #speed-wrap,
+body.intro-active #planet-info,
+body.intro-active #help-btn,
+body.intro-active #fullscreen-btn,
+body.intro-active #help-panel,
+body.intro-active #constellation-labels,
+body.intro-active #tooltip,
+body.intro-active #mobile-dock,
+body.intro-active #mobile-backdrop {
+  opacity:0;
+  pointer-events:none;
+}
+
+#timeline-wrap,
+#focus-bar,
+#view-btns,
+#hud-top,
+#controls,
+#search-wrap,
+#speed-wrap,
+#planet-info,
+#help-btn,
+#fullscreen-btn,
+#help-panel,
+#constellation-labels,
+#tooltip {
+  transition:opacity 0.6s ease;
+}
+
+.mobile-only {
+  display:none;
+}
+
+#timeline-panel,
+#objects-panel,
+#search-panel,
+#controls-panel {
+  display:contents;
+}
+
+#mobile-backdrop,
+#mobile-dock {
+  display:none;
+}
+
+#intro-overlay {
+  position:fixed; inset:0; z-index:120;
+  display:flex; align-items:center; justify-content:center;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(110,165,255,0.12) 0%, rgba(110,165,255,0.04) 16%, rgba(0,0,0,0.16) 34%, rgba(0,0,0,0.92) 68%, rgba(0,0,0,1) 100%),
+    linear-gradient(180deg, rgba(4,10,20,0.985) 0%, rgba(0,0,0,0.94) 100%);
+  overflow:hidden;
+  cursor:pointer;
+  transition:opacity 0.7s ease, visibility 0.7s ease;
+  animation:introOverlayFade 10s ease forwards;
+}
+#intro-overlay.done {
+  opacity:0;
+  visibility:hidden;
+}
+#intro-overlay::before,
+#intro-overlay::after {
+  content:''; position:absolute; inset:-12%; pointer-events:none;
+}
+#intro-overlay::before {
+  background:
+    repeating-linear-gradient(180deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 5px),
+    linear-gradient(90deg, transparent 0%, rgba(120,190,255,0.07) 34%, rgba(255,255,255,0.12) 50%, rgba(120,190,255,0.07) 66%, transparent 100%);
+  mix-blend-mode:screen;
+  opacity:0;
+  animation:introSweep 10s ease forwards;
+}
+#intro-overlay::after {
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(180,225,255,0.18) 0 4%, rgba(110,175,255,0.1) 12%, rgba(110,175,255,0.02) 28%, transparent 52%),
+    radial-gradient(ellipse at 50% 50%, transparent 0 185px, rgba(120,200,255,0.06) 206px, transparent 246px);
+  transform:scaleX(1.9) scaleY(0.62);
+  opacity:0;
+  animation:introHalo 10s ease forwards;
+}
+
+.intro-nebula,
+.intro-nebula::before,
+.intro-nebula::after {
+  position:absolute; content:''; pointer-events:none;
+}
+
+.intro-nebula {
+  left:-42vw;
+  top:6vh;
+  width:122vw;
+  height:112vh;
+  background:url('textures/purple-nebula.jpg') no-repeat left center;
+  background-size:cover;
+  opacity:0;
+  mix-blend-mode:screen;
+  -webkit-mask-image:radial-gradient(ellipse at 12% 56%, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.8) 16%, rgba(0,0,0,0.58) 32%, rgba(0,0,0,0.3) 48%, rgba(0,0,0,0.12) 64%, rgba(0,0,0,0.04) 74%, transparent 88%);
+  mask-image:radial-gradient(ellipse at 12% 56%, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.8) 16%, rgba(0,0,0,0.58) 32%, rgba(0,0,0,0.3) 48%, rgba(0,0,0,0.12) 64%, rgba(0,0,0,0.04) 74%, transparent 88%);
+  filter:blur(1.8px) saturate(1.08) brightness(0.8);
+  animation:introNebula 10s ease forwards;
+}
+
+.intro-nebula::before,
+.intro-nebula::after {
+  inset:0;
+}
+
+.intro-nebula::before {
+  background:
+    radial-gradient(ellipse at 18% 58%, rgba(124,72,255,0.14) 0%, rgba(124,72,255,0.1) 16%, rgba(156,96,255,0.05) 30%, transparent 48%),
+    radial-gradient(ellipse at 10% 72%, rgba(230,118,255,0.09) 0%, rgba(230,118,255,0.06) 12%, transparent 28%),
+    radial-gradient(ellipse at 28% 46%, rgba(96,116,255,0.07) 0%, rgba(96,116,255,0.045) 14%, transparent 28%);
+  transform:rotate(-9deg) scale(1.04);
+}
+
+.intro-nebula::after {
+  background:
+    radial-gradient(ellipse at 16% 60%, rgba(255,255,255,0.06) 0%, rgba(244,220,255,0.03) 10%, transparent 22%),
+    radial-gradient(ellipse at 24% 70%, rgba(198,142,255,0.07) 0%, rgba(198,142,255,0.03) 10%, transparent 20%),
+    radial-gradient(ellipse at 12% 78%, rgba(144,118,255,0.06) 0%, rgba(144,118,255,0.025) 10%, transparent 18%);
+  filter:blur(12px) saturate(1.04);
+  opacity:0.26;
+}
+
+#intro-core {
+  position:relative;
+  width:min(78vw, 920px);
+  height:min(46vw, 420px);
+  display:flex; align-items:center; justify-content:center;
+}
+
+.intro-stars,
+.intro-stars::before,
+.intro-stars::after {
+  position:absolute; inset:-8%; content:''; pointer-events:none;
+}
+.intro-stars {
+  opacity:0;
+  animation:introStars 10s ease forwards;
+}
+.intro-stars::before {
+  background-image:
+    radial-gradient(circle at 8% 22%, rgba(255,255,255,0.95) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 19% 66%, rgba(190,220,255,0.8) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 31% 42%, rgba(255,255,255,0.72) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 47% 15%, rgba(255,255,255,0.96) 0 1.4px, transparent 2.2px),
+    radial-gradient(circle at 58% 79%, rgba(170,210,255,0.7) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 73% 36%, rgba(255,255,255,0.8) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 88% 64%, rgba(255,255,255,0.9) 0 1.5px, transparent 2.4px),
+    radial-gradient(circle at 82% 21%, rgba(190,220,255,0.82) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 14% 84%, rgba(255,255,255,0.7) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 63% 9%, rgba(255,255,255,0.65) 0 0.9px, transparent 1.6px);
+  filter:drop-shadow(0 0 4px rgba(170,210,255,0.16));
+}
+.intro-stars::after {
+  background-image:
+    radial-gradient(circle at 6% 52%, rgba(255,255,255,0.5) 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 12% 11%, rgba(255,255,255,0.45) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 24% 28%, rgba(175,215,255,0.44) 0 0.8px, transparent 1.5px),
+    radial-gradient(circle at 29% 88%, rgba(255,255,255,0.42) 0 0.9px, transparent 1.6px),
+    radial-gradient(circle at 37% 59%, rgba(255,255,255,0.45) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 42% 7%, rgba(255,255,255,0.42) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 54% 31%, rgba(175,215,255,0.38) 0 0.8px, transparent 1.5px),
+    radial-gradient(circle at 61% 68%, rgba(255,255,255,0.42) 0 0.9px, transparent 1.5px),
+    radial-gradient(circle at 69% 49%, rgba(255,255,255,0.48) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 77% 83%, rgba(175,215,255,0.38) 0 0.8px, transparent 1.5px),
+    radial-gradient(circle at 84% 12%, rgba(255,255,255,0.46) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 93% 39%, rgba(255,255,255,0.4) 0 0.8px, transparent 1.5px);
+  opacity:0.9;
+}
+
+.intro-ftl,
+.intro-ftl::before,
+.intro-ftl::after {
+  position:absolute; inset:-8%; content:''; pointer-events:none;
+}
+
+.intro-ftl {
+  display:none;
+}
+
+.intro-ftl::before {
+  opacity:0;
+}
+
+.intro-ftl::after {
+  opacity:0;
+}
+
+.intro-flare,
+.intro-flare::before,
+.intro-flare::after {
+  position:absolute;
+  pointer-events:none;
+  content:'';
+  mix-blend-mode:screen;
+}
+
+.intro-flare {
+  /*
+    Optical-axis flare only.
+    Nothing is drawn on top of the O/Sun. The flare artifacts start away
+    from the title and run from the Sun direction toward the top-left.
+  */
+  inset:0;
+  opacity:0;
+  animation:introFlare 10s ease forwards;
+}
+
+.intro-flare::before {
+  /* removed the broad diagonal streak */
+  display:none;
+}
+
+.intro-flare::after {
+  /* soft top-left light source only — no spokes/starburst */
+  left:6.5%;
+  top:6.5%;
+  width:clamp(70px, 8.5vw, 126px);
+  height:clamp(70px, 8.5vw, 126px);
+  border-radius:50%;
+  transform:translate(-50%, -50%);
+  background:
+    radial-gradient(circle at center,
+      rgba(255,255,255,0.72) 0%,
+      rgba(255,232,168,0.48) 6%,
+      rgba(255,174,82,0.18) 17%,
+      rgba(255,174,82,0.055) 34%,
+      rgba(255,174,82,0.018) 52%,
+      transparent 72%);
+  box-shadow:
+    0 0 26px rgba(255,206,118,0.12),
+    0 0 72px rgba(255,158,64,0.06);
+  filter:blur(0.8px);
+  opacity:0.62;
+}
+
+.intro-flare-ghosts,
+.intro-flare-ghosts::before,
+.intro-flare-ghosts::after {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  content:'';
+  mix-blend-mode:screen;
+}
+
+.intro-flare-ghosts {
+  opacity:0;
+  animation:introFlareGhosts 10s ease forwards;
+}
+
+.intro-flare-ghosts::before {
+  background:
+    radial-gradient(circle at 43% 44%, rgba(255,224,146,0.16) 0%, rgba(255,224,146,0.065) 2.4%, transparent 5.2%),
+    radial-gradient(circle at 36% 37%, rgba(255,150,82,0.14) 0%, rgba(255,150,82,0.052) 2.6%, transparent 5.8%),
+    radial-gradient(circle at 29% 30%, rgba(255,205,116,0.12) 0%, rgba(255,205,116,0.045) 2.2%, transparent 5.2%),
+    radial-gradient(circle at 22% 23%, rgba(130,205,255,0.09) 0%, rgba(130,205,255,0.035) 2.6%, transparent 6.2%),
+    radial-gradient(circle at 15% 16%, rgba(255,226,156,0.10) 0%, rgba(255,226,156,0.04) 2.2%, transparent 5.8%);
+  filter:blur(1.4px);
+}
+
+.intro-flare-ghosts::after {
+  background:
+    radial-gradient(circle at 40% 41%, rgba(255,255,255,0.08) 0%, transparent 1.5%),
+    radial-gradient(circle at 33% 34%, rgba(255,176,92,0.08) 0%, transparent 1.9%),
+    radial-gradient(circle at 26% 27%, rgba(145,215,255,0.07) 0%, transparent 1.8%),
+    radial-gradient(circle at 18% 19%, rgba(255,232,170,0.07) 0%, transparent 2.2%),
+    radial-gradient(circle at 10% 11%, rgba(255,255,255,0.055) 0%, transparent 2.2%);
+  filter:blur(7px);
+}
+
+.intro-flare-bloom {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  mix-blend-mode:screen;
+  background:
+    radial-gradient(ellipse at 24% 24%, rgba(255,174,82,0.08) 0%, rgba(255,174,82,0.035) 18%, transparent 42%),
+    radial-gradient(ellipse at 12% 12%, rgba(255,236,186,0.07) 0%, rgba(255,236,186,0.03) 15%, transparent 35%);
+  filter:blur(26px);
+  animation:introFlareBloom 10s ease forwards;
+}
+
+.intro-ring,
+.intro-ring::before,
+.intro-ring::after {
+  position:absolute; inset:50% auto auto 50%; border-radius:999px;
+  transform:translate(-50%, -50%);
+  content:'';
+}
+.intro-ring {
+  width:min(54vw, 520px); height:min(54vw, 520px);
+  border:1px solid rgba(150,210,255,0.12);
+  box-shadow:0 0 22px rgba(100,180,255,0.05), inset 0 0 28px rgba(160,220,255,0.02);
+  opacity:0;
+  animation:introRingSpin 10s cubic-bezier(.23,.82,.19,.98) forwards;
+}
+.intro-ring::before {
+  width:82%; height:82%; border:1px solid rgba(255,255,255,0.1);
+}
+.intro-ring::after {
+  width:112%; height:112%; border:1px solid rgba(90,150,255,0.1);
+}
+
+.intro-crosshair,
+.intro-crosshair::before,
+.intro-crosshair::after {
+  position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);
+  content:'';
+}
+.intro-crosshair {
+  width:min(62vw, 620px); height:1px; background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 50%, transparent 100%);
+  opacity:0;
+  animation:introCross 10s ease forwards;
+}
+.intro-crosshair::before {
+  width:1px; height:min(32vw, 320px); background:linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+}
+.intro-crosshair::after {
+  width:130px; height:130px; border:1px solid rgba(150,220,255,0.1); border-radius:50%;
+}
+
+#intro-sol {
+  position:relative; z-index:2;
+  margin-top:10px;
+  font-size:clamp(56px, 14vw, 168px);
+  font-weight:600;
+  line-height:0.9;
+  letter-spacing:0.56em;
+  text-indent:0.56em;
+  color:rgba(236,244,255,0.92);
+  text-transform:uppercase;
+  -webkit-text-stroke:1px rgba(236,244,255,0.4);
+  text-shadow:0 0 8px rgba(180,220,255,0.28), 0 0 20px rgba(100,160,255,0.1);
+  opacity:0;
+  transform:translateY(18px) scale(0.94);
+  animation:introTitle 10s cubic-bezier(.19,.9,.22,1) forwards;
+}
+
+#intro-sol::before {
+  content:attr(data-text);
+  position:absolute; inset:0;
+  color:rgba(214,236,255,0.4);
+  text-shadow:0 0 20px rgba(150,210,255,0.18);
+  filter:blur(10px);
+  transform:translateX(0) scaleX(1) scaleY(1);
+  transform-origin:center center;
+  opacity:0;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  animation:introTitleSmear 10s linear forwards;
+}
+
+#intro-sol::after {
+  content:attr(data-text);
+  position:absolute; inset:0;
+  color:rgba(150,210,255,0.34);
+  text-shadow:0 0 12px rgba(120,190,255,0.18);
+  filter:blur(3px);
+  transform:translateX(0) scaleX(1) scaleY(1);
+  transform-origin:center center;
+  opacity:0;
+  pointer-events:none;
+  mix-blend-mode:screen;
+  animation:introTitleTrail 10s linear forwards;
+}
+
+#intro-sub {
+  position:absolute; left:50%; top:50%; transform:translate(-50%, calc(-50% + 82px));
+  font-size:10px; letter-spacing:8px; color:rgba(180,210,255,0.6);
+  opacity:0;
+  animation:introSub 10s ease forwards;
+}
+
+#intro-credit {
+  position:absolute; left:50%; top:50%; transform:translate(-50%, calc(-50% - 108px));
+  font-size:11px; letter-spacing:5px; text-transform:uppercase;
+  color:rgba(220,232,248,0.66);
+  white-space:nowrap;
+  opacity:0;
+  animation:introCredit 10s ease forwards;
+}
+
+#intro-credit strong {
+  font-weight:normal;
+  color:rgba(245,248,255,0.9);
+}
+
+@keyframes introSweep {
+  0% { opacity:0; transform:translateX(-28%) scaleX(0.7); }
+  14% { opacity:0.12; }
+  40% { opacity:0.32; }
+  70% { opacity:0.12; }
+  100% { opacity:0; transform:translateX(28%) scaleX(1.15); }
+}
+@keyframes introOverlayFade {
+  0%, 72% { opacity:1; }
+  100% { opacity:0; }
+}
+@keyframes introHalo {
+  0% { opacity:0; transform:scaleX(1.55) scaleY(0.52) rotate(-8deg); }
+  28% { opacity:0.1; }
+  44% { opacity:0.22; transform:scaleX(1.82) scaleY(0.62) rotate(0deg); }
+  72% { opacity:0.22; transform:scaleX(1.94) scaleY(0.67) rotate(8deg); }
+  100% { opacity:0; transform:scaleX(2.08) scaleY(0.72) rotate(12deg); }
+}
+@keyframes introCross {
+  0% { opacity:0; transform:translate(-50%, -50%) scaleX(0.75); }
+  30% { opacity:0.34; }
+  62% { opacity:0.52; }
+  100% { opacity:0; transform:translate(-50%, -50%) scaleX(1.16); }
+}
+@keyframes introTitle {
+  0% { opacity:0; transform:translateY(28px) scale(0.9); filter:blur(12px); }
+  44% { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+  72% { opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+  100% { opacity:0; transform:translateY(-30px) scaleX(2.42) scaleY(1.44); filter:blur(16px); }
+}
+@keyframes introRingSpin {
+  0% { opacity:0; transform:translate(-50%, -50%) scale(0.88) rotate(-10deg); }
+  28% { opacity:0.14; }
+  44% { opacity:0.34; transform:translate(-50%, -50%) scale(0.98) rotate(0deg); }
+  72% { opacity:0.34; transform:translate(-50%, -50%) scale(1) rotate(10deg); }
+  100% { opacity:0; transform:translate(-50%, -50%) scale(1.1) rotate(22deg); }
+}
+@keyframes introSub {
+  0%, 16% { opacity:0; letter-spacing:12px; }
+  30%, 66% { opacity:0.82; letter-spacing:8px; }
+  100% { opacity:0; letter-spacing:10px; }
+}
+@keyframes introSkip {
+  0%, 52% { opacity:0; }
+  72% { opacity:0.45; }
+  100% { opacity:0; }
+}
+@keyframes introNebula {
+  0% { opacity:0; transform:translate(-3%, 4%) scale(1.05); }
+  28% { opacity:0.1; }
+  44% { opacity:0.24; }
+  72% { opacity:0.24; transform:translate(0, 0) scale(1); }
+  100% { opacity:0; transform:translate(1%, -1%) scale(0.98); }
+}
+@keyframes introStars {
+  0% { opacity:0; transform:scale(1.06); }
+  24% { opacity:0.5; }
+  50% { opacity:0.95; }
+  100% { opacity:0.3; transform:scale(1); }
+}
+@keyframes introFlare {
+  0% { opacity:0; transform:translate(1.2%, 1.2%) scale(0.96); }
+  24% { opacity:0.16; }
+  52% { opacity:0.48; }
+  72% { opacity:0.40; }
+  100% { opacity:0; transform:translate(-1.4%, -1.4%) scale(1.03); }
+}
+@keyframes introFlareGhosts {
+  0% { opacity:0; transform:translate(1.4%, 1.4%) scale(0.97); }
+  26% { opacity:0.05; }
+  52% { opacity:0.32; }
+  74% { opacity:0.24; }
+  100% { opacity:0; transform:translate(-1.0%, -1.0%) scale(1.03); }
+}
+@keyframes introFlareBloom {
+  0% { opacity:0; transform:translate(1%, 1%) scale(0.92); }
+  20% { opacity:0.035; }
+  48% { opacity:0.16; }
+  70% { opacity:0.12; }
+  100% { opacity:0; transform:translate(-1.8%, -1.8%) scale(1.03); }
+}
+@keyframes introCredit {
+  0%, 28% { opacity:0; letter-spacing:7px; transform:translate(-50%, calc(-50% - 108px)); }
+  44%, 72% { opacity:0.82; letter-spacing:5px; transform:translate(-50%, calc(-50% - 108px)); }
+  100% { opacity:0; letter-spacing:6px; transform:translate(-50%, calc(-50% - 108px)); }
+}
+@keyframes introTitleSmear {
+  0%, 70% { opacity:0; transform:translateX(0) scaleX(1) scaleY(1); }
+  100% { opacity:0; transform:translateX(-74px) scaleX(2.86) scaleY(1.34); }
+}
+@keyframes introTitleTrail {
+  0%, 70% { opacity:0; transform:translateX(0) scaleX(1) scaleY(1); }
+  100% { opacity:0; transform:translateX(98px) scaleX(2.68) scaleY(1.36); }
+}
+
+#view-btns {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%);
+  display:flex; gap:3px; z-index:10;
+}
+.vbtn {
+  background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.13);
+  color:rgba(255,255,255,0.35); font-family:'Courier New',monospace;
+  font-size:11px; letter-spacing:2px; padding:9px 18px; cursor:pointer; transition:all 0.18s;
+}
+.vbtn:hover { color:rgba(255,255,255,0.75); border-color:rgba(255,255,255,0.3); }
+.vbtn.active { color:#fff; border-color:rgba(160,130,255,0.65); background:rgba(70,45,130,0.5); }
+
+#search-wrap {
+  position:fixed; top:22px; right:22px; z-index:20; width:260px;
+}
+#search-input {
+  width:100%; box-sizing:border-box;
+  background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.8); font-family:'Courier New',monospace;
+  font-size:11px; letter-spacing:1.5px; padding:8px 12px;
+  outline:none; border-radius:3px;
+}
+#search-input::placeholder { color:rgba(255,255,255,0.22); }
+#search-input:focus { border-color:rgba(255,255,255,0.35); background:rgba(0,0,0,0.75); }
+#search-dropdown {
+  display:none; position:absolute; top:100%; left:0; right:0; margin-top:3px;
+  background:rgba(0,0,0,0.88); border:1px solid rgba(255,255,255,0.12);
+  border-radius:3px; max-height:320px; overflow-y:auto; z-index:21;
+}
+.search-group {
+  padding:5px 0 2px; border-top:1px solid rgba(255,255,255,0.06);
+}
+.search-group:first-child { border-top:none; }
+.search-group-label {
+  font-size:8px; letter-spacing:2px; color:rgba(255,255,255,0.22);
+  padding:2px 12px 4px; text-transform:uppercase;
+}
+.search-item {
+  padding:6px 12px; font-size:10px; letter-spacing:1px;
+  color:rgba(255,255,255,0.55); cursor:pointer; transition:all 0.1s;
+  display:flex; align-items:center; gap:8px;
+}
+.search-item:hover, .search-item.active {
+  background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.9);
+}
+.search-dot {
+  width:6px; height:6px; border-radius:50%; flex-shrink:0;
+}
+.search-sub { color:rgba(255,255,255,0.28); font-size:9px; margin-left:auto; }
+
+#speed-wrap {
+  position:fixed; bottom:22px; right:22px; z-index:10;
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+}
+#focus-select-wrap {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:6px;
+  width:140px;
+}
+#focus-select-label {
+  font-size:10px;
+  letter-spacing:3px;
+  color:rgba(255,255,255,0.22);
+  text-align:right;
+}
+#focus-select {
+  width:100%;
+  background:rgba(0,0,0,0.55);
+  border:1px solid rgba(255,255,255,0.15);
+  color:rgba(255,255,255,0.78);
+  font-family:'Courier New',monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  padding:8px 10px;
+  border-radius:3px;
+  outline:none;
+}
+#focus-select:focus {
+  border-color:rgba(255,255,255,0.35);
+  background:rgba(0,0,0,0.75);
+}
+#focus-select option,
+#focus-select optgroup {
+  background:#080808;
+  color:#f0f0f0;
+}
+#spd-label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.22); }
+#spd {
+  appearance:none; -webkit-appearance:none; width:140px; height:3px;
+  background:rgba(255,255,255,0.12); outline:none; cursor:pointer;
+}
+#spd::-webkit-slider-thumb {
+  -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+  background:rgba(255,255,255,0.75); cursor:pointer;
+}
+#spd-val { font-size:10px; color:rgba(255,255,255,0.32); letter-spacing:1px; }
+#objects-count-wrap {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:5px;
+  width:176px;
+}
+#objects-count-label {
+  font-size:10px;
+  letter-spacing:1.5px;
+  color:rgba(255,255,255,0.22);
+  text-align:right;
+  white-space:nowrap;
+}
+#objects-count-row {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow:hidden;
+}
+#objects-count-slider {
+  flex:1 1 0;
+  min-width:0;
+  max-width:100%;
+  appearance:none;
+  -webkit-appearance:none;
+  height:3px;
+  background:rgba(255,255,255,0.12);
+  outline:none;
+  cursor:pointer;
+}
+#objects-count-slider::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:13px;
+  height:13px;
+  border-radius:50%;
+  background:rgba(80,200,255,0.85);
+  cursor:pointer;
+}
+#objects-count-value {
+  min-width:36px;
+  text-align:left;
+  font-size:10px;
+  letter-spacing:1px;
+  color:rgba(80,200,255,0.85);
+  white-space:nowrap;
+}
+.sbtn {
+  background:transparent; border:1px solid rgba(255,255,255,0.14);
+  color:rgba(255,255,255,0.32); font-family:'Courier New',monospace;
+  font-size:11px; letter-spacing:2px; padding:7px 14px; cursor:pointer; transition:all 0.18s;
+}
+.sbtn:hover { border-color:rgba(255,255,255,0.4); color:rgba(255,255,255,0.8); }
+.sbtn.active { border-color:rgba(255,220,80,0.6); color:rgba(255,220,80,0.9); }
+
+#timeline-wrap {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  z-index:9; pointer-events:auto;
+  background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px; padding:10px 18px;
+}
+#timeline-label { font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.22); }
+#timeline-year  { font-size:12px; letter-spacing:2px; color:rgba(255,255,255,0.7); min-width:220px; text-align:center; }
+#tl {
+  appearance:none; -webkit-appearance:none; width:500px; max-width:65vw; height:3px;
+  background:rgba(255,255,255,0.12); outline:none; cursor:pointer;
+}
+#tl::-webkit-slider-thumb {
+  -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+  background:rgba(255,200,80,0.9); cursor:pointer;
+}
+#tl-hardpoints {
+  display:flex; gap:4px; flex-wrap:wrap; justify-content:center; max-width:65vw;
+}
+.tlhp {
+  background:transparent; border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.3); font-family:'Courier New',monospace;
+  font-size:9px; letter-spacing:1px; padding:3px 7px; cursor:pointer;
+  transition:all 0.15s; border-radius:2px;
+}
+.tlhp:hover { border-color:rgba(255,200,80,0.5); color:rgba(255,200,80,0.8); }
+.tlhp.now { border-color:rgba(255,200,80,0.4); color:rgba(255,200,80,0.6); }
+#tl-stepbtns {
+  display:flex; gap:2px; align-items:center; flex-wrap:wrap; justify-content:center;
+}
+#tl-modebtns {
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.tlstep {
+  background:transparent; border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.28); font-family:'Courier New',monospace;
+  font-size:9px; letter-spacing:0.5px; padding:3px 5px; cursor:pointer;
+  transition:all 0.15s; border-radius:2px; white-space:nowrap;
+}
+.tlstep:hover { border-color:rgba(255,255,255,0.35); color:rgba(255,255,255,0.7); }
+#tl-stepdivider { width:1px; background:rgba(255,255,255,0.1); height:14px; margin:0 3px; }
+.tlmode {
+  min-width:104px;
+  text-align:center;
+}
+
+#controls {
+  display:none;
+}
+#controls strong {
+  color:rgba(255,255,255,0.46); font-weight:normal;
+}
+#hud-top {
+  position:fixed; top:16px; right:16px; text-align:right; pointer-events:none;
+  font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.18); line-height:2;
+}
+#hud-top span { color:rgba(160,140,255,0.6); }
+
+#help-btn {
+  position:fixed; bottom:22px; left:22px; z-index:22;
+  min-width:34px; padding:7px 10px;
+}
+#fullscreen-btn {
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:22;
+  width:40px;
+  height:40px;
+  padding:0;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+}
+body:not(.mobile-ui) #fullscreen-btn {
+  display:none;
+}
+body.mobile-ui #fullscreen-btn {
+  display:inline-flex;
+}
+#fullscreen-btn .fs-icon {
+  position:relative;
+  width:16px;
+  height:16px;
+  display:block;
+}
+#fullscreen-btn .fs-icon::before,
+#fullscreen-btn .fs-icon::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  border:2px solid rgba(255,255,255,0.6);
+  transition:all 0.18s ease;
+}
+#fullscreen-btn .fs-icon::before {
+  border-right:none;
+  border-bottom:none;
+  clip-path:polygon(0 0, 100% 0, 100% 34%, 34% 34%, 34% 100%, 0 100%);
+}
+#fullscreen-btn .fs-icon::after {
+  border-left:none;
+  border-top:none;
+  clip-path:polygon(66% 0, 100% 0, 100% 100%, 0 100%, 0 66%, 66% 66%);
+}
+#fullscreen-btn.is-fullscreen .fs-icon::before {
+  inset:2px 2px auto auto;
+  width:6px;
+  height:6px;
+}
+#fullscreen-btn.is-fullscreen .fs-icon::after {
+  inset:auto auto 2px 2px;
+  width:6px;
+  height:6px;
+}
+#fullscreen-btn.is-fullscreen .fs-icon {
+  transform:rotate(180deg);
+}
+#help-panel {
+  position:fixed; bottom:64px; left:22px; z-index:21;
+  width:min(360px, calc(100vw - 44px));
+  background:rgba(0,0,0,0.82); border:1px solid rgba(255,255,255,0.12);
+  border-radius:6px; padding:14px 16px 12px; display:none;
+  backdrop-filter:blur(8px);
+}
+#help-panel.show { display:block; }
+#help-title {
+  font-size:12px; letter-spacing:3px; color:rgba(255,255,255,0.86);
+  margin-bottom:10px;
+}
+.help-section {
+  margin-top:10px;
+}
+.help-label {
+  font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.34);
+  margin-bottom:6px;
+}
+.help-row {
+  display:flex; justify-content:space-between; gap:14px;
+  font-size:10px; line-height:1.55; color:rgba(255,255,255,0.82);
+  margin-bottom:5px;
+}
+.help-key {
+  color:rgba(255,220,120,0.9); white-space:nowrap;
+}
+.help-desc {
+  color:rgba(255,255,255,0.62); text-align:right;
+}
+.help-note {
+  margin-top:10px; font-size:10px; line-height:1.5;
+  color:rgba(255,255,255,0.46);
+}
+
+#planet-info {
+  position:fixed; top:16px; left:16px; pointer-events:none;
+  background:rgba(0,0,0,0.72); border:1px solid rgba(255,255,255,0.1);
+  border-radius:4px; padding:14px 16px; display:none; min-width:210px;
+  max-height:520px; overflow-y:auto;
+}
+#planet-info.show { display:block; pointer-events:auto; }
+#planet-info-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+#pi-name { font-size:14px; letter-spacing:3px; margin-bottom:0; }
+.pi-btn,
+#info-toggle-btn {
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.72);
+  font-family:'Courier New',monospace;
+  font-size:10px;
+  letter-spacing:1.8px;
+  text-transform:uppercase;
+  padding:6px 10px;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.pi-btn:hover,
+#info-toggle-btn:hover {
+  color:rgba(255,255,255,0.92);
+  border-color:rgba(255,255,255,0.28);
+}
+#info-toggle-btn {
+  position:fixed;
+  top:16px;
+  left:16px;
+  z-index:27;
+  display:none;
+  border-radius:999px;
+  backdrop-filter:blur(10px);
+}
+#info-toggle-btn.show { display:inline-flex; }
+.pi-row { display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:5px; gap:18px; }
+.pi-val { color:rgba(255,255,255,0.8); }
+
+#tooltip {
+  position:fixed; pointer-events:none; background:rgba(0,0,0,0.78);
+  border:1px solid rgba(255,255,255,0.13); border-radius:3px;
+  padding:5px 10px; font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.75);
+  display:none; z-index:20;
+}
+
+#constellation-labels {
+  position:fixed; inset:0; pointer-events:none; z-index:24;
+}
+.constellation-label {
+  position:fixed; transform:translate(-50%, -100%);
+  padding:0;
+  font-size:10px;
+  letter-spacing:2px;
+  color:rgba(225,235,255,0.88);
+  text-transform:uppercase;
+  white-space:nowrap;
+  text-shadow:0 0 12px rgba(90,140,255,0.28);
+}
+
+#focus-bar {
+  position:fixed; bottom:108px; left:50%; transform:translateX(-50%);
+  display:flex; gap:3px; z-index:10; flex-wrap:wrap; justify-content:center;
+  max-width:92vw;
+}
+body:not(.mobile-ui) #focus-bar {
+  display:none;
+}
+.fbtn {
+  background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.28); font-family:'Courier New',monospace;
+  font-size:10px; letter-spacing:1px; padding:6px 11px; cursor:pointer;
+  transition:all 0.18s; border-radius:2px;
+}
+.fbtn:hover { color:rgba(255,255,255,0.7); border-color:rgba(255,255,255,0.28); }
+.fbtn.active { color:#fff; border-color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.1); }
+.fbtn .dot {
+  display:inline-block; width:7px; height:7px; border-radius:50%;
+  margin-right:5px; vertical-align:middle; margin-top:-1px;
+}
+.fbar-sep {
+  width:1px; background:rgba(255,255,255,0.12); margin:0 6px; align-self:stretch;
+}
+
+@media (min-width: 901px) and (max-height: 820px) {
+  #focus-bar {
+    bottom:138px;
+    max-width:calc(100vw - 40px);
+    gap:5px 4px;
+    padding:0 8px;
+  }
+
+  #focus-bar .fbtn {
+    font-size:8px;
+    padding:4px 7px;
+    letter-spacing:0.7px;
+  }
+
+  #focus-bar .dot {
+    width:5px;
+    height:5px;
+    margin-right:3px;
+  }
+
+  #timeline-wrap {
+    bottom:14px;
+    width:min(920px, calc(100vw - 300px));
+    max-width:none;
+    gap:9px;
+    padding:9px 14px;
+  }
+
+  #timeline-wrap::before {
+    content:none;
+  }
+
+  #timeline-year {
+    min-width:0;
+    width:100%;
+  }
+
+  #tl {
+    width:min(700px, calc(100vw - 340px));
+    max-width:100%;
+  }
+
+  #tl-stepbtns {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    align-items:center;
+    gap:4px 5px;
+    width:100%;
+    max-width:none;
+  }
+
+  #tl-modebtns {
+    gap:5px;
+    width:100%;
+  }
+
+  .tlstep {
+    font-size:8px;
+    padding:3px 6px;
+    letter-spacing:0.3px;
+    width:auto;
+    text-align:center;
+  }
+
+  #tl-stepdivider {
+    display:none;
+  }
+
+  #tl-hardpoints {
+    max-width:100%;
+    gap:6px;
+  }
+
+  .tlhp {
+    font-size:8px;
+    padding:4px 6px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) and (max-height: 820px) {
+  #timeline-wrap {
+    left:calc(50% - 90px);
+    width:min(640px, calc(100vw - 430px));
+    padding:9px 12px;
+  }
+
+  #tl {
+    width:100%;
+    max-width:none;
+  }
+
+  #tl-stepbtns {
+    display:grid;
+    grid-template-columns:repeat(6, max-content);
+    justify-content:center;
+    gap:4px 5px;
+    width:100%;
+  }
+
+  #tl-modebtns {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:5px;
+    width:min(240px, 100%);
+  }
+
+  .tlmode {
+    min-width:0;
+    width:100%;
+  }
+
+  #tl-hardpoints {
+    max-width:100%;
+    gap:5px;
+  }
+}
+
+@media (max-width: 900px), (pointer: coarse) and (max-height: 600px) {
+  body.mobile-ui {
+    --mobile-gap: 12px;
+    --mobile-safe-top: max(12px, env(safe-area-inset-top));
+    --mobile-safe-bottom: max(12px, env(safe-area-inset-bottom));
+    width:100vw;
+    max-width:100vw;
+    min-height:100vh;
+    overflow:hidden;
+    overflow-x:hidden;
+  }
+
+  body.mobile-ui canvas {
+    touch-action:none;
+  }
+
+  body.mobile-ui #mobile-backdrop {
+    display:block;
+    position:fixed;
+    inset:0;
+    z-index:25;
+    background:rgba(0,0,0,0.34);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.22s ease;
+  }
+
+  body.mobile-ui.mobile-panel-open #mobile-backdrop {
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  body.mobile-ui #mobile-dock {
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:8px;
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:var(--mobile-safe-bottom);
+    z-index:29;
+    padding:8px;
+    background:rgba(0,0,0,0.82);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    backdrop-filter:blur(14px);
+  }
+
+  body.mobile-ui .mnav-btn {
+    min-height:48px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;
+    color:rgba(255,255,255,0.72);
+    font-family:'Courier New',monospace;
+    font-size:13px;
+    line-height:1.1;
+    letter-spacing:0.6px;
+    font-weight:600;
+    text-transform:uppercase;
+    text-align:center;
+    white-space:nowrap;
+    -webkit-text-size-adjust:none;
+    text-size-adjust:none;
+    padding:11px 8px;
+  }
+
+  body.mobile-ui .mnav-btn.active {
+    color:rgba(255,220,120,0.95);
+    border-color:rgba(255,220,120,0.45);
+    background:rgba(255,220,120,0.08);
+  }
+
+  body.mobile-ui #timeline-panel,
+  body.mobile-ui #objects-panel,
+  body.mobile-ui #controls-panel,
+  body.mobile-ui #search-panel {
+    display:block;
+    position:fixed;
+    left:12px;
+    right:12px;
+    z-index:28;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transition:opacity 0.24s ease, transform 0.24s ease, visibility 0s linear 0.24s;
+  }
+
+  body.mobile-ui #timeline-panel *,
+  body.mobile-ui #objects-panel *,
+  body.mobile-ui #controls-panel *,
+  body.mobile-ui #search-panel * {
+    pointer-events:none;
+  }
+
+  body.mobile-ui #timeline-panel,
+  body.mobile-ui #objects-panel,
+  body.mobile-ui #controls-panel {
+    bottom:calc(var(--mobile-safe-bottom) + 78px);
+    max-height:min(62vh, 560px);
+    padding:12px;
+    overflow:auto;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:18px;
+    background:rgba(0,0,0,0.84);
+    backdrop-filter:blur(16px);
+    transform:translateY(18px);
+  }
+
+  body.mobile-ui #search-panel {
+    top:calc(var(--mobile-safe-top) + 8px);
+    padding:12px;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:18px;
+    background:rgba(0,0,0,0.84);
+    backdrop-filter:blur(16px);
+    transform:translateY(-16px);
+  }
+
+  body.mobile-ui[data-mobile-panel="timeline"] #timeline-panel,
+  body.mobile-ui[data-mobile-panel="objects"] #objects-panel,
+  body.mobile-ui[data-mobile-panel="controls"] #controls-panel,
+  body.mobile-ui[data-mobile-panel="search"] #search-panel {
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:translateY(0);
+    transition:opacity 0.24s ease, transform 0.24s ease;
+  }
+
+  body.mobile-ui[data-mobile-panel="timeline"] #timeline-panel *,
+  body.mobile-ui[data-mobile-panel="objects"] #objects-panel *,
+  body.mobile-ui[data-mobile-panel="controls"] #controls-panel *,
+  body.mobile-ui[data-mobile-panel="search"] #search-panel * {
+    pointer-events:auto;
+  }
+
+  body.mobile-ui #timeline-wrap,
+  body.mobile-ui #focus-bar,
+  body.mobile-ui #view-btns,
+  body.mobile-ui #hud-top,
+  body.mobile-ui #search-wrap,
+  body.mobile-ui #speed-wrap,
+  body.mobile-ui #help-btn,
+  body.mobile-ui #help-panel {
+    position:static !important;
+    top:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    left:auto !important;
+    transform:none !important;
+    width:100%;
+    max-width:none;
+    min-width:0;
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  body.mobile-ui #timeline-wrap,
+  body.mobile-ui #focus-bar,
+  body.mobile-ui #speed-wrap {
+    background:none;
+    border:none;
+    border-radius:0;
+    padding:0;
+  }
+
+  body.mobile-ui #timeline-wrap {
+    gap:10px;
+    align-items:stretch;
+  }
+
+  body.mobile-ui #timeline-year {
+    min-width:0;
+    width:100%;
+    text-align:left;
+    font-size:13px;
+    line-height:1.4;
+  }
+
+  body.mobile-ui #tl {
+    width:100%;
+    max-width:none;
+    height:26px;
+  }
+
+  body.mobile-ui #tl-stepbtns,
+  body.mobile-ui #tl-modebtns,
+  body.mobile-ui #tl-hardpoints {
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    max-width:none;
+    padding-bottom:4px;
+    scrollbar-width:none;
+  }
+
+  body.mobile-ui #tl-stepbtns::-webkit-scrollbar,
+  body.mobile-ui #tl-modebtns::-webkit-scrollbar,
+  body.mobile-ui #tl-hardpoints::-webkit-scrollbar {
+    display:none;
+  }
+
+  body.mobile-ui .tlstep,
+  body.mobile-ui .tlhp,
+  body.mobile-ui .sbtn,
+  body.mobile-ui #focus-select,
+  body.mobile-ui .vbtn,
+  body.mobile-ui .fbtn,
+  body.mobile-ui .search-item {
+    min-height:44px;
+    font-size:12px;
+  }
+
+  body.mobile-ui .tlstep,
+  body.mobile-ui .tlhp,
+  body.mobile-ui .sbtn,
+  body.mobile-ui .vbtn,
+  body.mobile-ui .fbtn {
+    padding:10px 12px;
+  }
+
+  body.mobile-ui #focus-select-wrap {
+    width:100%;
+    gap:8px;
+  }
+
+  body.mobile-ui #objects-count-wrap {
+    width:100%;
+    gap:8px;
+  }
+
+  body.mobile-ui #objects-count-label,
+  body.mobile-ui #objects-count-value {
+    text-align:left;
+    font-size:11px;
+  }
+
+  body.mobile-ui #objects-count-slider {
+    height:18px;
+  }
+
+  body.mobile-ui #focus-select-label {
+    text-align:left;
+    font-size:11px;
+  }
+
+  body.mobile-ui #focus-select {
+    font-size:12px;
+    padding:10px 12px;
+  }
+
+  body.mobile-ui #focus-bar {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+    max-width:none;
+  }
+
+  body.mobile-ui #focus-bar .fbtn {
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    text-align:left;
+  }
+
+  body.mobile-ui .fbar-sep {
+    width:auto;
+    height:1px;
+    margin:4px 0;
+    grid-column:1 / -1;
+  }
+
+  body.mobile-ui #search-wrap {
+    width:100%;
+  }
+
+  body.mobile-ui #search-input {
+    font-size:14px;
+    padding:14px 16px;
+    letter-spacing:1.2px;
+  }
+
+  body.mobile-ui #search-dropdown {
+    position:relative;
+    margin-top:8px;
+    max-height:42vh;
+  }
+
+  body.mobile-ui .search-group-label {
+    font-size:10px;
+    padding:6px 12px;
+  }
+
+  body.mobile-ui .search-item {
+    padding:10px 12px;
+    letter-spacing:0.8px;
+  }
+
+  body.mobile-ui #controls-panel > * + * {
+    margin-top:10px;
+  }
+
+  body.mobile-ui #view-btns {
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px;
+  }
+
+  body.mobile-ui #hud-top {
+    text-align:left;
+    line-height:1.6;
+    font-size:11px;
+    color:rgba(255,255,255,0.4);
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:10px 12px;
+  }
+
+  body.mobile-ui #speed-wrap {
+    align-items:stretch;
+    gap:10px;
+  }
+
+  body.mobile-ui #spd {
+    width:100%;
+    height:18px;
+  }
+
+  body.mobile-ui #spd-val,
+  body.mobile-ui #spd-label {
+    text-align:left;
+  }
+
+  body.mobile-ui #help-btn {
+    min-width:44px;
+    align-self:flex-end;
+  }
+
+  body.mobile-ui #help-panel {
+    width:100%;
+    margin-top:0;
+  }
+
+  body.mobile-ui #planet-info {
+    top:auto;
+    left:12px;
+    right:12px;
+    bottom:calc(var(--mobile-safe-bottom) + 78px);
+    min-width:0;
+    max-height:min(48vh, 420px);
+    overflow:auto;
+    z-index:28;
+    pointer-events:none;
+  }
+
+  body.mobile-ui #planet-info.show {
+    pointer-events:auto;
+  }
+
+  body.mobile-ui #info-toggle-btn {
+    top:auto;
+    left:12px;
+    bottom:calc(var(--mobile-safe-bottom) + 86px);
+    z-index:29;
+  }
+
+  body.mobile-ui.mobile-panel-open #planet-info {
+    display:none !important;
+    pointer-events:none;
+  }
+
+  body.mobile-ui.mobile-panel-open #info-toggle-btn {
+    display:none !important;
+  }
+
+  body.mobile-ui #tooltip {
+    display:none !important;
+  }
+
+  body.mobile-ui #controls {
+    display:none !important;
+  }
+}
+</style>
+</head>
+<body class="intro-active">
+
+<div id="intro-overlay" aria-label="Intro animation" role="presentation">
+  <div id="intro-core">
+    <div class="intro-nebula"></div>
+    <div class="intro-stars"></div>
+    <div class="intro-ftl"></div>
+    <div class="intro-flare-bloom"></div>
+    <div class="intro-flare"></div>
+    <div class="intro-flare-ghosts"></div>
+    <div class="intro-ring"></div>
+    <div class="intro-crosshair"></div>
+    <div id="intro-credit">Made by <strong>Shiv and Chaitaniya</strong></div>
+    <div id="intro-sol" data-text="SOL">SOL</div>
+    <div id="intro-sub">SOLAR SYSTEM SIMULATION</div>
+  </div>
+</div>
+
+<!-- ── NASA Eyes Top Header ─────────────────────────────────────────────── -->
+<header id="nasa-header">
+  <div class="nasa-brand" onclick="location.reload();" title="Eyes on the Solar System & SPHEREx Sky Diary">
+    <svg class="nasa-meatball" width="34" height="34" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="48" fill="#0B3D91" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+      <circle cx="26" cy="30" r="2" fill="white" opacity="0.9"/>
+      <circle cx="74" cy="28" r="1.6" fill="white" opacity="0.8"/>
+      <circle cx="34" cy="74" r="2" fill="white" opacity="0.7"/>
+      <circle cx="68" cy="68" r="1.8" fill="white" opacity="0.9"/>
+      <circle cx="50" cy="18" r="1.8" fill="white" opacity="0.85"/>
+      <circle cx="82" cy="50" r="1.6" fill="white" opacity="0.8"/>
+      <ellipse cx="50" cy="50" rx="42" ry="18" stroke="white" stroke-width="2.5" stroke-opacity="0.85" transform="rotate(-25 50 50)"/>
+      <path d="M18 68 L50 22 L65 52 L54 52 L48 38 L30 68 Z" fill="#FC3D21"/>
+      <text x="50" y="55" font-family="'Barlow', Arial, sans-serif" font-weight="900" font-size="14" fill="white" text-anchor="middle" letter-spacing="-0.04em">NASA</text>
+    </svg>
+    <span class="nasa-title">EYES ON THE SOLAR SYSTEM</span>
+  </div>
+  <div class="nasa-header-actions">
+    <button class="nasa-head-btn" id="btn-head-search" title="Search objects ( / )">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    </button>
+    <button class="nasa-head-btn" id="btn-head-share" title="Share mission view">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      <span>Share</span>
+    </button>
+    <button class="nasa-head-btn" id="btn-head-menu" title="Navigation menu">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <span>Menu</span>
+    </button>
+  </div>
+</header>
+
+<!-- ── NASA Eyes Left Panel: Featured Stories ────────────────────────────── -->
+<aside id="nasa-stories-panel">
+  <div class="nasa-stories-header">
+    <span class="nasa-stories-title">Featured Stories and Events</span>
+    <button id="btn-toggle-stories" class="nasa-chevron-btn" title="Collapse sidebar">«</button>
+  </div>
+  <div class="nasa-stories-list">
+    <!-- Story 1: Voyager 1 -->
+    <div class="nasa-eyes-card" id="story-voyager" title="Focus Voyager 1">
+      <div class="nasa-card-content">
+        <h3 class="nasa-card-title">Voyager One<br>Light-Day</h3>
+        <div class="nasa-card-date">N O V E M B E R &nbsp; 1 8 T H , &nbsp; 2 0 2 6</div>
+      </div>
+      <div class="nasa-card-thumb">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#080a10" fill-opacity="0.8" />
+          <path d="M 62 40 Q 68 35 74 30 T 82 22 T 90 14" stroke="#ffdd55" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M 64 38 Q 69 44 75 38 T 83 30 T 92 22" stroke="#ffc83b" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <line x1="45" y1="52" x2="16" y2="70" stroke="#8892a4" stroke-width="1.5" />
+          <line x1="48" y1="50" x2="30" y2="22" stroke="#8892a4" stroke-width="1.2" />
+          <line x1="56" y1="58" x2="78" y2="76" stroke="#94a3b8" stroke-width="1.8" />
+          <rect x="74" y="72" width="10" height="7" rx="1.5" fill="#d4a373" />
+          <polygon points="46,46 56,48 58,58 48,60 42,54" fill="#cca06a" />
+          <ellipse cx="54" cy="44" rx="18" ry="11" transform="rotate(-28 54 44)" fill="#e2e8f0" stroke="#ffffff" stroke-width="1.5" />
+          <circle cx="62" cy="39" r="2.2" fill="#d4a373" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Story 2: Europa Clipper -->
+    <div class="nasa-eyes-card" id="story-clipper" title="Focus Europa Clipper Flyby">
+      <div class="nasa-card-content">
+        <h3 class="nasa-card-title">Europa Clipper<br>Earth Gravity<br>Assist</h3>
+        <div class="nasa-card-date">E A R T H &nbsp; F L Y B Y &nbsp; O N &nbsp; D E C E M B E R &nbsp; 3 R D , &nbsp; 2 0 2 6</div>
+      </div>
+      <div class="nasa-card-thumb">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#080a10" fill-opacity="0.8" />
+          <polygon points="12,48 40,46 40,54 12,52" fill="#1e3a8a" stroke="#68a8cf" stroke-width="0.8"/>
+          <polygon points="60,46 88,48 88,52 60,54" fill="#1e3a8a" stroke="#68a8cf" stroke-width="0.8"/>
+          <rect x="42" y="44" width="16" height="12" rx="1.5" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+          <line x1="50" y1="44" x2="50" y2="34" stroke="#68a8cf" stroke-width="1.2"/>
+          <circle cx="50" cy="33" r="2.5" fill="#e2e8f0" stroke="#68a8cf" stroke-width="0.8"/>
+          <line x1="45" y1="56" x2="36" y2="68" stroke="#94a3b8" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Story 3: Roman Space Telescope / SPHEREx -->
+    <div class="nasa-eyes-card" id="story-roman" title="Focus SPHEREx / Roman Space Telescope">
+      <div class="nasa-card-content">
+        <h3 class="nasa-card-title">Roman Space<br>Telescope<br>Launch</h3>
+        <div class="nasa-card-date">M I S S I O N &nbsp; L A U N C H &nbsp; A U G U S T &nbsp; 3 0 T H , &nbsp; 2 0 2 6</div>
+      </div>
+      <div class="nasa-card-thumb">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#080a10" fill-opacity="0.8" />
+          <path d="M38,72 L45,36 L55,36 L62,72 Z" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+          <ellipse cx="50" cy="36" rx="8" ry="4" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+          <path d="M42,36 L48,22 L52,22 L58,36 Z" fill="#475569" stroke="#cbd5e1" stroke-width="0.8"/>
+          <polygon points="62,50 78,54 78,64 62,60" fill="#1e3a8a" stroke="#68a8cf" stroke-width="0.6"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <button id="btn-stories-spherex-toggle" class="nasa-eyes-card-btn">
+    🔭 SPHEREx CANDIDATES CATALOG (25)
+  </button>
+</aside>
+
+<div id="nasa-stories-toggle-tab" title="Expand Featured Stories">»</div>
+
+<!-- ── NASA Eyes Bottom Center Time Bar & Dial Widget ───────────────────── -->
+<div id="nasa-time-bar">
+  <button id="nasa-btn-live" class="nasa-live-pill" title="Jump to Current Time (Live)">
+    <span class="live-dot"></span> LIVE
+  </button>
+  <button id="nasa-btn-timelapse-open" class="nasa-live-pill" style="border-color:rgba(34,211,238,0.4); color:#22D3EE;" title="Open Date-to-Date Timelapse Simulation">
+    ⏱ TIMELAPSE
+  </button>
+  <span id="nasa-date-text">NOV 14, 2026</span>
+
+  <div class="nasa-dial-container" title="Click to toggle Real Rate / Fast Forward / Pause">
+    <div id="nasa-rate-status">REAL RATE</div>
+    <div class="nasa-dial-track">
+      <div class="nasa-dial-arc"></div>
+      <div id="nasa-dial-knob" class="nasa-dial-knob"></div>
+    </div>
+  </div>
+
+  <span id="nasa-time-text">10:02:34 AM</span>
+</div>
+
+<!-- ── NASA Eyes Right Vertical Floating Toolbar (High Visibility) ───────── -->
+<div id="nasa-vertical-toolbar">
+  <button class="nasa-tool-btn" id="btn-tool-info" data-tooltip="Object Telemetry & Spectra (I)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-timelapse" data-tooltip="Date-to-Date Timelapse Simulation (T)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-camera" data-tooltip="Camera Views & Navigation (V)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-zoomin" data-tooltip="Zoom In (+)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-zoomout" data-tooltip="Zoom Out (−)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-layers" data-tooltip="Visual Layers & Settings (L)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-movers" data-tooltip="SPHEREx Candidates Catalog (25) (M)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18h12"/><path d="M12 2v16"/><circle cx="12" cy="7" r="4"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-fullscreen" data-tooltip="Toggle Fullscreen (F)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+  </button>
+</div>
+
+<!-- ── NASA Camera Views Popover ─────────────────────────────────────────── -->
+<div id="nasa-camera-popover">
+  <div style="font-size:12px; font-weight:600; color:#fff; letter-spacing:1px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">CAMERA VIEWS</div>
+  <button class="nasa-cam-btn" id="btn-cam-reset"><span>⌂</span> Solar System Overview</button>
+  <button class="nasa-cam-btn" id="btn-cam-top"><span>⬇</span> Top View (Ecliptic North)</button>
+  <button class="nasa-cam-btn" id="btn-cam-side"><span>➔</span> Side View (Orbital Plane)</button>
+  <button class="nasa-cam-btn" id="btn-cam-follow"><span>🛸</span> Follow Focused Object</button>
+  <button class="nasa-cam-btn" id="btn-cam-free"><span>✦</span> Free Roam Camera</button>
+  <div style="font-size:10px; color:#94a3b8; margin-top:6px; margin-bottom:2px;">PAN CAMERA:</div>
+  <div class="nasa-pan-grid">
+    <div></div>
+    <button class="nasa-pan-btn" id="btn-pan-up" title="Pan Up">▲</button>
+    <div></div>
+    <button class="nasa-pan-btn" id="btn-pan-left" title="Pan Left">◀</button>
+    <button class="nasa-pan-btn" id="btn-pan-center" title="Center Target">●</button>
+    <button class="nasa-pan-btn" id="btn-pan-right" title="Pan Right">▶</button>
+    <div></div>
+    <button class="nasa-pan-btn" id="btn-pan-down" title="Pan Down">▼</button>
+    <div></div>
+  </div>
+</div>
+
+<!-- ── NASA Eyes Layers Popover ─────────────────────────────────────────── -->
+<div id="nasa-layers-popover">
+  <div style="font-size:12px; font-weight:600; color:#fff; letter-spacing:1px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">VISUAL LAYERS</div>
+  <div class="nasa-layer-row" id="layer-row-orbits">
+    <span>Planetary Orbits</span>
+    <div class="nasa-toggle-switch on" id="toggle-orbits"><div class="nasa-toggle-thumb"></div></div>
+  </div>
+  <div class="nasa-layer-row" id="layer-row-const">
+    <span>Constellations</span>
+    <div class="nasa-toggle-switch" id="toggle-const"><div class="nasa-toggle-thumb"></div></div>
+  </div>
+  <div class="nasa-layer-row" id="layer-row-realsize">
+    <span>True Physical Scale</span>
+    <div class="nasa-toggle-switch" id="toggle-realsize"><div class="nasa-toggle-thumb"></div></div>
+  </div>
+  <div class="nasa-layer-row" id="layer-row-fov">
+    <span>SPHEREx FOV & Rays</span>
+    <div class="nasa-toggle-switch on" id="toggle-fov"><div class="nasa-toggle-thumb"></div></div>
+  </div>
+  <div class="nasa-layer-row" id="layer-row-grid">
+    <span>RA / Dec Celestial Grid</span>
+    <div class="nasa-toggle-switch" id="toggle-grid"><div class="nasa-toggle-thumb"></div></div>
+  </div>
+  <div class="nasa-layer-row" id="layer-row-movers">
+    <span>3D Mover Vectors</span>
+    <div class="nasa-toggle-switch on" id="toggle-movers"><div class="nasa-toggle-thumb"></div></div>
+  </div>
+  <div class="nasa-layer-row" id="layer-row-pitch-tour" style="margin-top:6px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.1); color:#E0A526; font-weight:600;">
+    <span>▶ 3-Min Pitch Tour</span>
+    <span style="font-size:14px;">➔</span>
+  </div>
+</div>
+
+<!-- ── Date-to-Date Timelapse Simulation Modal Dialog ───────────────────── -->
+<div id="nasa-timelapse-modal">
+  <div class="nasa-tl-head">
+    <h3>Date-to-Date Timelapse Simulation</h3>
+    <button id="btn-close-timelapse-modal" class="nasa-chevron-btn" title="Close">✕</button>
+  </div>
+
+  <div class="nasa-tl-form-group">
+    <label class="nasa-tl-label" for="tl-target-select">1. Target Astronomical Body</label>
+    <select id="tl-target-select" class="nasa-tl-select">
+      <optgroup label="Inner Planets">
+        <option value="planet:MERCURY">Mercury</option>
+        <option value="planet:VENUS">Venus</option>
+        <option value="planet:EARTH" selected>Earth</option>
+        <option value="moon:Moon">Earth's Moon</option>
+        <option value="planet:MARS">Mars</option>
+      </optgroup>
+      <optgroup label="Outer Giants">
+        <option value="planet:JUPITER">Jupiter</option>
+        <option value="planet:SATURN">Saturn</option>
+        <option value="planet:URANUS">Uranus</option>
+        <option value="planet:NEPTUNE">Neptune</option>
+      </optgroup>
+      <optgroup label="Dwarf Planets & Asteroids">
+        <option value="dwarf:CERES">1 Ceres (Dwarf Planet / Asteroid)</option>
+        <option value="dwarf:PLUTO">Pluto</option>
+        <option value="dwarf:ERIS">Eris</option>
+        <option value="dwarf:SEDNA">Sedna (Deep Trans-Neptunian)</option>
+      </optgroup>
+      <optgroup label="Spacecraft & Probes">
+        <option value="probe:SPHEREx">SPHEREx Space Telescope</option>
+        <option value="probe:Voyager 1">Voyager 1</option>
+        <option value="probe:Voyager 2">Voyager 2</option>
+      </optgroup>
+      <optgroup label="SPHEREx Moving Candidates">
+        <option value="mover:SPX-MOV-0001">SPX-MOV-0001 (1 Ceres - Known)</option>
+        <option value="mover:SPX-MOV-0002">SPX-MOV-0002 (Unknown Candidate)</option>
+        <option value="mover:SPX-MOV-0003">SPX-MOV-0003 (Unknown Candidate)</option>
+        <option value="mover:SPX-MOV-0004">SPX-MOV-0004 (Unknown Candidate)</option>
+      </optgroup>
+      <optgroup label="Comets">
+        <option value="comet:Halley's">Halley's Comet (76 yr period)</option>
+        <option value="comet:Encke">Encke Comet (3.3 yr period)</option>
+        <option value="comet:Hale-Bopp">Hale-Bopp Comet</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+    <div class="nasa-tl-form-group">
+      <label class="nasa-tl-label" for="tl-start-datetime">2. Starting Date & Time</label>
+      <input type="datetime-local" id="tl-start-datetime" class="nasa-tl-input" value="2020-01-01T00:00">
+      <div class="nasa-tl-presets">
+        <button class="nasa-tl-preset-btn" data-set-start="2000-01-01T00:00">2000</button>
+        <button class="nasa-tl-preset-btn" data-set-start="2020-01-01T00:00">2020</button>
+        <button class="nasa-tl-preset-btn" data-set-start="2026-03-01T00:00">2026</button>
+      </div>
+    </div>
+
+    <div class="nasa-tl-form-group">
+      <label class="nasa-tl-label" for="tl-end-datetime">3. Ending Date & Time</label>
+      <input type="datetime-local" id="tl-end-datetime" class="nasa-tl-input" value="2030-01-01T00:00">
+      <div class="nasa-tl-presets">
+        <button class="nasa-tl-preset-btn" data-add-years="1">+1 Yr</button>
+        <button class="nasa-tl-preset-btn" data-add-years="5">+5 Yrs</button>
+        <button class="nasa-tl-preset-btn" data-add-years="10">+10 Yrs</button>
+        <button class="nasa-tl-preset-btn" data-set-end="2050-01-01T00:00">2050</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nasa-tl-form-group">
+    <label class="nasa-tl-label">4. Simulation Speed Multiplier</label>
+    <div class="nasa-tl-speed-row">
+      <button class="nasa-tl-speed-btn" data-speed="1">1x (Real)</button>
+      <button class="nasa-tl-speed-btn" data-speed="100">100x</button>
+      <button class="nasa-tl-speed-btn" data-speed="1000">1,000x</button>
+      <button class="nasa-tl-speed-btn" data-speed="10000">10,000x</button>
+      <button class="nasa-tl-speed-btn active" data-speed="100000">100,000x (~10d/s)</button>
+      <button class="nasa-tl-speed-btn" data-speed="1000000">1,000,000x (~1y/s)</button>
+    </div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+    <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:#cbd5e1; cursor:pointer;">
+      <input type="checkbox" id="tl-draw-trail" checked> Draw 3D Trajectory Trail
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:#cbd5e1; cursor:pointer;">
+      <input type="checkbox" id="tl-loop"> Loop Continuously
+    </label>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="nasa-tl-progress-bar-wrap" id="tl-progress-bar-wrap" title="Click to scrub time">
+    <div class="nasa-tl-progress-bar-fill" id="tl-progress-bar-fill"></div>
+  </div>
+  <div class="nasa-tl-status-readout">
+    <span id="tl-current-time-readout">SIMULATION TIME: READY</span>
+    <span id="tl-percent-readout">0%</span>
+  </div>
+
+  <!-- Action Controls -->
+  <div class="nasa-tl-actions">
+    <button class="nasa-tl-action-btn nasa-tl-btn-primary" id="btn-tl-play">
+      <span>▶</span> START TIMELAPSE
+    </button>
+    <button class="nasa-tl-action-btn nasa-tl-btn-secondary" id="btn-tl-pause" style="display:none;">
+      <span>⏸</span> PAUSE
+    </button>
+    <button class="nasa-tl-action-btn nasa-tl-btn-secondary" id="btn-tl-stop">
+      <span>⏹</span> RESET
+    </button>
+  </div>
+</div>
+
+<!-- ── NASA Eyes Menu Navigation Drawer ─────────────────────────────────── -->
+<nav id="nasa-menu-drawer">
+  <div class="nasa-menu-head">
+    <h2>Mission Navigation</h2>
+    <button id="btn-close-menu" class="nasa-chevron-btn">✕</button>
+  </div>
+  <div class="nasa-menu-links">
+    <div class="nasa-menu-item" onclick="SOL_APP.focusObject('sun'); document.getElementById('btn-close-menu').click();">☀ Sun</div>
+    <div class="nasa-menu-item" onclick="SOL_APP.focusObject('planet', SOL_APP.planets.find(p=>p.d.name==='EARTH')); document.getElementById('btn-close-menu').click();">⊕ Earth & SPHEREx</div>
+    <div class="nasa-menu-item" onclick="SOL_APP.focusObject('planet', SOL_APP.planets.find(p=>p.d.name==='MARS')); document.getElementById('btn-close-menu').click();">♂ Mars</div>
+    <div class="nasa-menu-item" onclick="SOL_APP.focusObject('planet', SOL_APP.planets.find(p=>p.d.name==='JUPITER')); document.getElementById('btn-close-menu').click();">♃ Jupiter</div>
+    <div class="nasa-menu-item" onclick="SOL_APP.focusObject('planet', SOL_APP.planets.find(p=>p.d.name==='SATURN')); document.getElementById('btn-close-menu').click();">♄ Saturn</div>
+    <div class="nasa-menu-item" onclick="document.getElementById('fbtn-spherex')?.click(); document.getElementById('btn-close-menu').click();">🔭 SPHEREx Space Observatory</div>
+    <div class="nasa-menu-item" onclick="document.getElementById('fbtn-ceres-known')?.click(); document.getElementById('btn-close-menu').click();">1 Ceres (Known Asteroid)</div>
+    <div class="nasa-menu-item" onclick="document.getElementById('fbtn-cand-unknown')?.click(); document.getElementById('btn-close-menu').click();">SPX-MOV-0002 (Candidate Mover)</div>
+    <div class="nasa-menu-item" onclick="document.getElementById('fbtn-open-movers')?.click(); document.getElementById('btn-close-menu').click();">🔭 SPHEREx Discovery Catalog (25)</div>
+    <div class="nasa-menu-item" onclick="document.getElementById('btn-pitch-tour')?.click(); document.getElementById('btn-close-menu').click();" style="color:#E0A526; font-weight:bold;">▶ Run 3-Minute Scripted Tour</div>
+  </div>
+</nav>
+
+<div id="mobile-backdrop" class="mobile-only"></div>
+<div id="mobile-dock" class="mobile-only" aria-label="Mobile navigation">
+  <button class="mnav-btn" type="button" data-mobile-panel="search">Search</button>
+  <button class="mnav-btn" type="button" data-mobile-panel="objects">Objects</button>
+  <button class="mnav-btn" type="button" data-mobile-panel="timeline">Time</button>
+  <button class="mnav-btn" type="button" data-mobile-panel="controls">Controls</button>
+</div>
+
+<div id="timeline-panel">
+<div id="timeline-wrap">
+  <div id="timeline-label">TIMELINE</div>
+  <div id="tl-stepbtns">
+    <button class="tlstep" data-step="-1000000">−1M yr</button>
+    <button class="tlstep" data-step="-100000">−100k yr</button>
+    <button class="tlstep" data-step="-10000">−10k yr</button>
+    <button class="tlstep" data-step="-1000">−1k yr</button>
+    <button class="tlstep" data-step="-100">−100 yr</button>
+    <button class="tlstep" data-step="-10">−1 decade</button>
+    <button class="tlstep" data-step="-1">−1 yr</button>
+    <button class="tlstep" data-step="-0.08333333">−1 mo</button>
+    <button class="tlstep" data-step="-0.00273973">−1 day</button>
+    <div id="tl-stepdivider"></div>
+    <button class="tlstep" data-step="0.00273973">+1 day</button>
+    <button class="tlstep" data-step="0.08333333">+1 mo</button>
+    <button class="tlstep" data-step="1">+1 yr</button>
+    <button class="tlstep" data-step="10">+1 decade</button>
+    <button class="tlstep" data-step="100">+100 yr</button>
+    <button class="tlstep" data-step="1000">+1k yr</button>
+    <button class="tlstep" data-step="10000">+10k yr</button>
+    <button class="tlstep" data-step="100000">+100k yr</button>
+    <button class="tlstep" data-step="1000000">+1M yr</button>
+  </div>
+  <div id="tl-modebtns">
+    <button class="sbtn tlmode" id="realtime-btn" title="R">REALTIME</button>
+    <button class="sbtn tlmode" id="pause-btn" title="Space">PAUSE</button>
+  </div>
+  <input type="range" id="tl" min="-4000000000" max="4000000000" value="26.29" step="100">
+  <div id="timeline-year">YEAR 2000 AD</div>
+  <div id="tl-hardpoints">
+    <button class="tlhp" data-now="true" data-year="26.29">NOW</button>
+    <button class="tlhp" data-year="-66000000">DINO EXTINCTION</button>
+    <button class="tlhp" data-year="-300000">HOMO SAPIENS</button>
+    <button class="tlhp" data-year="-12000">ICE AGE ENDS</button>
+    <button class="tlhp" data-year="-1976">ANCIENT ROME</button>
+    <button class="tlhp" data-year="-22.36">VOYAGER LAUNCH</button>
+    <button class="tlhp" data-year="-7.49">SL9 IMPACTS</button>
+  </div>
+</div>
+
+</div>
+
+<div id="objects-panel">
+<div id="focus-bar">
+  <!-- Planets -->
+  <button class="fbtn" data-focus="sun"><span class="dot" style="background:#FFE050"></span>SUN</button>
+  <button class="fbtn" data-focus="MERCURY"><span class="dot" style="background:#AAAAAA"></span>MERCURY</button>
+  <button class="fbtn" data-focus="VENUS"><span class="dot" style="background:#E8C068"></span>VENUS</button>
+  <button class="fbtn" data-focus="EARTH"><span class="dot" style="background:#3377BB"></span>EARTH</button>
+  <button class="fbtn" data-focus="MARS"><span class="dot" style="background:#C1440E"></span>MARS</button>
+  <button class="fbtn" data-focus="JUPITER"><span class="dot" style="background:#C99040"></span>JUPITER</button>
+  <button class="fbtn" data-focus="SATURN"><span class="dot" style="background:#E4D191"></span>SATURN</button>
+  <button class="fbtn" data-focus="URANUS"><span class="dot" style="background:#7DCCCC"></span>URANUS</button>
+  <button class="fbtn" data-focus="NEPTUNE"><span class="dot" style="background:#4466FF"></span>NEPTUNE</button>
+  <!-- Dwarf planets -->
+  <span class="fbar-sep"></span>
+  <button class="fbtn" data-focus-dwarf="CERES"><span class="dot" style="background:#998877"></span>CERES</button>
+  <button class="fbtn" data-focus-dwarf="PLUTO"><span class="dot" style="background:#BBAA88"></span>PLUTO</button>
+  <button class="fbtn" data-focus-dwarf="ERIS"><span class="dot" style="background:#CCCCCC"></span>ERIS</button>
+  <button class="fbtn" data-focus-dwarf="MAKEMAKE"><span class="dot" style="background:#BB9966"></span>MAKEMAKE</button>
+  <button class="fbtn" data-focus-dwarf="HAUMEA"><span class="dot" style="background:#DDDDCC"></span>HAUMEA</button>
+  <button class="fbtn" data-focus-dwarf="SEDNA"><span class="dot" style="background:#CC6644"></span>SEDNA</button>
+  <button class="fbtn" data-focus-dwarf="GONGGONG"><span class="dot" style="background:#AA8877"></span>GONGGONG</button>
+  <button class="fbtn" data-focus-dwarf="QUAOAR"><span class="dot" style="background:#997766"></span>QUAOAR</button>
+  <button class="fbtn" data-focus-dwarf="ORCUS"><span class="dot" style="background:#888899"></span>ORCUS</button>
+  <!-- Comets -->
+  <span class="fbar-sep"></span>
+  <button class="fbtn" data-focus-comet="Halley's"><span class="dot" style="background:#AADDFF"></span>HALLEY'S</button>
+  <button class="fbtn" data-focus-comet="Hale-Bopp"><span class="dot" style="background:#CCEEFF"></span>HALE-BOPP</button>
+  <button class="fbtn" data-focus-comet="Hyakutake"><span class="dot" style="background:#BBEEFF"></span>HYAKUTAKE</button>
+  <button class="fbtn" data-focus-comet="Encke"><span class="dot" style="background:#DDEEAA"></span>ENCKE</button>
+  <button class="fbtn" data-focus-comet="67P/C-G"><span class="dot" style="background:#BBBBAA"></span>67P/C-G</button>
+  <button class="fbtn" data-focus-comet="Tempel 1"><span class="dot" style="background:#CCBBAA"></span>TEMPEL 1</button>
+  <button class="fbtn" data-focus-comet="Wild 2"><span class="dot" style="background:#BBCCAA"></span>WILD 2</button>
+  <button class="fbtn" data-focus-comet="Shoemaker-Levy 9"><span class="dot" style="background:#DDCCBB"></span>SHOEMAKER-LEVY 9</button>
+  <button class="fbtn" data-focus-comet="NEOWISE"><span class="dot" style="background:#AADDEE"></span>NEOWISE</button>
+  <button class="fbtn" data-focus-comet="Ikeya-Seki"><span class="dot" style="background:#FFEEBB"></span>IKEYA-SEKI</button>
+  <!-- Voyagers -->
+  <span class="fbar-sep"></span>
+  <button class="fbtn" data-focus-probe="Voyager 1"><span class="dot" style="background:#AADDFF"></span>VOYAGER 1</button>
+  <button class="fbtn" data-focus-probe="Voyager 2"><span class="dot" style="background:#FFDDAA"></span>VOYAGER 2</button>
+</div>
+
+</div>
+
+<div id="controls-panel">
+<div id="view-btns">
+  <button class="vbtn active" id="btn-solar">SOLAR SYSTEM</button>
+  <button class="vbtn"        id="btn-vortex">VORTEX</button>
+</div>
+
+<div id="hud-top">
+  230 km/s <span>→</span> galactic orbit<br>
+  <span id="ly-val">0.0</span> ly travelled
+</div>
+
+<button class="sbtn" id="help-btn" title="Show controls and shortcuts">?</button>
+
+<div id="help-panel" aria-hidden="true">
+  <div id="help-title">NAVIGATION</div>
+  <div class="help-section">
+    <div class="help-label">MOUSE</div>
+    <div class="help-row"><span class="help-key">LEFT DRAG</span><span class="help-desc">orbit focused object or current view</span></div>
+    <div class="help-row"><span class="help-key">RIGHT DRAG</span><span class="help-desc">roll focused view, pan when unfocused</span></div>
+    <div class="help-row"><span class="help-key">SCROLL</span><span class="help-desc">zoom in or out</span></div>
+    <div class="help-row"><span class="help-key">CLICK</span><span class="help-desc">focus object and open info</span></div>
+  </div>
+  <div class="help-section">
+    <div class="help-label">KEYBOARD</div>
+    <div class="help-row"><span class="help-key">/</span><span class="help-desc">focus search</span></div>
+    <div class="help-row"><span class="help-key">SPACE</span><span class="help-desc">pause or resume time</span></div>
+    <div class="help-row"><span class="help-key">R / S</span><span class="help-desc">toggle realtime, real size</span></div>
+    <div class="help-row"><span class="help-key">O / T / C</span><span class="help-desc">toggle orbits, trails, constellations</span></div>
+    <div class="help-row"><span class="help-key">L / G / H</span><span class="help-desc">look at Sun, geo lock, help</span></div>
+    <div class="help-row"><span class="help-key">1 / 2</span><span class="help-desc">solar or vortex view</span></div>
+    <div class="help-row"><span class="help-key">ESC</span><span class="help-desc">clear focus or close panels</span></div>
+  </div>
+  <div class="help-note">Tip: geo lock is most useful when Earth or another planet is already focused. Search supports arrow keys and Enter.</div>
+</div>
+
+<div id="speed-wrap">
+  <div id="spd-label">SPEED</div>
+  <input type="range" id="spd" min="0" max="100" value="31">
+  <div id="spd-val">—</div>
+  <label id="focus-select-wrap" for="focus-select">
+    <span id="focus-select-label">OBJECT</span>
+    <select id="focus-select" aria-label="Focus object">
+      <option value="">FREE VIEW</option>
+      <optgroup label="Planets">
+        <option value="sun">SUN</option>
+        <option value="planet:MERCURY">MERCURY</option>
+        <option value="planet:VENUS">VENUS</option>
+        <option value="planet:EARTH">EARTH</option>
+        <option value="planet:MARS">MARS</option>
+        <option value="planet:JUPITER">JUPITER</option>
+        <option value="planet:SATURN">SATURN</option>
+        <option value="planet:URANUS">URANUS</option>
+        <option value="planet:NEPTUNE">NEPTUNE</option>
+      </optgroup>
+      <optgroup label="Dwarf planets">
+        <option value="dwarf:CERES">CERES</option>
+        <option value="dwarf:PLUTO">PLUTO</option>
+        <option value="dwarf:ERIS">ERIS</option>
+        <option value="dwarf:MAKEMAKE">MAKEMAKE</option>
+        <option value="dwarf:HAUMEA">HAUMEA</option>
+        <option value="dwarf:SEDNA">SEDNA</option>
+        <option value="dwarf:GONGGONG">GONGGONG</option>
+        <option value="dwarf:QUAOAR">QUAOAR</option>
+        <option value="dwarf:ORCUS">ORCUS</option>
+      </optgroup>
+      <optgroup label="Comets">
+        <option value="comet:Halley's">HALLEY'S</option>
+        <option value="comet:Hale-Bopp">HALE-BOPP</option>
+        <option value="comet:Hyakutake">HYAKUTAKE</option>
+        <option value="comet:Encke">ENCKE</option>
+        <option value="comet:67P/C-G">67P/C-G</option>
+        <option value="comet:Tempel 1">TEMPEL 1</option>
+        <option value="comet:Wild 2">WILD 2</option>
+        <option value="comet:Shoemaker-Levy 9">SHOEMAKER-LEVY 9</option>
+        <option value="comet:NEOWISE">NEOWISE</option>
+        <option value="comet:Ikeya-Seki">IKEYA-SEKI</option>
+      </optgroup>
+      <optgroup label="Voyager probes">
+        <option value="probe:Voyager 1">VOYAGER 1</option>
+        <option value="probe:Voyager 2">VOYAGER 2</option>
+      </optgroup>
+    </select>
+  </label>
+  <button class="sbtn" id="ephemeris-btn" title="E" style="border-color:rgba(80,200,255,0.4)">KEPLER MODE</button>
+  <label id="objects-count-wrap" for="objects-count-slider">
+    <span id="objects-count-label">SMALL BODIES H &lt;= 12</span>
+    <div id="objects-count-row">
+      <span id="objects-count-value">0</span>
+      <input type="range" id="objects-count-slider" min="0" max="25" step="1" value="12" aria-label="Small bodies absolute magnitude threshold">
+    </div>
+  </label>
+  <button class="sbtn" id="real-size-btn" title="S">REAL SIZE</button>
+  <button class="sbtn" id="trails-btn" title="T">TRAILS ON</button>
+  <button class="sbtn" id="orbits-btn" title="O">ORBITS ON</button>
+  <button class="sbtn" id="probes-btn" title="P">PROBES ON</button>
+  <button class="sbtn" id="const-btn" title="C">CONSTELLATIONS ON</button>
+  <select class="sbtn" id="select-lookat" title="L" style="border-color:rgba(255,220,80,0.4);margin-top:4px;background:#111;color:#e8e8e8;cursor:pointer">
+    <option value="">— LOOK AT —</option>
+    <option value="sun">☀ Sun</option>
+    <option value="mercury">Mercury</option>
+    <option value="venus">Venus</option>
+    <option value="earth">Earth</option>
+    <option value="mars">Mars</option>
+    <option value="jupiter">Jupiter</option>
+    <option value="saturn">Saturn</option>
+    <option value="uranus">Uranus</option>
+    <option value="neptune">Neptune</option>
+  </select>
+  <button class="sbtn" id="btn-geo-lock" title="G" style="border-color:rgba(100,220,255,0.4);margin-top:4px">⊕ GEO LOCK</button>
+  <button class="sbtn" id="btn-orion" title="Focus Orion" style="border-color:rgba(160,180,255,0.4);margin-top:4px">✦ HUNTER / ORION</button>
+</div>
+
+</div>
+
+<div id="controls">
+  <strong>SCROLL</strong> — zoom<br>
+  <strong>LEFT DRAG</strong> — orbit view<br>
+  <strong>RIGHT DRAG</strong> — roll focus / pan free view<br>
+  <strong>/</strong> search &nbsp; <strong>SPACE</strong> pause &nbsp; <strong>R</strong> realtime &nbsp; <strong>S</strong> real size &nbsp; <strong>H</strong> help
+</div>
+
+<div id="search-panel">
+<div id="search-wrap">
+  <input id="search-input" type="text" placeholder="SEARCH OBJECTS...  ( / )" autocomplete="off" spellcheck="false" title="Press / to focus search">
+  <div id="search-dropdown"></div>
+</div>
+
+</div>
+
+<button class="sbtn" id="fullscreen-btn" title="Enter fullscreen" aria-label="Enter fullscreen" aria-pressed="false">
+  <span class="fs-icon" aria-hidden="true"></span>
+</button>
+
+<div id="planet-info">
+  <div id="planet-info-head">
+    <div id="pi-name">—</div>
+    <button class="pi-btn" id="pi-hide-btn" type="button" aria-label="Hide info panel">Hide</button>
+  </div>
+  <div class="pi-action-row">
+    <button class="pi-action-btn" id="pi-btn-focus" title="Zoom and center on this object">⊕ FOCUS</button>
+    <button class="pi-action-btn" id="pi-btn-follow" title="Lock camera to follow this object in its orbit">🛸 FOLLOW</button>
+    <button class="pi-action-btn" id="pi-btn-timelapse" title="Open Date-to-Date Timelapse Simulation for this body">⏱ TIMELAPSE</button>
+    <button class="pi-action-btn" id="pi-btn-orbit" title="Toggle orbit visibility">🌌 ORBIT</button>
+    <button class="pi-action-btn" id="pi-btn-deselect" title="Deselect and return to solar system overview">✕ DESELECT</button>
+  </div>
+  <div class="pi-row"><span id="pi-lbl-diam">DIAMETER</span><span class="pi-val" id="pi-diam">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-dist">FROM SUN</span><span class="pi-val" id="pi-dist">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-year">PERIOD</span><span class="pi-val" id="pi-year">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-moons">MOONS</span><span class="pi-val" id="pi-moons">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-peri">PERIHELION</span><span class="pi-val" id="pi-peri">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-eta-peri">ETA TO PERIHELION</span><span class="pi-val" id="pi-eta-peri">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-ap">APHELION</span><span class="pi-val" id="pi-ap">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-eta-ap">ETA TO APHELION</span><span class="pi-val" id="pi-eta-ap">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-vel">ORBITAL SPEED</span><span class="pi-val" id="pi-vel">—</span></div>
+  <div class="pi-row"><span id="pi-lbl-type">TYPE</span><span class="pi-val" id="pi-type">—</span></div>
+</div>
+<button id="info-toggle-btn" type="button" aria-label="Show info panel">Show info</button>
+<div id="constellation-labels"></div>
+<div id="tooltip"></div>
+
+<script src="js/three.min.js"></script>
+<script src="js/voyager_trajectories.js"></script>
+<script src="js/ephemeris.js"></script>
+<script src="js/solar_system.js"></script>
+<script src="js/sphere_engine.js"></script>
+<script src="js/sphere_integration.js"></script>
+<script src="js/timelapse_engine.js"></script>
+<script src="js/nasa_eyes_ui.js"></script>
+
+</body>
+</html>

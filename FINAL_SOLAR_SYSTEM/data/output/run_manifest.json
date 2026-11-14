@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "pipeline_version": "v1.0.0",
+  "timestamp": "2026-11-14T08:15:26.744395+00:00",
+  "total_duration_s": 23.813,
+  "data_source": "mock",
+  "is_synthetic": true,
+  "seed": 42,
+  "git_commit": "9eb096e1ae100013bb92b2ae3a9083255ba9563f",
+  "catalog_source": "offline",
+  "stages": {
+    "adapter": {
+      "status": "success",
+      "duration_s": 0.001
+    },
+    "processing": {
+      "status": "success",
+      "duration_s": 6.826
+    },
+    "detection": {
+      "status": "success",
+      "duration_s": 10.765
+    },
+    "matching": {
+      "status": "success",
+      "duration_s": 0.006
+    },
+    "spectra": {
+      "status": "success",
+      "duration_s": 5.73
+    },
+    "frames": {
+      "status": "success",
+      "duration_s": 0.44
+    },
+    "validation": {
+      "status": "success",
+      "duration_s": 0.003
+    },
+    "eval": {
+      "status": "success",
+      "duration_s": 0.001
+    },
+    "sync": {
+      "status": "success",
+      "duration_s": 0.038
+    }
+  },
+  "file_hashes": {
+    "candidates.json": "ac080d9d792439cf0cf66aaad27b0717e04b15ef710ad8138cd4daba4e2d2b37",
+    "frames_manifest.json": "431eb64fb21258bddabd51b3a319843e2afa4f05ba332496091c0ba52bc8c1ce",
+    "validation_report.json": "d5f878fe59a9e724cf1e264d8256855ed2ac094d7a23283b68093398ad0cf1e5",
+    "detection_eval.json": "2decf258961d5905f9b6a36bad689e305f1d1f9b1f02b4f3c8bf19168df188da"
+  },
+  "region": {
+    "name": "SPHEREx Deep Field North (Mock)",
+    "ra_center": 269.452,
+    "dec_center": 66.561,
+    "radius_deg": 0.5
+  }
+}
