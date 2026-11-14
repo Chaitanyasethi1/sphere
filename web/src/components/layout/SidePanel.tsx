@@ -58,16 +58,22 @@ export function SidePanel({
   // If desktop is collapsed, show sleek NASA Eyes floating tab
   if (desktopCollapsed) {
     return (
-      <div className="hidden md:flex absolute top-20 left-4 z-30">
+      <div className="absolute top-16 left-4 z-40 pointer-events-auto">
         <button
           type="button"
-          onClick={() => setDesktopCollapsed(false)}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/75 hover:bg-black/90 backdrop-blur-md border border-white/20 text-white shadow-2xl transition-all group"
-          title="Expand Featured Movers"
+          onClick={() => {
+            setDesktopCollapsed(false);
+            setMobileExpanded(true);
+          }}
+          className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-black/80 hover:bg-black/95 backdrop-blur-xl border border-cyan-500/30 hover:border-cyan-400 text-white shadow-2xl transition-all group cursor-pointer"
+          title="Expand Featured Movers & Targets"
         >
-          <span className="font-mono text-cyan-400 group-hover:translate-x-0.5 transition-transform">»</span>
-          <span className="text-xs font-sans tracking-wide uppercase font-semibold">
-            Movers ({movers.length})
+          <span className="h-2 w-2 rounded-full bg-cyan-400 shadow-sm shadow-cyan-400 animate-pulse" />
+          <span className="text-xs font-sans tracking-widest uppercase font-bold text-cyan-300">
+            MOVERS ({movers.length})
+          </span>
+          <span className="text-xs font-mono text-white/50 group-hover:text-white group-hover:translate-x-0.5 transition-transform">
+            »
           </span>
         </button>
       </div>
@@ -88,17 +94,21 @@ export function SidePanel({
           <span className="text-xs uppercase tracking-widest text-space-300 font-semibold font-sans">
             {selectedMover ? "Mover Analysis & SED" : "Featured Movers & Targets"}
           </span>
-          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-cyan-300">
+          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-cyan-300 font-bold">
             {movers.length}
           </span>
         </div>
         <button
           type="button"
-          onClick={() => setDesktopCollapsed(true)}
-          className="text-space-400 hover:text-white text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors font-mono"
+          onClick={() => {
+            setDesktopCollapsed(true);
+            setMobileExpanded(false);
+          }}
+          className="text-space-400 hover:text-white text-xs px-2.5 py-1 rounded-lg hover:bg-white/10 transition-colors font-mono flex items-center gap-1 cursor-pointer"
           title="Collapse Panel"
         >
-          «
+          <span>«</span>
+          <span className="text-[10px] uppercase font-sans tracking-wider">Dock</span>
         </button>
       </div>
 

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { TestDataBadge } from "@/components/ui";
+import { CHALLENGE_TARGETS } from "@/data/targets";
 
 export interface AppHeaderProps {
   isSynthetic?: boolean;
@@ -18,6 +19,9 @@ export interface AppHeaderProps {
   activeTargetName?: string;
   isDemo?: boolean;
   onToggleDemo?: () => void;
+  onSelectTarget?: (target: { ra: number; dec: number; fov: number; name: string }) => void;
+  mode3D?: boolean;
+  onToggleMode3D?: () => void;
 }
 
 export function AppHeader({
@@ -27,11 +31,15 @@ export function AppHeader({
   onOpenTour,
   onOpenShare,
   onOpenSearch,
-  activeTargetName = "3I/ATLAS · SPHEREx NEP FIELD",
+  activeTargetName = "SPHEREx Deep Field North",
   isDemo = false,
   onToggleDemo,
+  onSelectTarget,
+  mode3D = true,
+  onToggleMode3D,
 }: AppHeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTargetDropdownOpen, setIsTargetDropdownOpen] = useState(false);
 
   return (
     <>
@@ -90,14 +98,126 @@ export function AppHeader({
           )}
         </div>
 
-        {/* 2. Center Faint Celestial Target Indicator (e.g. 3I/ATLAS in screenshot) */}
-        <div className="hidden lg:flex items-center gap-1.5 text-xs font-mono text-white/40 tracking-wider">
-          <span className="text-white/20">○</span>
-          <span className="truncate max-w-sm">{activeTargetName}</span>
+        {/* 2. Interactive Target Quick-Pick Popover */}
+        <div className="relative hidden lg:block">
+          <button
+            type="button"
+            onClick={() => setIsTargetDropdownOpen(!isTargetDropdownOpen)}
+            className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-mono text-white/70 hover:text-white transition-all cursor-pointer"
+            aria-expanded={isTargetDropdownOpen}
+            aria-label="Select astronomical target"
+          >
+            <span className="text-cyan-400">○</span>
+            <span className="truncate max-w-xs">{activeTargetName}</span>
+            <svg
+              className={`w-3 h-3 text-white/40 transition-transform ${isTargetDropdownOpen ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Floating Dropdown List of Challenge Targets */}
+          {isTargetDropdownOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setIsTargetDropdownOpen(false)}
+              />
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-80 rounded-2xl bg-black/90 backdrop-blur-xl border border-white/15 p-2 shadow-2xl z-50 space-y-1">
+                <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest text-white/40 border-b border-white/10">
+                  Challenge Targets &amp; Fields
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectTarget?.({
+                      ra: 269.452,
+                      dec: 66.561,
+                      fov: 0.2,
+                      name: "SPHEREx Deep Field North",
+                    });
+                    setIsTargetDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold text-cyan-300">
+                    <span>SPHEREx Deep Field North</span>
+                    <span className="text-[10px] font-mono text-cyan-400/70">Benchmark</span>
+                  </div>
+                  <span className="text-[10px] text-white/50 font-mono">
+                    RA 269.4520° • Dec +66.5610° (4 epochs multi-cutouts)
+                  </span>
+                </button>
+                {CHALLENGE_TARGETS.map((t) => (
+                  <button
+                    key={t.name}
+                    type="button"
+                    onClick={() => {
+                      onSelectTarget?.({
+                        ra: t.ra,
+                        dec: t.dec,
+                        fov: t.fovDefault,
+                        name: t.name,
+                      });
+                      setIsTargetDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-2.5 py-2 rounded-xl hover:bg-white/10 transition-colors flex flex-col gap-0.5 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between text-xs font-semibold text-white">
+                      <span>{t.name}</span>
+                      <span className="text-[9px] font-mono px-1 rounded bg-white/10 text-white/60">
+                        {t.category}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-white/40 font-mono">
+                      RA {t.ra.toFixed(4)}° • Dec {t.dec >= 0 ? `+${t.dec.toFixed(4)}` : t.dec.toFixed(4)}°
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
-        {/* 3. Right Minimal NASA Eyes Actions: Search, Share, Menu */}
-        <div className="flex items-center gap-4 md:gap-6 shrink-0 text-xs font-sans text-white/80">
+        {/* 3. Right Minimal NASA Eyes Actions: 3D/2D Mode, Search, Share, Menu */}
+        <div className="flex items-center gap-3 md:gap-5 shrink-0 text-xs font-sans text-white/80">
+          {/* Mode Switcher Pill: 3D Universe vs 2D Sky Survey */}
+          {onToggleMode3D && (
+            <div className="flex items-center p-0.5 rounded-full bg-black/60 border border-white/15 backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => !mode3D && onToggleMode3D()}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] md:text-xs font-mono transition-all cursor-pointer ${
+                  mode3D
+                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-bold shadow-md shadow-cyan-500/30"
+                    : "text-white/60 hover:text-white"
+                }`}
+                aria-pressed={mode3D}
+                title="Interactive 3D Celestial Universe"
+              >
+                <span>🌌</span>
+                <span className="font-semibold uppercase tracking-wider">3D UNIVERSE</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => mode3D && onToggleMode3D()}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] md:text-xs font-mono transition-all cursor-pointer ${
+                  !mode3D
+                    ? "bg-gradient-to-r from-amber-500 to-orange-600 text-black font-bold shadow-md shadow-amber-500/30"
+                    : "text-white/60 hover:text-white"
+                }`}
+                aria-pressed={!mode3D}
+                title="Scientific 2D Aladin Lite Sky Survey"
+              >
+                <span>🔭</span>
+                <span className="font-semibold uppercase tracking-wider">2D SURVEY</span>
+              </button>
+            </div>
+          )}
+
           {/* Quick Search Icon Button */}
           <button
             type="button"

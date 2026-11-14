@@ -25,6 +25,24 @@ const DynamicSkyViewer = dynamic(
   }
 );
 
+// Dynamically import 3D Universe Canvas with ssr: false (Three.js / WebGL is browser-only)
+const DynamicUniverseCanvas = dynamic(
+  () => import("@/components/universe3d").then((mod) => mod.UniverseCanvas),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-[#050816] text-xs font-mono text-cyan-300">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+          <span className="tracking-widest uppercase text-[11px]">Generating 3D Celestial Universe...</span>
+        </div>
+      </div>
+    ),
+  }
+);
+
+import { CinematicIntro } from "@/components/universe3d/CinematicIntro";
+
 export default function SkyDiaryApp() {
   const [urlState, setUrlState] = useUrlState();
   const [beginnerMode, setBeginnerMode] = useState<boolean>(true);
@@ -33,6 +51,8 @@ export default function SkyDiaryApp() {
   const [isGlobalShareOpen, setIsGlobalShareOpen] = useState<boolean>(false);
   const [isTimeControlsOpen, setIsTimeControlsOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [is3DMode, setIs3DMode] = useState<boolean>(true);
+  const [showIntro, setShowIntro] = useState<boolean>(true);
 
   // Keyboard shortcut '/' to trigger search dialog
   useEffect(() => {
@@ -60,9 +80,8 @@ export default function SkyDiaryApp() {
     ? movers.find((m) => m.object_id === urlState.object) || null
     : null;
 
-  const handleSelectObjectId = (objectId: string) => {
-    const isDesel = objectId === urlState.object;
-    if (isDesel) {
+  const handleSelectObjectId = (objectId: string | null) => {
+    if (!objectId || objectId === urlState.object) {
       setUrlState({ object: null });
     } else {
       const match = movers.find((m) => m.object_id === objectId);
@@ -195,9 +214,18 @@ export default function SkyDiaryApp() {
         onOpenTour={() => setIsTourOpen(true)}
         onOpenShare={() => setIsGlobalShareOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
-        activeTargetName={catalog?.region?.name || "SPHEREx NEP Field"}
+        activeTargetName={catalog?.region?.name || "SPHEREx Deep Field North"}
         isDemo={urlState.demo}
         onToggleDemo={() => setUrlState({ demo: !urlState.demo })}
+        mode3D={is3DMode}
+        onToggleMode3D={() => setIs3DMode(!is3DMode)}
+        onSelectTarget={(target) => {
+          setUrlState({
+            ra: target.ra,
+            dec: target.dec,
+            fov: target.fov,
+          });
+        }}
       />
 
       {/* Demo Mode Honesty Banner (Slim & Unobtrusive) */}
@@ -258,31 +286,50 @@ export default function SkyDiaryApp() {
             </div>
           )}
 
-          {/* Interactive Celestial Sky Canvas */}
+          {/* Interactive Celestial Sky Canvas: 3D Universe vs 2D Sky Survey */}
           <div className="flex-1 relative w-full h-full overflow-hidden">
-            <ErrorBoundary fallbackTitle="Sky Viewer Error">
-              <DynamicSkyViewer
-                ra={urlState.ra}
-                dec={urlState.dec}
-                fov={urlState.fov}
-                onMove={(ra, dec, fov) => setUrlState({ ra, dec, fov })}
-                movers={movers}
-                selectedObjectId={urlState.object}
-                epochIndex={urlState.epoch}
-                epochs={epochs}
-                onSelect={handleSelectObjectId}
-                showTrails={urlState.trails}
-                isDemo={urlState.demo}
-              />
-            </ErrorBoundary>
+            {is3DMode ? (
+              <ErrorBoundary fallbackTitle="3D Celestial Universe Error">
+                <DynamicUniverseCanvas
+                  movers={movers}
+                  selectedObjectId={urlState.object}
+                  onSelectObject={handleSelectObjectId}
+                  epochIndex={urlState.epoch}
+                  epochs={epochs}
+                  centerRa={urlState.ra}
+                  centerDec={urlState.dec}
+                  showTrails={urlState.trails}
+                  isDemo={urlState.demo}
+                  onSwitchTo2D={() => setIs3DMode(false)}
+                />
+              </ErrorBoundary>
+            ) : (
+              <ErrorBoundary fallbackTitle="2D Sky Survey Error">
+                <DynamicSkyViewer
+                  ra={urlState.ra}
+                  dec={urlState.dec}
+                  fov={urlState.fov}
+                  onMove={(ra, dec, fov) => setUrlState({ ra, dec, fov })}
+                  movers={movers}
+                  selectedObjectId={urlState.object}
+                  epochIndex={urlState.epoch}
+                  epochs={epochs}
+                  onSelect={handleSelectObjectId}
+                  showTrails={urlState.trails}
+                  isDemo={urlState.demo}
+                />
+              </ErrorBoundary>
+            )}
 
-            {/* Field of View Floating Preset Overlay */}
-            <div className="absolute top-3 left-3 z-30 max-w-xs">
-              <FovControl
-                fov={urlState.fov}
-                onFovChange={(newFov) => setUrlState({ fov: newFov })}
-              />
-            </div>
+            {/* Field of View Floating Preset Overlay (in 2D mode) */}
+            {!is3DMode && (
+              <div className="absolute top-3 left-3 z-30 max-w-xs">
+                <FovControl
+                  fov={urlState.fov}
+                  onFovChange={(newFov) => setUrlState({ fov: newFov })}
+                />
+              </div>
+            )}
 
             {/* Right Vertical Minimal Tool Strip (NASA Eyes Palette) */}
             <div className="absolute right-4 bottom-24 z-30 flex flex-col gap-2.5 p-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white/70 shadow-2xl">
@@ -349,6 +396,19 @@ export default function SkyDiaryApp() {
                 </button>
               </Tooltip>
 
+              <Tooltip content={is3DMode ? "Switch to 2D Sky Survey" : "Switch to 3D Universe"} position="left">
+                <button
+                  type="button"
+                  onClick={() => setIs3DMode(!is3DMode)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+                    is3DMode ? "text-cyan-400 bg-white/10" : "hover:text-white hover:bg-white/10"
+                  }`}
+                  aria-label="Toggle 3D Universe and 2D Survey"
+                >
+                  <span className="text-xs">{is3DMode ? "🌌" : "🔭"}</span>
+                </button>
+              </Tooltip>
+
               <Tooltip content="Fullscreen" position="left">
                 <button
                   type="button"
@@ -369,25 +429,31 @@ export default function SkyDiaryApp() {
               </Tooltip>
             </div>
 
-            {/* Bottom-Left NASA Eyes "● LIVE" Indicator (Exact Match to Photo) */}
-            <div className="absolute bottom-6 left-6 z-20 flex items-center gap-2 select-none pointer-events-none">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse" />
-              <span className="text-xs font-sans font-bold tracking-widest text-emerald-400 uppercase">
-                LIVE
-              </span>
-            </div>
+            {/* Bottom-Left NASA Eyes "● LIVE" Status Pill (2D Mode) */}
+            {!is3DMode && (
+              <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md border border-white/10 select-none pointer-events-none shadow-2xl">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse" />
+                <span className="text-[10px] md:text-xs font-sans font-bold tracking-widest text-emerald-400 uppercase">
+                  LIVE
+                </span>
+                <span className="text-white/20">•</span>
+                <span className="text-[10px] font-mono text-white/70">
+                  EPOCH {urlState.epoch + 1}/{epochs.length}
+                </span>
+              </div>
+            )}
 
-            {/* Bottom-Center Minimal TIME CONTROLS (Exact Match to Photo) */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center pointer-events-auto">
+            {/* Bottom-Center Minimal TIME CONTROLS (NASA Eyes Command Ribbon) */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex flex-col-reverse items-center pointer-events-auto">
               <button
                 type="button"
                 onClick={() => setIsTimeControlsOpen(!isTimeControlsOpen)}
-                className="group flex flex-col items-center gap-0.5 text-white/70 hover:text-white transition-colors cursor-pointer select-none py-1 px-3"
+                className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/80 hover:bg-black/95 backdrop-blur-md border border-white/15 hover:border-cyan-400/50 text-white/80 hover:text-white transition-all cursor-pointer select-none shadow-2xl"
                 aria-expanded={isTimeControlsOpen}
                 aria-label="Toggle Time Controls Drawer"
               >
                 <svg
-                  className={`w-3.5 h-3.5 text-white/50 group-hover:text-white transition-transform ${isTimeControlsOpen ? "rotate-180" : ""}`}
+                  className={`w-3.5 h-3.5 text-cyan-400 transition-transform ${isTimeControlsOpen ? "rotate-180" : ""}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -395,14 +461,17 @@ export default function SkyDiaryApp() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
                 </svg>
-                <span className="text-[10px] md:text-xs font-sans tracking-widest uppercase font-medium">
+                <span className="text-[10px] md:text-xs font-sans tracking-widest uppercase font-semibold text-white/90">
                   TIME CONTROLS
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white/10 text-cyan-300">
+                  {urlState.mode === "blink" ? "BLINK" : "SCRUB"}
                 </span>
               </button>
 
-              {/* Sliding Drawer Container */}
+              {/* Sliding Drawer Container (Opens upward cleanly above the toggle pill) */}
               {isTimeControlsOpen && (
-                <div className="mt-2 w-[92vw] max-w-3xl p-3 rounded-2xl bg-black/85 backdrop-blur-xl border border-white/10 shadow-2xl">
+                <div className="mb-2 w-[92vw] max-w-3xl p-3 rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/15 shadow-2xl">
                   {urlState.mode === "viewer" ? (
                     <TimeBar
                       epochs={epochs}
@@ -471,6 +540,11 @@ export default function SkyDiaryApp() {
         mover={selectedMover}
         regionName={catalog?.region?.name}
       />
+
+      {/* Cinematic Intro Animation on Initial Load */}
+      {showIntro && (
+        <CinematicIntro onComplete={() => setShowIntro(false)} />
+      )}
     </div>
   );
 }

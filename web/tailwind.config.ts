@@ -9,23 +9,32 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // NASA Eyes 3D Universe Sophisticated Palette
+        cosmic: {
+          black: "#050816",
+          indigo: "#101B46",
+          violet: "#39216F",
+          blue: "#087EAC",
+          cyan: "#27D9D0",
+          amber: "#F5A742",
+        },
         space: {
-          950: "#050814", // Deepest cosmic background
-          900: "#090e24", // Primary app background
-          850: "#0d1536", // Elevated glass panel surface
-          800: "#131d47", // Active / elevated border
-          700: "#1d2c68", // Subtle borders
-          600: "#2d4294", // Accent borders
-          500: "#4862c4",
-          400: "#7c93e4", // Muted text
-          300: "#a9b9f3", // Light text
-          200: "#cfd9fa", // Soft white
-          100: "#e9effe",
-          50: "#f6f8ff",  // Pure bright foreground
+          950: "#050816", // Deepest astronomical void black
+          900: "#101B46", // Primary HUD panel background / deep indigo
+          850: "#15204e", // Glass panel surface
+          800: "#1d2b63", // Active borders / elevated cards
+          700: "#27387a", // Subtle borders
+          600: "#39216F", // Accent lines / nebula violet
+          500: "#087EAC", // Cosmic blue
+          400: "#7084cc", // Muted telemetry labels
+          300: "#9fb0eb", // Secondary text
+          200: "#cad5fa", // Primary body text
+          100: "#e8eeff",
+          50: "#f8fafc",  // Crisp high-contrast titles
         },
         cyan: {
           300: "#67e8f9",
-          400: "#22d3ee",
+          400: "#27D9D0", // Ion cyan
           500: "#06b6d4",
           600: "#0891b2",
           900: "#164e63",
@@ -33,7 +42,7 @@ const config: Config = {
         },
         amber: {
           300: "#fcd34d",
-          400: "#fbbf24",
+          400: "#F5A742", // Solar amber
           500: "#f59e0b",
           600: "#d97706",
           900: "#78350f",
@@ -72,9 +81,10 @@ const config: Config = {
         touch: "44px",
       },
       boxShadow: {
-        glass: "0 8px 32px 0 rgba(0, 0, 0, 0.45)",
-        "glow-cyan": "0 0 20px -3px rgba(34, 211, 238, 0.35)",
-        "glow-amber": "0 0 20px -3px rgba(251, 191, 36, 0.35)",
+        glass: "0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+        "glow-cyan": "0 0 25px -4px rgba(56, 189, 248, 0.35)",
+        "glow-amber": "0 0 25px -4px rgba(251, 191, 36, 0.35)",
+        hud: "0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.1)",
       },
     },
   },

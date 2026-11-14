@@ -116,8 +116,8 @@ export function SearchBox({
             setQuery(e.target.value);
             if (errorMsg) setErrorMsg(null);
           }}
-          placeholder="RA/Dec (133.79 -7.24, 08h55m -07d14m) or target name..."
-          className="w-full min-h-[44px] pl-10 pr-24 py-2 text-xs md:text-sm font-mono rounded-xl bg-space-950/80 border border-white/10 text-space-100 placeholder-space-400 transition-all focus:border-cyan-400 focus:bg-space-900 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
+          placeholder="Target or RA/Dec (e.g. WISE 0855, 133.79 -7.24)..."
+          className="w-full min-h-[44px] pl-10 pr-20 py-2 text-xs md:text-sm font-mono rounded-xl bg-black/80 border border-white/15 text-white placeholder-white/40 transition-all focus:border-cyan-400 focus:bg-space-950 focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none"
         />
 
         <div className="absolute inset-y-0 right-1 flex items-center pr-1.5 gap-1">
@@ -129,7 +129,7 @@ export function SearchBox({
                 setErrorMsg(null);
               }}
               aria-label="Clear query"
-              className="min-h-[36px] min-w-[36px] flex items-center justify-center text-space-400 hover:text-white"
+              className="min-h-[34px] min-w-[34px] flex items-center justify-center text-white/40 hover:text-white"
             >
               ✕
             </button>
@@ -137,7 +137,7 @@ export function SearchBox({
           <button
             type="submit"
             disabled={loading || !query.trim()}
-            className="min-h-[36px] px-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-space-950 font-bold text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="min-h-[34px] px-3.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-space-950 font-bold text-xs font-mono disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-md shadow-cyan-500/20"
           >
             Go
           </button>

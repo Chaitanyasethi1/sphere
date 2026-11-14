@@ -31,6 +31,11 @@ export interface EpochFramesProps {
   opacity?: number;
   onManifestLoaded?: (manifest: FramesManifest) => void;
   isDemo?: boolean;
+  centerRa?: number;
+  centerDec?: number;
+  fovDeg?: number;
+  containerWidth?: number;
+  containerHeight?: number;
   className?: string;
 }
 
@@ -40,6 +45,11 @@ export function EpochFrames({
   opacity = 0.85,
   onManifestLoaded,
   isDemo = false,
+  centerRa,
+  centerDec,
+  fovDeg,
+  containerWidth,
+  containerHeight,
   className = "",
 }: EpochFramesProps) {
   const [manifest, setManifest] = useState<FramesManifest | null>(null);
@@ -113,19 +123,80 @@ export function EpochFrames({
         </div>
       )}
 
-      {/* Georeferenced SPHEREx Epoch Frame Overlay */}
-      {/* TODO(VERIFY): Aladin Lite v3 FITS/HiPS image overlay placement method vs Canvas georeferenced projection */}
-      <div
-        className="w-full h-full flex items-center justify-center transition-opacity duration-200"
-        style={{ opacity }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={`/${activeFrame.image_path}`}
-          alt={`SPHEREx field for ${activeFrame.epoch_id}`}
-          className="max-h-full max-w-full object-contain filter contrast-125 select-none"
-        />
-      </div>
+      {/* Georeferenced & Feathered SPHEREx Epoch Frame Overlay */}
+      {(() => {
+        const hasProjection =
+          typeof centerRa === "number" &&
+          typeof centerDec === "number" &&
+          typeof fovDeg === "number" &&
+          typeof containerWidth === "number" &&
+          typeof containerHeight === "number" &&
+          containerWidth > 0 &&
+          containerHeight > 0 &&
+          fovDeg > 0;
+
+        if (hasProjection && activeFrame.bounds) {
+          const cosDec = Math.cos((centerDec * Math.PI) / 180);
+          const halfFov = fovDeg / 2.0;
+          const dRa = (activeFrame.bounds.ra_center - centerRa) * cosDec;
+          const dDec = activeFrame.bounds.dec_center - centerDec;
+
+          // Standard astronomy display: East is Left (-x), North is Up (-y)
+          const px = containerWidth / 2 - (dRa / halfFov) * (containerWidth / 2);
+          const py = containerHeight / 2 - (dDec / halfFov) * (containerHeight / 2);
+
+          const frameFov = activeFrame.bounds.fov_deg || 1.0;
+          const frameWidthPx = (frameFov / fovDeg) * containerWidth;
+          const frameHeightPx = (frameFov / fovDeg) * containerHeight;
+
+          return (
+            <div
+              className="absolute pointer-events-none transition-opacity duration-150"
+              style={{
+                left: `${px}px`,
+                top: `${py}px`,
+                width: `${frameWidthPx}px`,
+                height: `${frameHeightPx}px`,
+                transform: "translate(-50%, -50%)",
+                opacity,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/${activeFrame.image_path}`}
+                alt={`SPHEREx field for ${activeFrame.epoch_id}`}
+                className="w-full h-full object-cover filter contrast-125 select-none"
+                style={{
+                  maskImage:
+                    "radial-gradient(circle at center, rgba(0,0,0,1) 45%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0) 90%)",
+                  WebkitMaskImage:
+                    "radial-gradient(circle at center, rgba(0,0,0,1) 45%, rgba(0,0,0,0.85) 65%, rgba(0,0,0,0) 90%)",
+                }}
+              />
+            </div>
+          );
+        }
+
+        return (
+          <div
+            className="w-full h-full flex items-center justify-center transition-opacity duration-200"
+            style={{ opacity }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/${activeFrame.image_path}`}
+              alt={`SPHEREx field for ${activeFrame.epoch_id}`}
+              className="max-h-full max-w-full object-contain filter contrast-125 select-none"
+              style={{
+                maskImage:
+                  "radial-gradient(circle at center, rgba(0,0,0,1) 50%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0) 95%)",
+                WebkitMaskImage:
+                  "radial-gradient(circle at center, rgba(0,0,0,1) 50%, rgba(0,0,0,0.7) 75%, rgba(0,0,0,0) 95%)",
+              }}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }

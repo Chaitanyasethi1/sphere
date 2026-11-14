@@ -170,13 +170,32 @@ export const SpectrumChart: React.FC<SpectrumChartProps> = ({ mover, className =
   }
 
   const isKnown = mover.type === "known";
-  const strokeColor = isKnown ? "#22d3ee" : "#fbbf24"; // cyan-400 or amber-400
-  const fillColor = isKnown ? "rgba(6, 182, 212, 0.18)" : "rgba(245, 158, 11, 0.18)";
+  const strokeColor = isKnown ? "#27D9D0" : "#F5A742"; // Ion cyan vs Solar amber
+  const fillColor = isKnown ? "rgba(39, 217, 208, 0.22)" : "rgba(245, 167, 66, 0.22)";
 
   // X-axis ticks (e.g. at 1.0, 2.0, 3.0, 4.0, 5.0)
   const xTicks = [1.0, 2.0, 3.0, 4.0, 5.0].filter((val) => val >= xMin && val <= xMax);
   // Y-axis 4 ticks
   const yTicks = [0, 0.33, 0.66, 1.0].map((t) => yMin + t * (yMax - yMin));
+
+  // Diagnostic spectral features relevant to SPHEREx asteroids and outer Solar System ices
+  const diagnosticLines = [
+    { name: "Silicate", wl: 1.05, color: "#94a3b8" },
+    { name: "H₂O Ice", wl: 1.52, color: "#38bdf8" },
+    { name: "Silicate", wl: 2.00, color: "#94a3b8" },
+    { name: "H₂O Ice", wl: 3.05, color: "#38bdf8" },
+    { name: "CO₂ Ice", wl: 4.26, color: "#c084fc" },
+  ];
+
+  // SPHEREx 6 detector array bands
+  const detectorBands = [
+    { id: "B1", min: 0.75, max: 1.11 },
+    { id: "B2", min: 1.11, max: 1.64 },
+    { id: "B3", min: 1.64, max: 2.42 },
+    { id: "B4", min: 2.42, max: 3.82 },
+    { id: "B5", min: 3.82, max: 4.42 },
+    { id: "B6", min: 4.42, max: 5.00 },
+  ];
 
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
@@ -203,7 +222,7 @@ export const SpectrumChart: React.FC<SpectrumChartProps> = ({ mover, className =
             onClick={() => setShowTable((prev) => !prev)}
             aria-expanded={showTable}
             aria-controls={`${chartId}-table`}
-            className="text-xs text-slate-400 hover:text-slate-200"
+            className="text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
           >
             {showTable ? "Hide Data Table" : "View Data Table"}
           </Button>
@@ -212,7 +231,7 @@ export const SpectrumChart: React.FC<SpectrumChartProps> = ({ mover, className =
             variant="outline"
             size="sm"
             onClick={downloadCsv}
-            className="text-xs gap-1.5 border-slate-700 hover:border-cyan-400"
+            className="text-xs gap-1.5 border-slate-700 hover:border-cyan-400 cursor-pointer"
           >
             <span>⬇</span>
             <span>Download CSV</span>
@@ -230,6 +249,73 @@ export const SpectrumChart: React.FC<SpectrumChartProps> = ({ mover, className =
             2
           )} micrometers`}
         >
+          <defs>
+            <linearGradient id={`${chartId}-grad`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={strokeColor} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          {/* SPHEREx 6 Detector Bands Background Shading */}
+          {detectorBands.map((band, bIdx) => {
+            const bX1 = Math.max(60, 60 + ((band.min - xMin) / (xMax - xMin)) * 515);
+            const bX2 = Math.min(575, 60 + ((band.max - xMin) / (xMax - xMin)) * 515);
+            if (bX2 <= bX1) return null;
+
+            return (
+              <g key={band.id}>
+                <rect
+                  x={bX1}
+                  y={30}
+                  width={bX2 - bX1}
+                  height={205}
+                  fill={bIdx % 2 === 0 ? "rgba(255, 255, 255, 0.015)" : "rgba(255, 255, 255, 0.035)"}
+                />
+                <text
+                  x={(bX1 + bX2) / 2}
+                  y={42}
+                  textAnchor="middle"
+                  fill="rgba(148, 163, 184, 0.4)"
+                  fontSize="9"
+                  fontFamily="monospace"
+                >
+                  {band.id}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Diagnostic Absorption Feature Markers */}
+          {diagnosticLines.map((diag, dIdx) => {
+            if (diag.wl < xMin || diag.wl > xMax) return null;
+            const dx = 60 + ((diag.wl - xMin) / (xMax - xMin)) * 515;
+            return (
+              <g key={`diag-${dIdx}`}>
+                <line
+                  x1={dx}
+                  y1={48}
+                  x2={dx}
+                  y2={235}
+                  stroke={diag.color}
+                  strokeWidth="1"
+                  strokeDasharray="2 3"
+                  strokeOpacity="0.45"
+                />
+                <text
+                  x={dx}
+                  y={58}
+                  textAnchor="middle"
+                  fill={diag.color}
+                  fontSize="8"
+                  fontFamily="monospace"
+                  opacity="0.8"
+                >
+                  {diag.name}
+                </text>
+              </g>
+            );
+          })}
+
           <defs>
             <linearGradient id={`${chartId}-grad`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={strokeColor} stopOpacity="0.3" />

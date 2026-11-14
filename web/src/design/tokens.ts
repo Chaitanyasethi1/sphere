@@ -7,33 +7,43 @@
 
 export const DESIGN_TOKENS = {
   colors: {
+    // NASA Eyes 3D Universe Sophisticated Palette
+    palette: {
+      cosmicBlack: "#050816",
+      deepIndigo: "#101B46",
+      nebulaViolet: "#39216F",
+      cosmicBlue: "#087EAC",
+      ionCyan: "#27D9D0",
+      solarAmber: "#F5A742",
+    },
     // Cosmic Deep Space Canvas
     space: {
-      950: "#050814", // Deepest cosmic navy background (>15:1 contrast against white)
-      900: "#090e24", // Primary panel / elevated surface
-      850: "#0d1536", // Glass panel base
-      800: "#131d47", // Card active / hover border
-      700: "#1d2c68", // Subtle borders
-      600: "#2d4294",
-      400: "#7c93e4", // Muted text (AA standard >= 4.5:1)
+      950: "#050816", // Deepest cosmic black/navy (>15:1 contrast against white)
+      900: "#101B46", // Deep indigo surface
+      850: "#182457", // Elevated glass panel base
+      800: "#223275", // Card active / hover border
+      700: "#2d4294", // Subtle borders
+      600: "#39216F", // Nebula violet accent
+      400: "#087EAC", // Cosmic blue telemetry
+      300: "#a9b9f3", // Light text
       200: "#cfd9fa", // Soft foreground
       50: "#f6f8ff",  // Crisp high-contrast white text
     },
-    // Cyan: Catalog-Matched Known Asteroids / Comets
+    // Ion Cyan: Catalog-Matched Known Asteroids / Comets
     known: {
-      primary: "#06b6d4",
-      light: "#22d3ee",
-      hover: "#67e8f9",
-      dark: "#083344",
-      glow: "rgba(34, 211, 238, 0.35)",
+      primary: "#27D9D0",
+      light: "#5ce5dc",
+      hover: "#8af0e9",
+      dark: "#0b4d49",
+      glow: "rgba(39, 217, 208, 0.45)",
     },
-    // Amber: Unknown Movers & Planet X Candidates
+    // Solar Amber: Unknown Movers & Planet X Candidates
     unknown: {
-      primary: "#f59e0b",
-      light: "#fbbf24",
-      hover: "#fcd34d",
-      dark: "#451a03",
-      glow: "rgba(251, 191, 36, 0.35)",
+      primary: "#F5A742",
+      light: "#f7ba68",
+      hover: "#f9cd8e",
+      dark: "#5e380b",
+      glow: "rgba(245, 167, 66, 0.45)",
     },
     // Minimal Slate: Test Data & Synthetic Provenance (no neon / rose)
     synthetic: {

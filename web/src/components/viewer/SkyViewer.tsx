@@ -53,21 +53,42 @@ export function SkyViewer({
   const dragStartRef = useRef<{ x: number; y: number; ra: number; dec: number } | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Deterministic realistic star field for canvas/offline/demo mode
-  const starsRef = useRef<Array<{ ra: number; dec: number; mag: number; color: string }>>([]);
+  // Deterministic realistic star field for canvas/offline/demo mode (1,200+ stars)
+  const starsRef = useRef<
+    Array<{ ra: number; dec: number; mag: number; color: string; spike: boolean; phase: number }>
+  >([]);
   if (starsRef.current.length === 0) {
     let seed = 42;
     const rand = () => {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
-    const colors = ["#ffffff", "#e0f2fe", "#fef3c7", "#fed7aa", "#bae6fd"];
-    for (let i = 0; i < 280; i++) {
+    // Spectral colors: O/B blue, A white, F yellow-white, G yellow, K orange, M red
+    const spectralColors = [
+      "#ffffff",
+      "#f8fafc",
+      "#e0f2fe",
+      "#bae6fd",
+      "#7dd3fc",
+      "#fef08a",
+      "#fde047",
+      "#fed7aa",
+      "#fca5a5",
+    ];
+
+    for (let i = 0; i < 1200; i++) {
+      const magRaw = rand();
+      // Power law distribution: vastly more faint stars than bright stars
+      const mag = 0.5 + Math.pow(magRaw, 2.2) * 5.5;
+      const isBright = mag < 2.0;
+
       starsRef.current.push({
-        ra: 269.452 + (rand() - 0.5) * 4.5,
-        dec: 66.561 + (rand() - 0.5) * 4.5,
-        mag: 1.0 + rand() * 4.0,
-        color: colors[Math.floor(rand() * colors.length)],
+        ra: 269.452 + (rand() - 0.5) * 8.0,
+        dec: 66.561 + (rand() - 0.5) * 8.0,
+        mag,
+        color: spectralColors[Math.floor(rand() * spectralColors.length)],
+        spike: isBright || (mag < 3.0 && rand() > 0.6),
+        phase: rand() * Math.PI * 2,
       });
     }
   }
@@ -126,73 +147,164 @@ export function SkyViewer({
     return () => el.removeEventListener("wheel", handleWheel);
   }, [fov, ra, dec]);
 
-  // Render dynamic starfield canvas when in offline/demo/canvas mode
+  // Render dynamic starfield canvas when in offline/demo/canvas mode with smooth animation
   useEffect(() => {
     if (!useCanvasFallback || !canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
+    let animFrameId: number;
+    const startTime = performance.now();
 
-    // Subtle cosmic radial gradient
-    const grad = ctx.createRadialGradient(
-      dimensions.width / 2,
-      dimensions.height / 2,
-      0,
-      dimensions.width / 2,
-      dimensions.height / 2,
-      Math.max(dimensions.width, dimensions.height) / 2
-    );
-    grad.addColorStop(0, "rgba(6, 182, 212, 0.08)");
-    grad.addColorStop(1, "rgba(2, 6, 23, 1)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+    const render = (time: number) => {
+      const elapsed = (time - startTime) * 0.001; // seconds
+      const width = dimensions.width;
+      const height = dimensions.height;
 
-    // Dynamic celestial grid lines that scale and pan with FOV
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
-    ctx.lineWidth = 1;
-    const gridSize = Math.max(30, Math.min(120, Math.round(50 / (fov / 0.2))));
-    for (let x = (dimensions.width / 2) % gridSize; x < dimensions.width; x += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, dimensions.height);
-      ctx.stroke();
-    }
-    for (let y = (dimensions.height / 2) % gridSize; y < dimensions.height; y += gridSize) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(dimensions.width, y);
-      ctx.stroke();
-    }
+      ctx.clearRect(0, 0, width, height);
 
-    // Draw stars
-    const cosDec = Math.cos((dec * Math.PI) / 180);
-    const halfFov = fov / 2.0;
+      // 1. Cosmic deep space gradient with subtle infrared nebular clouds
+      const bgGrad = ctx.createRadialGradient(
+        width / 2,
+        height / 2,
+        0,
+        width / 2,
+        height / 2,
+        Math.max(width, height) * 0.75
+      );
+      bgGrad.addColorStop(0, "rgba(8, 20, 48, 1)");
+      bgGrad.addColorStop(0.4, "rgba(5, 12, 28, 1)");
+      bgGrad.addColorStop(1, "rgba(2, 4, 10, 1)");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
 
-    starsRef.current.forEach((star) => {
-      const dRa = (star.ra - ra) * cosDec;
-      const dDec = star.dec - dec;
+      // Subtle diffuse nebular dust patch (JWST/SPHEREx simulated IR glow)
+      const nebulaGrad = ctx.createRadialGradient(
+        width * 0.42,
+        height * 0.48,
+        20,
+        width * 0.42,
+        height * 0.48,
+        width * 0.55
+      );
+      nebulaGrad.addColorStop(0, "rgba(6, 182, 212, 0.04)");
+      nebulaGrad.addColorStop(0.5, "rgba(99, 102, 241, 0.025)");
+      nebulaGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = nebulaGrad;
+      ctx.fillRect(0, 0, width, height);
 
-      // Astronomy convention: East is Left (-X), North is Up (-Y)
-      const sx = dimensions.width / 2 - (dRa / halfFov) * (dimensions.width / 2);
-      const sy = dimensions.height / 2 - (dDec / halfFov) * (dimensions.height / 2);
+      // 2. High-precision J2000 Celestial Coordinate Grid
+      const cosDec = Math.cos((dec * Math.PI) / 180);
+      const halfFov = fov / 2.0;
 
-      if (sx >= -10 && sx <= dimensions.width + 10 && sy >= -10 && sy <= dimensions.height + 10) {
-        ctx.fillStyle = star.color;
-        const radius = Math.max(0.7, Math.min(3.5, star.mag * (0.2 / fov) * 0.75));
-        ctx.beginPath();
-        ctx.arc(sx, sy, radius, 0, Math.PI * 2);
-        ctx.fill();
+      // Adaptive grid line spacing in degrees based on FOV
+      let gridStepDeg = 0.5;
+      if (fov < 0.15) gridStepDeg = 0.02;
+      else if (fov < 0.4) gridStepDeg = 0.05;
+      else if (fov < 1.0) gridStepDeg = 0.1;
+      else if (fov < 2.5) gridStepDeg = 0.25;
 
-        if (star.mag > 3.0) {
-          ctx.fillStyle = star.color + "22";
+      const raMin = ra - halfFov / (cosDec || 1);
+      const raMax = ra + halfFov / (cosDec || 1);
+      const decMin = dec - halfFov;
+      const decMax = dec + halfFov;
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+      ctx.lineWidth = 1;
+      ctx.font = "10px monospace";
+      ctx.fillStyle = "rgba(148, 163, 184, 0.35)";
+
+      // Declination parallels (Horizontal lines)
+      const startDec = Math.floor(decMin / gridStepDeg) * gridStepDeg;
+      for (let d = startDec; d <= decMax + gridStepDeg; d += gridStepDeg) {
+        const dDec = d - dec;
+        const py = height / 2 - (dDec / halfFov) * (height / 2);
+        if (py >= 0 && py <= height) {
           ctx.beginPath();
-          ctx.arc(sx, sy, radius * 2.2, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.moveTo(0, py);
+          ctx.lineTo(width, py);
+          ctx.stroke();
+
+          // Declination label on right edge
+          const sign = d >= 0 ? "+" : "";
+          const dLabel = `${sign}${d.toFixed(2)}°`;
+          ctx.fillText(dLabel, 8, py - 3);
         }
       }
-    });
+
+      // Right Ascension meridians (Vertical lines)
+      const startRa = Math.floor(raMin / gridStepDeg) * gridStepDeg;
+      for (let r = startRa; r <= raMax + gridStepDeg; r += gridStepDeg) {
+        const dRa = (r - ra) * cosDec;
+        // East is Left (-x)
+        const px = width / 2 - (dRa / halfFov) * (width / 2);
+        if (px >= 0 && px <= width) {
+          ctx.beginPath();
+          ctx.moveTo(px, 0);
+          ctx.lineTo(px, height);
+          ctx.stroke();
+
+          // RA label on bottom edge
+          const raHours = (r / 15).toFixed(2);
+          ctx.fillText(`${raHours}h`, px + 4, height - 10);
+        }
+      }
+
+      // 3. Render 1,200+ multi-spectral stars with diffraction spikes and twinkling
+      starsRef.current.forEach((star) => {
+        const dRa = (star.ra - ra) * cosDec;
+        const dDec = star.dec - dec;
+
+        const sx = width / 2 - (dRa / halfFov) * (width / 2);
+        const sy = height / 2 - (dDec / halfFov) * (height / 2);
+
+        if (sx >= -20 && sx <= width + 20 && sy >= -20 && sy <= height + 20) {
+          // Subtle twinkle factor (sinusoidal modulation)
+          const twinkle = 0.85 + 0.3 * Math.sin(elapsed * 2.5 + star.phase);
+          const baseRadius = Math.max(0.6, Math.min(3.8, star.mag * (0.2 / fov) * 0.7 * twinkle));
+
+          // Soft Gaussian outer glow for bright stars
+          if (star.mag > 2.5) {
+            ctx.fillStyle = star.color;
+            ctx.globalAlpha = 0.15;
+            ctx.beginPath();
+            ctx.arc(sx, sy, baseRadius * 3.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Star Core
+          ctx.globalAlpha = Math.min(1.0, 0.7 + twinkle * 0.3);
+          ctx.fillStyle = star.color;
+          ctx.beginPath();
+          ctx.arc(sx, sy, baseRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 4-Point Space Telescope Diffraction Spikes for bright reference stars
+          if (star.spike && baseRadius > 1.4) {
+            const spikeLen = baseRadius * 4.5 * twinkle;
+            ctx.strokeStyle = star.color;
+            ctx.lineWidth = 0.8;
+            ctx.globalAlpha = 0.35 * twinkle;
+
+            ctx.beginPath();
+            // Horizontal spike
+            ctx.moveTo(sx - spikeLen, sy);
+            ctx.lineTo(sx + spikeLen, sy);
+            // Vertical spike
+            ctx.moveTo(sx, sy - spikeLen);
+            ctx.lineTo(sx, sy + spikeLen);
+            ctx.stroke();
+          }
+        }
+      });
+
+      ctx.globalAlpha = 1.0;
+      animFrameId = requestAnimationFrame(render);
+    };
+
+    animFrameId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(animFrameId);
   }, [ra, dec, fov, dimensions, useCanvasFallback]);
 
   // Aladin Lite initialization & StrictMode cleanup
@@ -211,15 +323,18 @@ export function SkyViewer({
       const stackStr = String(reason?.stack || "");
       const isFetchOrAladin =
         reasonStr.includes("fetch") ||
+        reasonStr.includes("HiPS") ||
         reasonStr.includes("NetworkError") ||
         reasonStr.includes("Failed to fetch") ||
         reasonStr.includes("Load failed") ||
+        reasonStr.includes("properties") ||
         stackStr.includes("aladin") ||
         stackStr.includes("SkyViewer");
 
       if (isFetchOrAladin) {
         // Prevent Next.js development overlay and browser uncaught error banner
         event.preventDefault();
+        event.stopImmediatePropagation();
         if (!isCancelled) {
           console.warn("Aladin Lite network request failed; falling back to offline star-field canvas:", reason);
           setAladinError("Sky survey network connection unavailable. Operating in offline sky view.");
@@ -230,8 +345,14 @@ export function SkyViewer({
 
     const handleError = (event: ErrorEvent) => {
       const msg = String(event.message || "");
-      if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("aladin")) {
+      if (
+        msg.includes("Failed to fetch") ||
+        msg.includes("NetworkError") ||
+        msg.includes("HiPS") ||
+        msg.includes("aladin")
+      ) {
         event.preventDefault();
+        event.stopImmediatePropagation();
         if (!isCancelled) {
           console.warn("Aladin error intercepted; falling back to offline canvas:", msg);
           setAladinError("Sky survey network connection unavailable. Operating in offline sky view.");
@@ -240,8 +361,8 @@ export function SkyViewer({
       }
     };
 
-    window.addEventListener("unhandledrejection", handleRejection);
-    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleRejection, true);
+    window.addEventListener("error", handleError, true);
 
     const initAladin = async () => {
       try {
@@ -256,13 +377,12 @@ export function SkyViewer({
 
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
-          await fetch("https://alasky.cds.unistra.fr/DSS/DSSColor/properties", {
-            method: "HEAD",
-            mode: "no-cors",
+          const timeoutId = setTimeout(() => controller.abort(), 1500);
+          const probeRes = await fetch("https://alasky.cds.unistra.fr/MocServer/query?expr=ID=*DSS*&get=record&fmt=json", {
             signal: controller.signal,
           });
           clearTimeout(timeoutId);
+          if (!probeRes.ok) throw new Error("CDS survey offline");
         } catch {
           if (!isCancelled) {
             console.warn("CDS survey server unreachable. Gracefully switching to offline star-field canvas.");
@@ -484,35 +604,32 @@ export function SkyViewer({
             className="absolute inset-0 w-full h-full"
           />
 
-          {/* Circular Sky Reticle */}
-          <div className="relative h-72 w-72 sm:h-96 sm:w-96 rounded-full border border-cyan-500/30 flex items-center justify-center shadow-2xl shadow-cyan-950/40 pointer-events-none">
-            <div className="absolute inset-10 rounded-full border border-dashed border-white/10" />
+          {/* NASA Eyes Style Celestial Target Reticle */}
+          <div className="relative h-64 w-64 sm:h-80 sm:w-80 rounded-full border border-cyan-500/25 flex items-center justify-center shadow-2xl shadow-cyan-950/30 pointer-events-none">
+            <div className="absolute inset-12 rounded-full border border-dashed border-white/10" />
             <div className="absolute h-full w-px bg-white/10" />
             <div className="absolute w-full h-px bg-white/10" />
-            <span className="absolute top-2 text-[10px] font-mono text-space-400">+N</span>
-            <span className="absolute bottom-2 text-[10px] font-mono text-space-400">-S</span>
-            <span className="absolute left-2 text-[10px] font-mono text-space-400">+E</span>
-            <span className="absolute right-2 text-[10px] font-mono text-space-400">-W</span>
-          </div>
-
-          {/* Offline/Demo mode notice */}
-          <div className="absolute bottom-4 left-4 z-20 px-2.5 py-1 rounded-lg bg-space-900/90 border border-white/10 text-[11px] font-mono text-space-300 pointer-events-none">
-            {isDemo ? (
-              <span className="text-amber-300 font-bold">● Offline Demo Mode (Plain Canvas)</span>
-            ) : (
-              <span className="text-cyan-300">
-                {aladinError ? "Aladin unavailable - Running Offline Canvas" : "Offline Star-Field Canvas"}
-              </span>
-            )}
+            <div className="h-4 w-4 rounded-full border border-cyan-400/40 flex items-center justify-center">
+              <span className="h-1 w-1 rounded-full bg-cyan-400" />
+            </div>
+            <span className="absolute top-2 text-[9px] font-mono font-semibold text-cyan-300/60 tracking-wider">+N</span>
+            <span className="absolute bottom-2 text-[9px] font-mono font-semibold text-cyan-300/60 tracking-wider">-S</span>
+            <span className="absolute left-2 text-[9px] font-mono font-semibold text-cyan-300/60 tracking-wider">+E</span>
+            <span className="absolute right-2 text-[9px] font-mono font-semibold text-cyan-300/60 tracking-wider">-W</span>
           </div>
         </div>
       )}
 
-      {/* 3. Display-Ready SPHEREx Epoch Frame Overlay */}
+      {/* 3. Display-Ready SPHEREx Epoch Frame Overlay (Synchronously Georeferenced & Feathered) */}
       <EpochFrames
         epochIndex={epochIndex}
-        opacity={0.75}
+        opacity={0.82}
         isDemo={isDemo}
+        centerRa={ra}
+        centerDec={dec}
+        fovDeg={fov}
+        containerWidth={dimensions.width}
+        containerHeight={dimensions.height}
         className="absolute inset-0 z-10 pointer-events-none"
       />
 
@@ -532,13 +649,24 @@ export function SkyViewer({
         className="z-20"
       />
 
-      {/* 5. Sky Coordinates Overlay Badge */}
-      <div className="absolute top-3 right-3 z-30 px-2.5 py-1.5 rounded-xl bg-space-950/85 backdrop-blur-md border border-white/10 text-right text-xs font-mono pointer-events-none space-y-0.5">
-        <div className="text-[10px] text-space-400">POINTING (J2000)</div>
-        <div className="text-cyan-300 font-bold">
+      {/* 5. Sky Coordinates Overlay Badge (NASA Eyes HUD Telemetry) */}
+      <div className="absolute top-3 right-3 z-30 px-3 py-2 rounded-xl bg-black/75 backdrop-blur-md border border-white/10 text-right text-xs font-mono pointer-events-none space-y-1 shadow-2xl">
+        <div className="text-[9px] uppercase tracking-widest text-white/50 font-sans font-semibold">
+          POINTING (J2000)
+        </div>
+        <div className="text-cyan-300 font-bold tracking-tight text-xs md:text-sm">
           RA {ra.toFixed(4)}° • Dec {dec >= 0 ? `+${dec.toFixed(4)}` : dec.toFixed(4)}°
         </div>
-        <div className="text-[10px] text-space-400">FoV: {fov.toFixed(2)}°</div>
+        <div className="flex items-center justify-end gap-2 text-[10px] text-white/60">
+          <span>FoV: {fov.toFixed(2)}° ({(fov * 60).toFixed(1)}&apos;)</span>
+          <span className="text-white/20">•</span>
+          <span 
+            className={useCanvasFallback ? "text-amber-400 font-semibold" : "text-cyan-400 font-semibold"}
+            title={aladinError || undefined}
+          >
+            {isDemo ? "Offline Demo Mode" : useCanvasFallback ? "BENCHMARK DATA" : "CDS SURVEY"}
+          </span>
+        </div>
       </div>
     </div>
   );

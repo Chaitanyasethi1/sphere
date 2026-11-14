@@ -44,18 +44,20 @@ export function FovControl({
   };
 
   return (
-    <div className={`glass-panel-subtle p-3 rounded-xl border border-white/10 flex flex-col gap-2 ${className}`}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-mono font-bold text-space-200">
-          Field of View (FoV):
-        </span>
-        <span className="text-xs font-mono font-bold text-cyan-400">
-          {fov.toFixed(2)}° ({Math.round(fov * 60)}&apos;)
-        </span>
-      </div>
+    <div
+      className={`glass-panel px-3 py-1.5 rounded-xl border border-white/10 flex items-center gap-2 select-none shadow-2xl ${className}`}
+    >
+      <span className="text-[10px] uppercase tracking-widest text-white/50 font-mono font-semibold">
+        FOV
+      </span>
+      <span className="text-xs font-mono font-bold text-cyan-300">
+        {fov.toFixed(2)}°
+      </span>
+
+      <div className="h-3 w-px bg-white/10 mx-0.5" />
 
       {/* Preset Buttons */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex items-center gap-1">
         {presets.map((preset) => {
           const isSelected = Math.abs(fov - preset) < 0.001;
           return (
@@ -63,10 +65,10 @@ export function FovControl({
               key={preset}
               type="button"
               onClick={() => handlePresetSelect(preset)}
-              className={`min-h-[36px] px-2.5 py-1 text-xs font-mono rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none ${
+              className={`min-h-[26px] px-2 py-0.5 text-[10px] font-mono rounded-md transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:outline-none ${
                 isSelected
-                  ? "bg-cyan-500 text-space-950 font-bold shadow-md shadow-cyan-500/20"
-                  : "bg-space-850 hover:bg-space-800 text-space-300 border border-white/5"
+                  ? "bg-cyan-500 text-space-950 font-bold shadow-sm shadow-cyan-500/30"
+                  : "bg-white/5 hover:bg-white/15 text-white/70 border border-white/5"
               }`}
             >
               {preset}°
@@ -79,9 +81,9 @@ export function FovControl({
           <button
             type="button"
             onClick={() => setIsEditingCustom(true)}
-            className="min-h-[36px] px-2.5 py-1 text-xs font-mono rounded-lg bg-space-850 hover:bg-space-800 text-space-400 border border-white/5 hover:text-white"
+            className="min-h-[26px] px-2 py-0.5 text-[10px] font-mono rounded-md bg-white/5 hover:bg-white/15 text-white/50 hover:text-white border border-white/5 cursor-pointer"
           >
-            Custom...
+            Custom
           </button>
         ) : (
           <form onSubmit={handleCustomSubmit} className="flex items-center gap-1">
@@ -92,12 +94,12 @@ export function FovControl({
               max="5.0"
               value={customInput}
               onChange={(e) => setCustomInput(e.target.value)}
-              className="w-16 min-h-[36px] px-1.5 py-0.5 text-xs font-mono rounded bg-space-950 border border-cyan-400 text-white"
+              className="w-14 min-h-[26px] px-1.5 py-0 text-[10px] font-mono rounded bg-black border border-cyan-400 text-white"
               autoFocus
             />
             <button
               type="submit"
-              className="min-h-[36px] px-2 py-0.5 text-xs font-mono rounded bg-cyan-500 text-space-950 font-bold"
+              className="min-h-[26px] px-2 py-0 text-[10px] font-mono rounded bg-cyan-500 text-space-950 font-bold cursor-pointer"
             >
               Set
             </button>
@@ -105,20 +107,12 @@ export function FovControl({
         )}
       </div>
 
-      {/* Educational Note */}
-      <p className="text-[10px] text-space-400 font-mono leading-tight">
-        Tip: Larger fields track faster movers, but require wider data footprints.
-      </p>
-
-      {/* Coverage Warning Banner */}
+      {/* Coverage Indicator Dot */}
       {isOverCoverage && (
-        <div
-          role="status"
-          className="p-2 rounded-lg bg-amber-950/50 border border-amber-500/40 text-[11px] text-amber-300 font-mono flex items-start gap-1.5"
-        >
-          <span className="text-amber-400 font-bold shrink-0">ℹ</span>
-          <span>No precomputed data for this field ({fov.toFixed(2)}° &gt; {coverageLimitDeg}°). Showing sky background only.</span>
-        </div>
+        <span
+          className="h-2 w-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400 shrink-0 ml-1"
+          title={`No precomputed data beyond ${coverageLimitDeg}°. Showing sky background only.`}
+        />
       )}
     </div>
   );
