@@ -7,13 +7,13 @@
     "recall": 0.6667,
     "false_positive_rate": 0.0,
     "position_error_arcsec": {
-      "mean": 1.286,
-      "median": 1.224,
-      "std": 0.519
+      "mean": 1.203,
+      "median": 1.168,
+      "std": 0.497
     },
     "velocity_error_arcsec_day": {
-      "ra_rate_mean_err": 0.173,
-      "dec_rate_mean_err": 0.136
+      "ra_rate_mean_err": 0.19,
+      "dec_rate_mean_err": 0.113
     },
     "matched_gt_movers": [
       "MOCK-MOVER-01",

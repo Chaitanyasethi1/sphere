@@ -18,6 +18,15 @@ export interface TargetMetadata {
 // TODO(VERIFY): Confirm optimal SPHEREx Deep Field epoch coverage coordinates for challenge targets.
 export const CHALLENGE_TARGETS: TargetMetadata[] = [
   {
+    name: "SPHEREx DR1 Flight Field",
+    aliases: ["DR1", "DR1 Field", "2025W18_1B_0095_1", "Deep Field North (Real)"],
+    ra: 270.55032,
+    dec: 66.16736,
+    description: "NASA SPHEREx DR1 Level 2 flight spectral observation (ObsID 2025W18_1B_0095_1, Band 2: 1.09-1.67 um).",
+    category: "high-proper-motion",
+    fovDefault: 0.25,
+  },
+  {
     name: "Barnard's Star",
     aliases: ["Barnard", "V2500 Oph", "GJ 699", "HIP 87937"],
     // TODO(VERIFY): High-proper-motion star in Ophiuchus (10.3 arcsec/year)

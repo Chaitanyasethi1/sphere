@@ -361,37 +361,45 @@ export function SkyViewer({
       }
     };
 
+    // Safe fetch wrapper: gracefully handles CDS / HiPS network errors when offline
+    const originalFetch = window.fetch;
+    const safeFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      try {
+        return await originalFetch(input, init);
+      } catch (err) {
+        const urlStr = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
+        if (
+          urlStr.includes("cds.unistra.fr") ||
+          urlStr.includes("u-strasbg.fr") ||
+          urlStr.includes("aladin") ||
+          urlStr.includes("hips")
+        ) {
+          if (urlStr.includes("MocServer") || urlStr.includes("fmt=json") || urlStr.endsWith(".json")) {
+            return new Response("[]", { status: 200, headers: { "Content-Type": "application/json" } });
+          }
+          if (urlStr.includes("properties")) {
+            return new Response(
+              "creator_did = ivo://CDS/P/allWISE/color\nhips_order = 9\nhips_frame = equatorial\nhips_tile_format = jpeg\n",
+              { status: 200, headers: { "Content-Type": "text/plain" } }
+            );
+          }
+          // Transparent 1x1 GIF fallback tile
+          const emptyGif = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+          return new Response(Uint8Array.from(atob(emptyGif), (c) => c.charCodeAt(0)), {
+            status: 200,
+            headers: { "Content-Type": "image/gif" },
+          });
+        }
+        throw err;
+      }
+    };
+    window.fetch = safeFetch;
+
     window.addEventListener("unhandledrejection", handleRejection, true);
     window.addEventListener("error", handleError, true);
 
     const initAladin = async () => {
       try {
-        // Fast probe: check if CDS survey server is reachable before initializing Aladin Lite
-        if (typeof navigator !== "undefined" && !navigator.onLine) {
-          if (!isCancelled) {
-            setAladinError("Offline: CDS sky survey unreachable. Operating in offline sky view.");
-            setUseCanvasFallback(true);
-          }
-          return;
-        }
-
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1500);
-          const probeRes = await fetch("https://alasky.cds.unistra.fr/MocServer/query?expr=ID=*DSS*&get=record&fmt=json", {
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          if (!probeRes.ok) throw new Error("CDS survey offline");
-        } catch {
-          if (!isCancelled) {
-            console.warn("CDS survey server unreachable. Gracefully switching to offline star-field canvas.");
-            setAladinError("CDS survey server unreachable. Operating in offline sky view.");
-            setUseCanvasFallback(true);
-          }
-          return;
-        }
-
         const aladinModule = await import("aladin-lite");
         const A = (aladinModule as any).default || aladinModule;
 
@@ -404,15 +412,15 @@ export function SkyViewer({
         // Clean any existing children in container to prevent duplicate WebGL canvases
         targetElement.innerHTML = "";
 
-        // Wait for library ready
+        // Wait for library ready (WebGL2 verification)
         if (A.init && typeof A.init.then === "function") {
           await A.init;
         }
 
         if (isCancelled) return;
 
-        // TODO(VERIFY): Aladin Lite v3 initialization options and survey ID
-        aladinInstance = A.aladin(`#${aladinDivId}`, {
+        // Initialize Aladin Lite v3 with target element directly
+        aladinInstance = A.aladin(targetElement, {
           survey: surveyId,
           fov: fov,
           target: `${ra} ${dec}`,
@@ -454,11 +462,16 @@ export function SkyViewer({
       }
     };
 
-    initAladin();
+    initAladin().catch(() => {
+      if (!isCancelled) {
+        setUseCanvasFallback(true);
+      }
+    });
 
     // Cleanup on unmount (React Strict Mode safe)
     return () => {
       isCancelled = true;
+      window.fetch = originalFetch;
       window.removeEventListener("unhandledrejection", handleRejection);
       window.removeEventListener("error", handleError);
       if (aladinInstanceRef.current) {
@@ -660,14 +673,34 @@ export function SkyViewer({
         <div className="flex items-center justify-end gap-2 text-[10px] text-white/60">
           <span>FoV: {fov.toFixed(2)}° ({(fov * 60).toFixed(1)}&apos;)</span>
           <span className="text-white/20">•</span>
-          <span 
-            className={useCanvasFallback ? "text-amber-400 font-semibold" : "text-cyan-400 font-semibold"}
-            title={aladinError || undefined}
-          >
-            {isDemo ? "Offline Demo Mode" : useCanvasFallback ? "BENCHMARK DATA" : "CDS SURVEY"}
-          </span>
+          {isDemo ? (
+            <span className="px-2 py-0.5 rounded-full border bg-amber-500/20 border-amber-500/40 text-amber-300">
+              Offline Demo Mode
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setUseCanvasFallback((prev) => !prev)}
+              className={`cursor-pointer px-2 py-0.5 rounded-full border transition-all ${
+                useCanvasFallback
+                  ? "bg-amber-500/15 border-amber-400/40 text-amber-300 hover:bg-amber-500/25"
+                  : "bg-cyan-500/15 border-cyan-400/40 text-cyan-300 hover:bg-cyan-500/25"
+              }`}
+              title="Click to toggle between Aladin Lite CDS HiPS tiles and offline canvas"
+            >
+              {useCanvasFallback ? "📊 BENCHMARK CANVAS" : "🔭 ALADIN LITE"}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Offline / Connection Notice Toast */}
+      {aladinError && !isDemo && (
+        <div className="absolute bottom-3 left-3 z-30 px-3 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-md border border-amber-500/30 text-amber-300 text-[11px] font-mono shadow-xl flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+          <span>{aladinError}</span>
+        </div>
+      )}
     </div>
   );
 }

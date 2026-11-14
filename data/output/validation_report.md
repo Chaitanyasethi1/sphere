@@ -1,6 +1,6 @@
 # SPHEREx Known Object Recovery Validation Report
 
-**Generated:** 2026-11-11T04:13:56.768109+00:00  
+**Generated:** 2026-11-14T08:15:20.530965+00:00  
 **Region:** SPHEREx Deep Field North (Mock) (RA 269.452°, Dec 66.561°)  
 
 ---

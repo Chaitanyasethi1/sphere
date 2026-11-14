@@ -115,9 +115,9 @@ def test_factory_switches_by_config():
     assert "Unsupported data_source" in str(excinfo.value)
 
 
-def test_irsa_source_stubs_raise_not_implemented():
-    """IrsaFitsSource stub must raise NotImplementedError with TODO(VERIFY) tags."""
-    irsa = IrsaFitsSource()
+def test_irsa_source_stubs_raise_not_implemented(tmp_path: Path):
+    """IrsaFitsSource stub must raise NotImplementedError with TODO(VERIFY) tags when unpopulated."""
+    irsa = IrsaFitsSource(data_dir=tmp_path / "empty")
     region = RegionInfo()
 
     with pytest.raises(NotImplementedError) as excinfo:
@@ -127,6 +127,28 @@ def test_irsa_source_stubs_raise_not_implemented():
     with pytest.raises(NotImplementedError) as excinfo2:
         irsa.load_epoch("epoch_01", region=region, fov_deg=0.2)
     assert "TODO(VERIFY)" in str(excinfo2.value)
+
+
+def test_irsa_source_loads_real_fits():
+    """IrsaFitsSource loads verified SPHEREx Level 2 MEF FITS file from raw data cache."""
+    raw_file = Path("data/raw/sample_dr1_l2b.fits")
+    if not raw_file.is_file():
+        pytest.skip("sample_dr1_l2b.fits not present in data/raw")
+
+    irsa = IrsaFitsSource(data_dir="data/raw")
+    epochs = irsa.list_epochs()
+    assert len(epochs) >= 1
+    assert epochs[0].band_count == 102
+
+    # Load first epoch with small FOV cutout
+    img = irsa.load_epoch(epochs[0].epoch_id, region=RegionInfo(ra_center=270.55, dec_center=66.17), fov_deg=0.1)
+    assert isinstance(img, EpochImage)
+    assert img.pixels.ndim == 2
+    assert img.variance.shape == img.pixels.shape
+    assert img.mask.shape == img.pixels.shape
+    assert img.wavelength_map.shape == img.pixels.shape
+    assert img.metadata["source"] == "irsa_dr1"
+    assert img.metadata["detector"] == 2
 
 
 def test_metadata_catalog_roundtrip(tmp_path: Path):

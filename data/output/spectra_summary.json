@@ -7,16 +7,16 @@
     {
       "object_id": "SPX-MOV-0001",
       "channels": 102,
-      "mean_flux": 109.792,
+      "mean_flux": 105.827,
       "taxonomy_class": "X-type / Unclassified",
-      "file": "C:\\Users\\pawan\\Desktop\\projects\\nasa sphere x\\data\\output\\spectra\\SPX-MOV-0001.json"
+      "file": "/Users/chaitanyasethi/Downloads/nasaspherex/spacex-nasa/data/output/spectra/SPX-MOV-0001.json"
     },
     {
       "object_id": "SPX-MOV-0002",
       "channels": 102,
-      "mean_flux": 23.86,
+      "mean_flux": 24.992,
       "taxonomy_class": "X-type / Unclassified",
-      "file": "C:\\Users\\pawan\\Desktop\\projects\\nasa sphere x\\data\\output\\spectra\\SPX-MOV-0002.json"
+      "file": "/Users/chaitanyasethi/Downloads/nasaspherex/spacex-nasa/data/output/spectra/SPX-MOV-0002.json"
     }
   ]
 }
