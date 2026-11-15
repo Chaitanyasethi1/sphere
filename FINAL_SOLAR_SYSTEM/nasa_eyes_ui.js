@@ -117,6 +117,19 @@
       });
     }
 
+    // Story 4: NEOSSat Asteroid Surveillance
+    const storyNeossat = document.getElementById('story-neossat');
+    if (storyNeossat) {
+      storyNeossat.addEventListener('click', () => {
+        if (window.SPHEREx && window.SPHEREx.focusNeossat) {
+          window.SPHEREx.focusNeossat();
+        } else {
+          const fbtn = document.getElementById('fbtn-neossat');
+          if (fbtn) fbtn.click();
+        }
+      });
+    }
+
     // SPHEREx Movers Toggle Button in Sidebar
     const btnStoriesMoverToggle = document.getElementById('btn-stories-spherex-toggle');
     if (btnStoriesMoverToggle) {

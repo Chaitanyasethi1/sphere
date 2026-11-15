@@ -897,12 +897,15 @@ body.mobile-ui #fullscreen-btn {
 }
 
 #focus-bar {
-  position:fixed; bottom:108px; left:50%; transform:translateX(-50%);
-  display:flex; gap:3px; z-index:10; flex-wrap:wrap; justify-content:center;
+  position:fixed; bottom:74px; left:50%; transform:translateX(-50%);
+  display:flex; gap:3px; z-index:15; flex-wrap:wrap; justify-content:center;
   max-width:92vw;
-}
-body:not(.mobile-ui) #focus-bar {
-  display:none;
+  background:rgba(8,12,20,0.7);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  padding:3px 8px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,0.08);
 }
 .fbtn {
   background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);
@@ -1550,6 +1553,23 @@ body:not(.mobile-ui) #focus-bar {
         </svg>
       </div>
     </div>
+
+    <!-- Story 4: NEOSSat Asteroid Surveillance -->
+    <div class="nasa-eyes-card" id="story-neossat" title="Focus CSA NEOSSat Spacecraft (Asteroid Tracker)">
+      <div class="nasa-card-content">
+        <h3 class="nasa-card-title">NEOSSat Asteroid<br>Surveillance<br>(Apophis / Didymos)</h3>
+        <div class="nasa-card-date">C S A &nbsp; P L A N E T A R Y &nbsp; D E F E N S E</div>
+      </div>
+      <div class="nasa-card-thumb">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#080a10" fill-opacity="0.8" />
+          <rect x="36" y="38" width="28" height="24" rx="2" fill="#cbd5e1" stroke="#ef4444" stroke-width="1.2"/>
+          <line x1="16" y1="50" x2="36" y2="50" stroke="#3b82f6" stroke-width="3.5"/>
+          <line x1="64" y1="50" x2="84" y2="50" stroke="#3b82f6" stroke-width="3.5"/>
+          <circle cx="50" cy="50" r="4.5" fill="#ef4444"/>
+        </svg>
+      </div>
+    </div>
   </div>
   <button id="btn-stories-spherex-toggle" class="nasa-eyes-card-btn">
     🔭 SPHEREx CANDIDATES CATALOG (25)
@@ -1817,6 +1837,8 @@ body:not(.mobile-ui) #focus-bar {
     <button type="button" class="sky-pick-btn" data-target-id="epsilon-indi-b">✦ Epsilon Indi B (Binary Brown Dwarf)</button>
     <button type="button" class="sky-pick-btn" data-target-id="rw-aurigae">✦ RW Aurigae (T Tauri Variable)</button>
     <button type="button" class="sky-pick-btn" data-target-id="r-draconis">✦ R Draconis (Mira Variable)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="neossat-apophis" style="border-color:#ff6b6b; color:#ff8787;">🍁 NEOSSat / Apophis (Planetary Defense)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="neossat-didymos" style="border-color:#ff6b6b; color:#ff8787;">🍁 NEOSSat / Didymos (DART Target)</button>
     <button type="button" class="sky-pick-btn" data-target-id="spx-mov-0001">✦ 1 Ceres (Known Asteroid Mover)</button>
     <button type="button" class="sky-pick-btn" data-target-id="spx-mov-0002" style="border-color:#E0A526; color:#E0A526;">⚠ SPX-MOV-0002 [Unknown Candidate]</button>
   </div>
@@ -1905,11 +1927,16 @@ body:not(.mobile-ui) #focus-bar {
       <!-- 102-CH SED Chart -->
       <div style="border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:6px; background:#060810;">
         <canvas id="sky-sed-canvas" width="380" height="150" style="width:100%; height:130px; display:block;"></canvas>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; gap:4px; flex-wrap:wrap;">
           <span style="font-size:9px; color:#64748b;">H2O ices at 1.5 & 2.0 µm | CO2 at 4.27 µm</span>
-          <button type="button" id="sky-btn-export-csv" class="sky-pick-btn" style="padding:2px 8px; font-size:9px; border-color:#22d3ee; color:#22d3ee;">
-            💾 Export SED CSV
-          </button>
+          <div style="display:flex; gap:4px;">
+            <button type="button" id="sky-btn-export-csv" class="sky-pick-btn" style="padding:2px 8px; font-size:9px; border-color:#22d3ee; color:#22d3ee;">
+              💾 Export SED CSV
+            </button>
+            <button type="button" id="sky-btn-export-mpc" class="sky-pick-btn" style="padding:2px 8px; font-size:9px; border-color:#ff6b6b; color:#ff8787;" title="Export 80-column observation records conforming to Minor Planet Center & CSA NEOSSAT_Tutorial standard">
+              📋 Export MPC Astrometry
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1923,6 +1950,16 @@ body:not(.mobile-ui) #focus-bar {
         <div class="sky-meta-row"><span class="sky-meta-label">SIGNAL-TO-NOISE:</span><span class="sky-meta-val" id="sky-meta-snr">28.4 dB</span></div>
         <div class="sky-meta-row"><span class="sky-meta-label">CONTAMINATION:</span><span class="sky-meta-val" style="color:#22D3EE;" id="sky-meta-flag">CLEAN (No artifact detected)</span></div>
         <div class="sky-meta-row"><span class="sky-meta-label">DESCRIPTION:</span><span class="sky-meta-val" style="font-family:inherit; font-size:10px; max-width:65%;" id="sky-meta-desc">Coldest known sub-stellar brown dwarf with water-ice clouds.</span></div>
+      </div>
+
+      <!-- Multi-Mission Open Archives Cross-Links -->
+      <div style="display:flex; gap:4px; flex-wrap:wrap; font-size:9px;">
+        <a href="https://irsa.ipac.caltech.edu/Missions/spherex.html" target="_blank" rel="noopener" class="sky-pick-btn" style="padding:2px 6px; color:#22d3ee; border-color:rgba(34,211,238,0.3); text-decoration:none;">IRSA SPHEREx ↗</a>
+        <a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" class="sky-pick-btn" style="padding:2px 6px; color:#22d3ee; border-color:rgba(34,211,238,0.3); text-decoration:none;">IPAC Tutorials ↗</a>
+        <a href="https://archive.stsci.edu/missions-and-data/gaia" target="_blank" rel="noopener" class="sky-pick-btn" style="padding:2px 6px; color:#e0a526; border-color:rgba(224,165,38,0.3); text-decoration:none;">MAST Gaia DR3 ↗</a>
+        <a href="https://www.asc-csa.gc.ca/eng/satellites/neossat/" target="_blank" rel="noopener" class="sky-pick-btn" style="padding:2px 6px; color:#ff8787; border-color:rgba(255,107,107,0.3); text-decoration:none;">CSA NEOSSat ↗</a>
+        <a href="https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/" target="_blank" rel="noopener" class="sky-pick-btn" style="padding:2px 6px; color:#ff8787; border-color:rgba(255,107,107,0.3); text-decoration:none;">CADC FITS ↗</a>
+        <a href="https://data.asc-csa.gc.ca/dataset/neossat" target="_blank" rel="noopener" class="sky-pick-btn" style="padding:2px 6px; color:#ff8787; border-color:rgba(255,107,107,0.3); text-decoration:none;">Open Gov Data ↗</a>
       </div>
 
       <!-- Sharing & URL Embedding -->
@@ -1985,6 +2022,30 @@ body:not(.mobile-ui) #focus-bar {
     <tr><th>WiseView & Backyard Worlds</th><td>Community citizen-science tool for viewing WISE and SPHEREx infrared time-lapse data.</td></tr>
     <tr><th>Gaia DR3 Integration</th><td>Astrometric cross-matching with European Space Agency Gaia Data Release 3 for proper motion vectors.</td></tr>
   </table>
+
+  <div class="irsa-section-title">4. Caltech/IPAC SPHEREx Tutorial Notebooks</div>
+  <table class="irsa-table">
+    <tr><th><a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" style="color:#22D3EE;">Notebook 1: Spectral Images ↗</a></th><td>Introduction to reading SPHEREx multi-extension FITS, WCS astrometry, and 102 LVF spectral channels.</td></tr>
+    <tr><th><a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" style="color:#22D3EE;">Notebook 2: Image Cutouts ↗</a></th><td>Extracting spatial sub-arrays around arbitrary RA/Dec coordinates across multiple survey epochs.</td></tr>
+    <tr><th><a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" style="color:#22D3EE;">Notebook 3: PSF in Cutouts ↗</a></th><td>Modeling Point Spread Functions (PSF) and optical dispersion across Linear Variable Filter detector arrays.</td></tr>
+    <tr><th><a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" style="color:#22D3EE;">Notebook 4: Source Discovery ↗</a></th><td>Blind source extraction algorithms, SNR background determination, and flux estimation.</td></tr>
+    <tr><th><a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" style="color:#22D3EE;">Notebook 5: Mosaic Cubes ↗</a></th><td>Constructing 3D (x, y, λ) spectral datacubes from overlapping survey observations.</td></tr>
+    <tr><th><a href="https://caltech-ipac.github.io/irsa-tutorials/spherex/" target="_blank" rel="noopener" style="color:#22D3EE;">Notebook 6: HiPS Cubes ↗</a></th><td>Generating Hierarchical Progressive Survey tiles for interactive CDS Aladin Lite visualization.</td></tr>
+  </table>
+
+  <div class="irsa-section-title">5. Canadian Space Agency (CSA) NEOSSat & CADC Open Archives</div>
+  <table class="irsa-table">
+    <tr><th><a href="https://www.asc-csa.gc.ca/eng/satellites/neossat/" target="_blank" rel="noopener" style="color:#ff8787;">CSA NEOSSat Mission ↗</a></th><td>World's first space telescope dedicated to detecting and tracking Near-Earth Asteroids, comets, and satellites.</td></tr>
+    <tr><th><a href="https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/" target="_blank" rel="noopener" style="color:#ff8787;">CADC FITS Open Archive ↗</a></th><td>Canadian Astronomy Data Centre search interface for public NEOSSat calibrated science images and astrometry.</td></tr>
+    <tr><th><a href="https://github.com/asc-csa/NEOSSAT_Tutorial" target="_blank" rel="noopener" style="color:#ff8787;">NEOSSAT Python Tutorial ↗</a></th><td>Official open-source workflow for plate-solving, difference imaging, and MPC 80-column astrometry reporting.</td></tr>
+    <tr><th><a href="https://data.asc-csa.gc.ca/dataset/neossat" target="_blank" rel="noopener" style="color:#ff8787;">Canada Open Government Data ↗</a></th><td>Open Data Portal datasets containing observations of near-Earth asteroids, comets, and space debris.</td></tr>
+  </table>
+
+  <div class="irsa-section-title">6. European Space Agency (ESA) Gaia DR3 & MAST Archive</div>
+  <table class="irsa-table">
+    <tr><th><a href="https://archive.stsci.edu/missions-and-data/gaia" target="_blank" rel="noopener" style="color:#e0a526;">MAST Gaia Mission Archive ↗</a></th><td>High-precision astrometry: positions, proper motion vectors (µα*, µδ), parallax (ϖ), and G-band photometry.</td></tr>
+    <tr><th>Astrometric Reference Frame</th><td>Used by SPHEREx and NEOSSat pipelines for absolute celestial alignment and distinguishing moving objects from fixed stars.</td></tr>
+  </table>
 </div>
 
 <!-- ── NASA Eyes Menu Navigation Drawer ─────────────────────────────────── -->
@@ -2000,6 +2061,7 @@ body:not(.mobile-ui) #focus-bar {
     <div class="nasa-menu-item" onclick="SOL_APP.focusObject('planet', SOL_APP.planets.find(p=>p.d.name==='JUPITER')); document.getElementById('btn-close-menu').click();">♃ Jupiter</div>
     <div class="nasa-menu-item" onclick="SOL_APP.focusObject('planet', SOL_APP.planets.find(p=>p.d.name==='SATURN')); document.getElementById('btn-close-menu').click();">♄ Saturn</div>
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-spherex')?.click(); document.getElementById('btn-close-menu').click();">🔭 SPHEREx Space Observatory</div>
+    <div class="nasa-menu-item" onclick="window.SPHEREx?.focusNeossat?.(); document.getElementById('btn-close-menu').click();" style="color:#ff8787;">🍁 CSA NEOSSat Spacecraft (Asteroid Tracker)</div>
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-ceres-known')?.click(); document.getElementById('btn-close-menu').click();">1 Ceres (Known Asteroid)</div>
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-cand-unknown')?.click(); document.getElementById('btn-close-menu').click();">SPX-MOV-0002 (Candidate Mover)</div>
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-open-movers')?.click(); document.getElementById('btn-close-menu').click();">🔭 SPHEREx Discovery Catalog (25)</div>

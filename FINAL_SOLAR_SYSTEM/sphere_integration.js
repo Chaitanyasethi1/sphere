@@ -1184,6 +1184,12 @@
 
       setLbl('pi-lbl-type', 'MISSION TYPE');
       set('pi-type', 'All-Sky Spectral Survey');
+
+      const infoPanel = document.getElementById('planet-info');
+      if (infoPanel) {
+        infoPanel.classList.add('show');
+        infoPanel.style.display = 'block';
+      }
     }
 
     function focusOnNeossat() {
@@ -1228,6 +1234,12 @@
 
       setLbl('pi-lbl-type', 'MISSION TYPE');
       set('pi-type', 'Surveillance Space Telescope');
+
+      const infoPanel = document.getElementById('planet-info');
+      if (infoPanel) {
+        infoPanel.classList.add('show');
+        infoPanel.style.display = 'block';
+      }
     }
 
     // ── 11. Hook Raycaster for Mover Clicks ──────────────────────────────────

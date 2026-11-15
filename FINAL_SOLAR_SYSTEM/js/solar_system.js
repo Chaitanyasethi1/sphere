@@ -4941,6 +4941,10 @@ const infoPanel= document.getElementById('planet-info');
 const infoHideBtn = document.getElementById('pi-hide-btn');
 const infoToggleBtn = document.getElementById('info-toggle-btn');
 const searchInputEl = document.getElementById('search-input');
+const searchDropdownEl = document.getElementById('search-dropdown');
+let focusObject = null;
+let focusByBodyId = null;
+let focusByName = null;
 let infoPanelDismissed = false;
 let focusedInfoType = null;
 let focusedInfoObj = null;
@@ -6933,7 +6937,7 @@ function slugify(name) {
     return catalog;
   }
 
-  function focusObject(type, obj) {
+  focusObject = function(type, obj) {
     document.querySelectorAll('.fbtn').forEach(x => x.classList.remove('active'));
     document.getElementById('btn-orion').classList.remove('active');
     clearPanOffsets();
@@ -6975,9 +6979,9 @@ function slugify(name) {
 
     camR = targetR;
     for (const c of comets) c.orbitLine.visible = isCometAvailableAtTime(c) && orbitsOn && probesOn && (viewMode==='solar');
-  }
+  };
 
-  function focusByBodyId(bodyId) {
+  focusByBodyId = function(bodyId) {
     if (bodyId == null) return false;
     const id = Number(bodyId);
     if (!Number.isFinite(id)) return false;
@@ -6987,9 +6991,9 @@ function slugify(name) {
     for (const c of comets)   { if (c.ephemerisBodyId === id) { focusObject('comet',  c); return true; } }
     for (const pr of probes)  { if (pr.ephemerisBodyId === id) { focusObject('probe', pr); return true; } }
     return false;
-  }
+  };
 
-  function focusByName(name) {
+  focusByName = function(name) {
     if (!name) return false;
     const normalized = String(name).trim().toUpperCase();
     if (!normalized) return false;
@@ -7030,7 +7034,11 @@ function slugify(name) {
     }
 
     return false;
-  }
+  };
+
+  window.focusObject = focusObject;
+  window.focusByBodyId = focusByBodyId;
+  window.focusByName = focusByName;
 
   async function searchRemoteBodies(query, seq) {
     const q = query.trim();
@@ -7282,7 +7290,9 @@ window.SOL_APP = {
   dwarfs,
   comets,
   probes,
-  focusObject,
+  focusObject: (type, obj) => (focusObject ? focusObject(type, obj) : window.focusObject?.(type, obj)),
+  focusByBodyId: (bodyId) => (focusByBodyId ? focusByBodyId(bodyId) : window.focusByBodyId?.(bodyId)),
+  focusByName: (name) => (focusByName ? focusByName(name) : window.focusByName?.(name)),
   showInfo,
   renderInfoContent,
   clearFocusSelection,
