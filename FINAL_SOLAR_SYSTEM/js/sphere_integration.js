@@ -1155,10 +1155,23 @@
 
     function focusOnSpherex() {
       if (!spherexMesh) return;
-      sol.focusObject('probe', {
-        mesh: spherexMesh,
-        vd: { name: 'SPHEREx Observatory' }
-      });
+      const vdProbe = {
+        name: 'SPHEREx Observatory',
+        ephemerisDriven: false,
+        trajectory: [],
+        color: 0x087EAC,
+        info: {
+          launch: '2025 (NASA MIDEX)',
+          speed: '7.50 km/s',
+          status: 'Operational (700 km Sun-Sync LEO)',
+          note: 'All-Sky Spectral Survey'
+        }
+      };
+      try {
+        sol.focusObject('probe', { mesh: spherexMesh, vd: vdProbe });
+      } catch (err) {
+        console.warn('focusObject probe fallback:', err);
+      }
 
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
       const setLbl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
@@ -1205,10 +1218,23 @@
 
     function focusOnNeossat() {
       if (!neossatMesh) return;
-      sol.focusObject('probe', {
-        mesh: neossatMesh,
-        vd: { name: 'NEOSSat (CSA)' }
-      });
+      const vdNeossat = {
+        name: 'NEOSSat (CSA)',
+        ephemerisDriven: false,
+        trajectory: [],
+        color: 0xFF2A2A,
+        info: {
+          launch: '2013 (PSLV-C20)',
+          speed: '7.49 km/s',
+          status: 'Operational (720 km Polar LEO)',
+          note: 'Asteroid Surveillance'
+        }
+      };
+      try {
+        sol.focusObject('probe', { mesh: neossatMesh, vd: vdNeossat });
+      } catch (err) {
+        console.warn('focusObject probe fallback:', err);
+      }
 
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
       const setLbl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };

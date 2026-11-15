@@ -4996,8 +4996,9 @@ function getInfoVelocity(type, obj) {
   if (type === 'dwarf') return formatSpeedKmS(getHeliocentricSpeedKmS(obj.d.sma, obj.mesh.position.length()));
   if (type === 'comet') return formatSpeedKmS(getHeliocentricSpeedKmS(obj.cd.sma, obj.nucleus.position.length()));
   if (type === 'probe') {
-    if (obj.vd.ephemerisDriven) return formatSpeedKmS(getEphemerisProbeInstantSpeedKmS(obj.vd.bodyId));
-    return formatSpeedKmS(getProbeInstantSpeedKmS(obj.vd));
+    if (obj.vd && obj.vd.ephemerisDriven) return formatSpeedKmS(getEphemerisProbeInstantSpeedKmS(obj.vd.bodyId));
+    if (obj.vd && Array.isArray(obj.vd.trajectory) && obj.vd.trajectory.length > 0) return formatSpeedKmS(getProbeInstantSpeedKmS(obj.vd));
+    return '7.5 km/s';
   }
   return 'N/A';
 }
@@ -5171,17 +5172,21 @@ function renderInfoContent(type, obj) {
     set('pi-year',obj.cd.period<1000?obj.cd.period.toFixed(1)+' yrs':(obj.cd.period/1000).toFixed(1)+'k yrs');
     set('pi-moons',obj.cd.inc.toFixed(1)+'°'); set('pi-vel',getInfoVelocity(type, obj)); set('pi-type','Comet');
   } else if (type==='probe') {
-    let distAU;
-    if (obj.vd.ephemerisDriven) {
+    let distAU = '1.0';
+    if (obj.vd && obj.vd.ephemerisDriven) {
       const pos = obj.vd.bodyId != null ? EphemerisSystem.getPosition(obj.vd.bodyId, simTime) : null;
       distAU = pos ? (Math.sqrt(pos.x*pos.x+pos.y*pos.y+pos.z*pos.z)/AU_SCENE).toFixed(1) : '?';
-    } else {
+    } else if (obj.vd && Array.isArray(obj.vd.trajectory) && obj.vd.trajectory.length > 0) {
       distAU = (getProbePos(obj.vd, 2000+simTime).length()/AU_SCENE).toFixed(1);
     }
-    lbl('LAUNCHED','DISTANCE','SPEED','STATUS','CURRENT SPEED','TYPE');
-    set('pi-name',obj.vd.name); set('pi-diam',obj.vd.info.launch);
-    set('pi-dist',distAU+' AU from Sun'); set('pi-year',obj.vd.info.speed ?? '');
-    set('pi-moons',obj.vd.info.status); set('pi-vel',getInfoVelocity(type, obj)); set('pi-type',obj.vd.info.note);
+    if (obj.vd && obj.vd.info) {
+      lbl('LAUNCHED','DISTANCE','SPEED','STATUS','CURRENT SPEED','TYPE');
+      set('pi-name',obj.vd.name); set('pi-diam',obj.vd.info.launch);
+      set('pi-dist',distAU+' AU from Sun'); set('pi-year',obj.vd.info.speed ?? '');
+      set('pi-moons',obj.vd.info.status); set('pi-vel',getInfoVelocity(type, obj)); set('pi-type',obj.vd.info.note);
+    } else if (obj.vd) {
+      set('pi-name', obj.vd.name || 'SPACECRAFT');
+    }
   }
 }
 
