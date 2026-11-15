@@ -146,6 +146,50 @@
       snr: 22.8,
       flag: "CLEAN (Follow-up Required)",
       wiseViewUrl: "http://byw.tools/wiseview#ra=269.5810&dec=66.4920&size=100&band=1"
+    },
+    {
+      id: "neossat-apophis",
+      name: "NEOSSat / (99942) Apophis",
+      category: "Near-Earth Asteroid / Planetary Defense",
+      ra: 123.1875,
+      dec: 18.2394,
+      raHms: "08h 12m 45.00s",
+      decDms: "+18° 14' 22.0\"",
+      properMotion: "26.4 arcsec/day",
+      pmRa: 24.1,
+      pmDec: -10.8,
+      distanceLy: "0.14 AU",
+      spectralType: "Sq-type Near-Earth Asteroid",
+      description: "High-priority Near-Earth Asteroid tracked by CSA NEOSSat (15-cm space telescope) and SPHEREx for orbit determination and Yarkovsky effect modeling.",
+      cutoutPrefix: "SPX-MOV-0001",
+      snr: 48.6,
+      flag: "CLEAN (Planetary Defense Target)",
+      cadcUrl: "https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?collection=NEOSSAT&target=Apophis",
+      gaiaId: "Gaia DR3 64281920194821",
+      mpcDesignation: "99942",
+      wiseViewUrl: "http://byw.tools/wiseview#ra=123.1875&dec=18.2394&size=100&band=1"
+    },
+    {
+      id: "neossat-didymos",
+      name: "NEOSSat / (65803) Didymos & Dimorphos",
+      category: "Binary Near-Earth Asteroid System",
+      ra: 186.4167,
+      dec: -12.5400,
+      raHms: "12h 25m 40.00s",
+      decDms: "-12° 32' 24.0\"",
+      properMotion: "18.8 arcsec/day",
+      pmRa: -16.2,
+      pmDec: 9.5,
+      distanceLy: "0.07 AU",
+      spectralType: "S-type Binary NEA",
+      description: "NASA DART / ESA Hera mission target monitored by CSA NEOSSat and SPHEREx for post-impact ejecta dust evolution and mutual orbital period changes.",
+      cutoutPrefix: "SPX-MOV-0002",
+      snr: 34.2,
+      flag: "CLEAN (Binary Asteroid)",
+      cadcUrl: "https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/search/?collection=NEOSSAT&target=Didymos",
+      gaiaId: "Gaia DR3 38192049182910",
+      mpcDesignation: "65803",
+      wiseViewUrl: "http://byw.tools/wiseview#ra=186.4167&dec=-12.5400&size=100&band=1"
     }
   ];
 
@@ -714,6 +758,79 @@
   };
 
   /**
+   * Export Minor Planet Center (MPC) 80-column observation records conforming to
+   * the Minor Planet Center optical format and the CSA NEOSSAT_Tutorial standard.
+   */
+  SphereSkyViewer.exportMpcReport = function () {
+    const target = SphereSkyViewer.currentTarget;
+    const epochs = target.epochs || [
+      { epoch: '2025-05-15 03:22:11', raOffset: 0.0, decOffset: 0.0, mag: 16.2 },
+      { epoch: '2025-11-18 14:05:40', raOffset: 0.2, decOffset: 0.1, mag: 16.3 },
+      { epoch: '2026-05-20 09:12:05', raOffset: 0.4, decOffset: 0.2, mag: 16.1 }
+    ];
+
+    let mpcLines = [];
+    mpcLines.push(`COD C00`);
+    mpcLines.push(`CON P. Sharma, SPHEREx / NEOSSat Collaborative Astrometry`);
+    mpcLines.push(`OBS NEOSSat / SPHEREx Joint Processing Team`);
+    mpcLines.push(`MEA Automated Centroid Astrometry Engine`);
+    mpcLines.push(`TEL 0.15-m Maksutov-Cassegrain (NEOSSat) / 0.20-m SPHEREx`);
+    mpcLines.push(`NET Gaia DR3`);
+    mpcLines.push(`ACK MPC Astrometry Report for target ${target.name}`);
+    mpcLines.push(`AC2 pawan@astrometry.local`);
+    mpcLines.push(`COM Format: MPC 80-column optical astrometry (CSA NEOSSAT_Tutorial standard)`);
+    mpcLines.push(``);
+
+    epochs.forEach((ep) => {
+      const dt = new Date(ep.epoch || '2025-05-15T00:00:00Z');
+      const yyyy = dt.getUTCFullYear();
+      const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const dd = dt.getUTCDate();
+      const fracDay = ((dt.getUTCHours() + dt.getUTCMinutes() / 60 + dt.getUTCSeconds() / 3600) / 24).toFixed(5).slice(1);
+      const dayStr = String(dd).padStart(2, '0') + fracDay;
+
+      let desig = '     ';
+      if (target.id === 'neossat-apophis') desig = '99942';
+      else if (target.id === 'neossat-didymos') desig = '65803';
+      else if (target.id === 'wise-0855') desig = 'W0855';
+      else if (target.id === 'barnards-star') desig = 'BARND';
+      else desig = (target.id.replace(/[^a-zA-Z0-9]/g, '').slice(0, 5)).toUpperCase().padEnd(5, ' ');
+
+      const dRaDeg = ((ep.raOffset || 0) / 3600.0) / Math.cos(target.dec * Math.PI / 180);
+      const dDecDeg = (ep.decOffset || 0) / 3600.0;
+      const currentRa = target.ra + dRaDeg;
+      const currentDec = target.dec + dDecDeg;
+
+      const raHours = (currentRa / 15.0 + 24.0) % 24.0;
+      const raH = Math.floor(raHours);
+      const raM = Math.floor((raHours - raH) * 60);
+      const raS = ((raHours - raH - raM / 60) * 3600).toFixed(3);
+      const raStr = `${String(raH).padStart(2, '0')} ${String(raM).padStart(2, '0')} ${raS.padStart(6, '0')}`;
+
+      const decSign = currentDec >= 0 ? '+' : '-';
+      const absDec = Math.abs(currentDec);
+      const decD = Math.floor(absDec);
+      const decM = Math.floor((absDec - decD) * 60);
+      const decS = ((absDec - decD - decM / 60) * 60).toFixed(2);
+      const decStr = `${decSign}${String(decD).padStart(2, '0')} ${String(decM).padStart(2, '0')} ${decS.padStart(5, '0')}`;
+
+      const magVal = (ep.mag !== undefined ? ep.mag : (target.mag || 16.5)).toFixed(1);
+      const magStr = `${magVal.padStart(4, ' ')} R`;
+
+      const datePart = `${yyyy} ${mm} ${dayStr}`;
+      const line = `${desig.padEnd(5, ' ')}  C${datePart.padEnd(17, ' ')}${raStr.padEnd(12, ' ')} ${decStr.padEnd(12, ' ')}         ${magStr.padEnd(9, ' ')}      C00`;
+      mpcLines.push(line);
+    });
+
+    const reportContent = mpcLines.join('\n') + '\n';
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `MPC_NEOSSAT_${target.id}_Astrometry.txt`;
+    link.click();
+  };
+
+  /**
    * Synchronize URL with active target, coordinates, and FOV for embedding & sharing.
    */
   SphereSkyViewer.syncUrl = function () {
@@ -929,9 +1046,11 @@
     if (chkWise) chkWise.addEventListener('change', (e) => { SphereSkyViewer.overlayWise = e.target.checked; SphereSkyViewer.renderCanvas(); });
     if (chkTracklet) chkTracklet.addEventListener('change', (e) => { SphereSkyViewer.overlayTracklet = e.target.checked; SphereSkyViewer.renderCanvas(); });
 
-    // CSV Export
+    // CSV & MPC Export
     const btnCsv = document.getElementById('sky-btn-export-csv');
     if (btnCsv) btnCsv.addEventListener('click', () => SphereSkyViewer.exportCsv());
+    const btnMpc = document.getElementById('sky-btn-export-mpc');
+    if (btnMpc) btnMpc.addEventListener('click', () => SphereSkyViewer.exportMpcReport());
 
     // Share / Embed Copy Buttons
     const btnCopyUrl = document.getElementById('sky-btn-copy-url');

@@ -135,6 +135,96 @@
     }
     buildSpherexObservatory();
 
+    // ── 1b. Create NEOSSat Spacecraft 3D Model (CSA / DRDC) ─────────────────
+    const neossatGroup = new THREE.Group();
+    neossatGroup.name = "neossat-satellite";
+    scene.add(neossatGroup);
+
+    let neossatMesh = null;
+    function buildNeossatSatellite() {
+      // 40 cm x 40 cm x 40 cm Micro-satellite cuboid chassis
+      const bodyGeom = new THREE.BoxGeometry(0.35, 0.35, 0.35);
+      const bodyMat = new THREE.MeshStandardMaterial({
+        color: 0xC0C0C8,
+        metalness: 0.8,
+        roughness: 0.3
+      });
+      const body = new THREE.Mesh(bodyGeom, bodyMat);
+
+      // Canadian Red accent stripe across chassis
+      const redBandGeom = new THREE.BoxGeometry(0.355, 0.08, 0.355);
+      const redBandMat = new THREE.MeshStandardMaterial({
+        color: 0xD82020,
+        metalness: 0.4,
+        roughness: 0.4
+      });
+      const redBand = new THREE.Mesh(redBandGeom, redBandMat);
+      body.add(redBand);
+
+      // 15 cm Maksutov-Cassegrain Telescope Baffle Tube
+      const baffleGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.42, 16);
+      const baffleMat = new THREE.MeshStandardMaterial({
+        color: 0x1A1A24,
+        metalness: 0.7,
+        roughness: 0.4
+      });
+      const baffle = new THREE.Mesh(baffleGeom, baffleMat);
+      baffle.rotation.x = Math.PI / 2;
+      baffle.position.z = 0.32;
+      body.add(baffle);
+
+      // Telescope Optical Aperture (blue coated glass)
+      const lensGeom = new THREE.CircleGeometry(0.11, 16);
+      const lensMat = new THREE.MeshBasicMaterial({ color: 0x2266AA });
+      const lens = new THREE.Mesh(lensGeom, lensMat);
+      lens.position.z = 0.53;
+      body.add(lens);
+
+      // Deployable Solar Arrays (Dual Blue Wings)
+      const wingGeom = new THREE.BoxGeometry(0.85, 0.02, 0.32);
+      const wingMat = new THREE.MeshStandardMaterial({
+        color: 0x0A3366,
+        metalness: 0.9,
+        roughness: 0.2,
+        emissive: 0x001122
+      });
+      const leftWing = new THREE.Mesh(wingGeom, wingMat);
+      leftWing.position.x = 0.55;
+      body.add(leftWing);
+
+      const rightWing = new THREE.Mesh(wingGeom, wingMat);
+      rightWing.position.x = -0.55;
+      body.add(rightWing);
+
+      // Canadian Flag Beacon / Red-White Blinker
+      const beaconGeom = new THREE.SphereGeometry(0.06, 8, 8);
+      const beaconMat = new THREE.MeshBasicMaterial({ color: 0xFF2A2A });
+      const beacon = new THREE.Mesh(beaconGeom, beaconMat);
+      beacon.position.y = 0.25;
+      body.add(beacon);
+
+      body.scale.set(1.4, 1.4, 1.4);
+      neossatGroup.add(body);
+      neossatMesh = body;
+
+      body.userData = {
+        type: 'neossat',
+        name: 'NEOSSat (CSA)',
+        obj: {
+          d: {
+            name: 'NEOSSat',
+            diameter: '40 cm × 40 cm × 40 cm',
+            dist: '720 km Polar LEO',
+            year: '99.1 min',
+            moons: '15 cm Maksutov-Cassegrain',
+            type: 'Canadian Asteroid Surveillance',
+            orbitSpeed: '7.5 km/s'
+          }
+        }
+      };
+    }
+    buildNeossatSatellite();
+
     // ── 2. Create 3D Celestial RA/Dec Grid ──────────────────────────────────
     function buildCelestialGrid() {
       const radius = 550;
@@ -346,6 +436,15 @@
           focusOnSpherex();
         });
         focusBar.appendChild(btnSpherex);
+
+        const btnNeossat = document.createElement('button');
+        btnNeossat.className = 'fbtn';
+        btnNeossat.id = 'fbtn-neossat';
+        btnNeossat.innerHTML = '<span class="dot" style="background:#FF4444"></span>🍁 NEOSSat';
+        btnNeossat.addEventListener('click', () => {
+          focusOnNeossat();
+        });
+        focusBar.appendChild(btnNeossat);
 
         const btnCeres = document.createElement('button');
         btnCeres.className = 'fbtn';
@@ -1087,6 +1186,50 @@
       set('pi-type', 'All-Sky Spectral Survey');
     }
 
+    function focusOnNeossat() {
+      if (!neossatMesh) return;
+      sol.focusObject('probe', {
+        mesh: neossatMesh,
+        vd: { name: 'NEOSSat (CSA)' }
+      });
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
+      const setLbl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
+
+      const nameEl = document.getElementById('pi-name');
+      if (nameEl) nameEl.textContent = 'NEOSSat (CSA / DRDC)';
+
+      setLbl('pi-lbl-diam', 'TELESCOPE');
+      set('pi-diam', '15 cm f/5.8 Maksutov (C00)');
+
+      setLbl('pi-lbl-dist', 'PRIMARY OBJECTIVE');
+      set('pi-dist', 'Near-Earth Asteroids & Debris');
+
+      setLbl('pi-lbl-year', 'ORBIT CLASSIFICATION');
+      set('pi-year', '720 km Polar Sun-Sync (98.6°)');
+
+      setLbl('pi-lbl-moons', 'CADENCE');
+      set('pi-moons', 'Asteroid Rate Tracking (Tracklets)');
+
+      setLbl('pi-lbl-peri', 'ORBIT PERIOD');
+      set('pi-peri', '99.1 minutes');
+
+      setLbl('pi-lbl-eta-peri', 'KEY TARGETS');
+      set('pi-eta-peri', '99942 Apophis, 65803 Didymos');
+
+      setLbl('pi-lbl-ap', 'ASTROMETRY CODE');
+      set('pi-ap', 'MPC C00 (Spacecraft Code)');
+
+      setLbl('pi-lbl-eta-ap', 'SPONSOR');
+      set('pi-eta-ap', 'Canadian Space Agency (CSA)');
+
+      setLbl('pi-lbl-vel', 'ORBITAL SPEED');
+      set('pi-vel', '7.49 km/s');
+
+      setLbl('pi-lbl-type', 'MISSION TYPE');
+      set('pi-type', 'Surveillance Space Telescope');
+    }
+
     // ── 11. Hook Raycaster for Mover Clicks ──────────────────────────────────
     function hookRaycasterClicks() {
       renderer.domElement.addEventListener('dblclick', onSceneClick);
@@ -1102,13 +1245,13 @@
         const ray = new THREE.Raycaster();
         ray.setFromCamera(m, camera);
 
-        // Intersect mover meshes & SPHEREx
-        const targets = [...moverMeshes, spherexMesh].filter(Boolean);
+        // Intersect mover meshes, SPHEREx, and NEOSSat
+        const targets = [...moverMeshes, spherexMesh, neossatMesh].filter(Boolean);
         const hits = ray.intersectObjects(targets, true);
 
         if (hits.length > 0) {
           let top = hits[0].object;
-          while (top.parent && top.parent !== moversGroup && top.parent !== spherexGroup && top.parent !== scene) {
+          while (top.parent && top.parent !== moversGroup && top.parent !== spherexGroup && top.parent !== neossatGroup && top.parent !== scene) {
             top = top.parent;
           }
           if (top.userData) {
@@ -1116,6 +1259,8 @@
               selectMoverById(top.userData.mover.object_id);
             } else if (top.userData.type === 'spherex') {
               focusOnSpherex();
+            } else if (top.userData.type === 'neossat') {
+              focusOnNeossat();
             }
           }
         }
@@ -1375,6 +1520,21 @@
         }
       }
 
+      // Rotate NEOSSat in polar sun-synchronous orbit around Earth (CSA)
+      if (neossatGroup && sol.planets) {
+        const earth = sol.planets.find(p => p.d.name === 'EARTH');
+        if (earth && earth.mesh) {
+          const earthPos = earth.mesh.position;
+          const t = Date.now() * 0.0009;
+          const orbitR = 2.8; // 720 km Polar LEO scene distance
+          neossatGroup.position.set(
+            earthPos.x + Math.sin(t * 0.85) * (orbitR * 0.18),
+            earthPos.y + Math.sin(t * 0.85) * orbitR,
+            earthPos.z + Math.cos(t * 0.85) * orbitR
+          );
+        }
+      }
+
       // Pulse mover marker rings
       if (moversGroup.visible && moverMeshes.length > 0) {
         const pulse = 1.0 + Math.sin(Date.now() * 0.004) * 0.15;
@@ -1389,6 +1549,8 @@
 
     window.SPHEREx = {
       selectMoverById,
+      focusOnSpherex,
+      focusOnNeossat,
       getCandidatesData: () => candidatesData,
       getMoverMeshes: () => moverMeshes
     };
