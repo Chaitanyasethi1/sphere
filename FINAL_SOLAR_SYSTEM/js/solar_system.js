@@ -5181,10 +5181,10 @@ function renderInfoContent(type, obj) {
       set('pi-moons', obj.vd.data.moons ?? '—');
       set('pi-vel', obj.vd.data.vel ?? '7.5 km/s');
       set('pi-type', obj.vd.data.type ?? 'Spacecraft');
-      if (obj.vd.data.peri) set('pi-peri', obj.vd.data.peri);
-      if (obj.vd.data.etaPeri) set('pi-eta-peri', obj.vd.data.etaPeri);
-      if (obj.vd.data.ap) set('pi-ap', obj.vd.data.ap);
-      if (obj.vd.data.etaAp) set('pi-eta-ap', obj.vd.data.etaAp);
+      if (obj.vd.data.peri) { set('pi-peri', obj.vd.data.peri); const el = document.getElementById('pi-lbl-peri'); if (el) el.textContent = 'ORBIT PERIOD'; }
+      if (obj.vd.data.etaPeri) { set('pi-eta-peri', obj.vd.data.etaPeri); const el = document.getElementById('pi-lbl-eta-peri'); if (el) el.textContent = 'KEY TARGETS'; }
+      if (obj.vd.data.ap) { set('pi-ap', obj.vd.data.ap); const el = document.getElementById('pi-lbl-ap'); if (el) el.textContent = 'ASTROMETRY CODE'; }
+      if (obj.vd.data.etaAp) { set('pi-eta-ap', obj.vd.data.etaAp); const el = document.getElementById('pi-lbl-eta-ap'); if (el) el.textContent = 'SPONSOR'; }
     } else {
       let distAU = '1.0';
       if (obj.vd && obj.vd.ephemerisDriven) {
