@@ -7290,9 +7290,18 @@ window.SOL_APP = {
   dwarfs,
   comets,
   probes,
-  focusObject: (type, obj) => (focusObject ? focusObject(type, obj) : window.focusObject?.(type, obj)),
-  focusByBodyId: (bodyId) => (focusByBodyId ? focusByBodyId(bodyId) : window.focusByBodyId?.(bodyId)),
-  focusByName: (name) => (focusByName ? focusByName(name) : window.focusByName?.(name)),
+  focusObject: function(type, obj) {
+    if (typeof focusObject === 'function') return focusObject(type, obj);
+    if (typeof window.focusObject === 'function') return window.focusObject(type, obj);
+  },
+  focusByBodyId: function(bodyId) {
+    if (typeof focusByBodyId === 'function') return focusByBodyId(bodyId);
+    if (typeof window.focusByBodyId === 'function') return window.focusByBodyId(bodyId);
+  },
+  focusByName: function(name) {
+    if (typeof focusByName === 'function') return focusByName(name);
+    if (typeof window.focusByName === 'function') return window.focusByName(name);
+  },
   showInfo,
   renderInfoContent,
   clearFocusSelection,

@@ -421,58 +421,69 @@
 
     // ── 5. Inject SPHEREx UI Controls into DOM ────────────────────────────────
     function injectUIControls() {
-      // 1. Add SPHEREx to Focus Bar
+      // 1. Hook or add SPHEREx & NEOSSat to Focus Bar
       const focusBar = document.getElementById('focus-bar');
       if (focusBar) {
-        const sep = document.createElement('span');
-        sep.className = 'fbar-sep';
-        focusBar.appendChild(sep);
+        let btnSpherex = document.getElementById('fbtn-spherex');
+        if (!btnSpherex) {
+          const sep = document.createElement('span');
+          sep.className = 'fbar-sep';
+          focusBar.appendChild(sep);
 
-        const btnSpherex = document.createElement('button');
-        btnSpherex.className = 'fbtn';
-        btnSpherex.id = 'fbtn-spherex';
-        btnSpherex.innerHTML = '<span class="dot" style="background:#087EAC"></span>SPHEREx';
-        btnSpherex.addEventListener('click', () => {
-          focusOnSpherex();
-        });
-        focusBar.appendChild(btnSpherex);
+          btnSpherex = document.createElement('button');
+          btnSpherex.className = 'fbtn';
+          btnSpherex.id = 'fbtn-spherex';
+          btnSpherex.innerHTML = '<span class="dot" style="background:#087EAC"></span>SPHEREx';
+          focusBar.appendChild(btnSpherex);
+        }
+        btnSpherex.onclick = () => focusOnSpherex();
 
-        const btnNeossat = document.createElement('button');
-        btnNeossat.className = 'fbtn';
-        btnNeossat.id = 'fbtn-neossat';
-        btnNeossat.innerHTML = '<span class="dot" style="background:#FF4444"></span>🍁 NEOSSat';
-        btnNeossat.addEventListener('click', () => {
-          focusOnNeossat();
-        });
-        focusBar.appendChild(btnNeossat);
+        let btnNeossat = document.getElementById('fbtn-neossat');
+        if (!btnNeossat) {
+          btnNeossat = document.createElement('button');
+          btnNeossat.className = 'fbtn';
+          btnNeossat.id = 'fbtn-neossat';
+          btnNeossat.innerHTML = '<span class="dot" style="background:#FF4444"></span>🍁 NEOSSat';
+          focusBar.appendChild(btnNeossat);
+        }
+        btnNeossat.onclick = () => focusOnNeossat();
 
-        const btnCeres = document.createElement('button');
-        btnCeres.className = 'fbtn';
-        btnCeres.id = 'fbtn-ceres-known';
-        btnCeres.innerHTML = '<span class="dot" style="background:#22D3EE"></span>1 CERES [KNOWN]';
-        btnCeres.addEventListener('click', () => {
-          selectMoverById('SPX-MOV-0001');
-        });
-        focusBar.appendChild(btnCeres);
+        let btnCeres = document.getElementById('fbtn-ceres-known');
+        if (!btnCeres) {
+          btnCeres = document.createElement('button');
+          btnCeres.className = 'fbtn';
+          btnCeres.id = 'fbtn-ceres-known';
+          btnCeres.innerHTML = '<span class="dot" style="background:#22D3EE"></span>1 CERES [KNOWN]';
+          focusBar.appendChild(btnCeres);
+        }
+        btnCeres.onclick = () => selectMoverById('SPX-MOV-0001');
 
-        const btnUnknown = document.createElement('button');
-        btnUnknown.className = 'fbtn';
-        btnUnknown.id = 'fbtn-cand-unknown';
-        btnUnknown.innerHTML = '<span class="dot" style="background:#E0A526"></span>CANDIDATE [UNKNOWN]';
-        btnUnknown.addEventListener('click', () => {
-          selectMoverById('SPX-MOV-0002');
-        });
-        focusBar.appendChild(btnUnknown);
+        let btnUnknown = document.getElementById('fbtn-cand-unknown');
+        if (!btnUnknown) {
+          btnUnknown = document.createElement('button');
+          btnUnknown.className = 'fbtn';
+          btnUnknown.id = 'fbtn-cand-unknown';
+          btnUnknown.innerHTML = '<span class="dot" style="background:#E0A526"></span>CANDIDATE [UNKNOWN]';
+          focusBar.appendChild(btnUnknown);
+        }
+        btnUnknown.onclick = () => selectMoverById('SPX-MOV-0002');
 
-        const btnMoversDrawer = document.createElement('button');
-        btnMoversDrawer.className = 'fbtn';
-        btnMoversDrawer.id = 'fbtn-open-movers';
-        btnMoversDrawer.style.borderColor = '#22D3EE';
-        btnMoversDrawer.innerHTML = '<span class="dot" style="background:#22D3EE"></span>MOVERS (25) 🔭';
-        btnMoversDrawer.addEventListener('click', () => {
-          toggleMoversDrawer();
-        });
-        focusBar.appendChild(btnMoversDrawer);
+        let btnMoversDrawer = document.getElementById('fbtn-open-movers');
+        if (!btnMoversDrawer) {
+          btnMoversDrawer = document.createElement('button');
+          btnMoversDrawer.className = 'fbtn';
+          btnMoversDrawer.id = 'fbtn-open-movers';
+          btnMoversDrawer.style.borderColor = '#22D3EE';
+          btnMoversDrawer.innerHTML = '<span class="dot" style="background:#22D3EE"></span>MOVERS (25) 🔭';
+          focusBar.appendChild(btnMoversDrawer);
+        }
+        btnMoversDrawer.onclick = () => toggleMoversDrawer();
+      }
+
+      // Also wire Left Stories NEOSSat card
+      const storyNeossat = document.getElementById('story-neossat');
+      if (storyNeossat) {
+        storyNeossat.onclick = () => focusOnNeossat();
       }
 
       // 2. Add View toggles to Speed/Controls Bar
