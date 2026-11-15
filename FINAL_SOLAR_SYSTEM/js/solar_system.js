@@ -5172,20 +5172,35 @@ function renderInfoContent(type, obj) {
     set('pi-year',obj.cd.period<1000?obj.cd.period.toFixed(1)+' yrs':(obj.cd.period/1000).toFixed(1)+'k yrs');
     set('pi-moons',obj.cd.inc.toFixed(1)+'°'); set('pi-vel',getInfoVelocity(type, obj)); set('pi-type','Comet');
   } else if (type==='probe') {
-    let distAU = '1.0';
-    if (obj.vd && obj.vd.ephemerisDriven) {
-      const pos = obj.vd.bodyId != null ? EphemerisSystem.getPosition(obj.vd.bodyId, simTime) : null;
-      distAU = pos ? (Math.sqrt(pos.x*pos.x+pos.y*pos.y+pos.z*pos.z)/AU_SCENE).toFixed(1) : '?';
-    } else if (obj.vd && Array.isArray(obj.vd.trajectory) && obj.vd.trajectory.length > 0) {
-      distAU = (getProbePos(obj.vd, 2000+simTime).length()/AU_SCENE).toFixed(1);
-    }
-    if (obj.vd && obj.vd.info) {
-      lbl('LAUNCHED','DISTANCE','SPEED','STATUS','CURRENT SPEED','TYPE');
-      set('pi-name',obj.vd.name); set('pi-diam',obj.vd.info.launch);
-      set('pi-dist',distAU+' AU from Sun'); set('pi-year',obj.vd.info.speed ?? '');
-      set('pi-moons',obj.vd.info.status); set('pi-vel',getInfoVelocity(type, obj)); set('pi-type',obj.vd.info.note);
-    } else if (obj.vd) {
-      set('pi-name', obj.vd.name || 'SPACECRAFT');
+    if (obj.vd && obj.vd.labels && obj.vd.data) {
+      lbl(...obj.vd.labels);
+      set('pi-name', obj.vd.name);
+      set('pi-diam', obj.vd.data.diam ?? '—');
+      set('pi-dist', obj.vd.data.dist ?? '—');
+      set('pi-year', obj.vd.data.year ?? '—');
+      set('pi-moons', obj.vd.data.moons ?? '—');
+      set('pi-vel', obj.vd.data.vel ?? '7.5 km/s');
+      set('pi-type', obj.vd.data.type ?? 'Spacecraft');
+      if (obj.vd.data.peri) set('pi-peri', obj.vd.data.peri);
+      if (obj.vd.data.etaPeri) set('pi-eta-peri', obj.vd.data.etaPeri);
+      if (obj.vd.data.ap) set('pi-ap', obj.vd.data.ap);
+      if (obj.vd.data.etaAp) set('pi-eta-ap', obj.vd.data.etaAp);
+    } else {
+      let distAU = '1.0';
+      if (obj.vd && obj.vd.ephemerisDriven) {
+        const pos = obj.vd.bodyId != null ? EphemerisSystem.getPosition(obj.vd.bodyId, simTime) : null;
+        distAU = pos ? (Math.sqrt(pos.x*pos.x+pos.y*pos.y+pos.z*pos.z)/AU_SCENE).toFixed(1) : '?';
+      } else if (obj.vd && Array.isArray(obj.vd.trajectory) && obj.vd.trajectory.length > 0) {
+        distAU = (getProbePos(obj.vd, 2000+simTime).length()/AU_SCENE).toFixed(1);
+      }
+      if (obj.vd && obj.vd.info) {
+        lbl('LAUNCHED','DISTANCE','SPEED','STATUS','CURRENT SPEED','TYPE');
+        set('pi-name',obj.vd.name); set('pi-diam',obj.vd.info.launch);
+        set('pi-dist',distAU+' AU from Sun'); set('pi-year',obj.vd.info.speed ?? '');
+        set('pi-moons',obj.vd.info.status); set('pi-vel',getInfoVelocity(type, obj)); set('pi-type',obj.vd.info.note);
+      } else if (obj.vd) {
+        set('pi-name', obj.vd.name || 'SPACECRAFT');
+      }
     }
   }
 }
@@ -6978,7 +6993,7 @@ function slugify(name) {
       showInfo('comet', obj);
     } else if (type === 'probe') {
       focusMesh = obj.mesh;
-      targetR = getFocusTargetRadius(focusMesh);
+      targetR = (obj.vd && obj.vd.targetR) ? obj.vd.targetR : getFocusTargetRadius(focusMesh);
       showInfo('probe', obj);
     }
 
@@ -7358,7 +7373,7 @@ window.SOL_APP = {
     clearPanOffsets();
   },
   getFocusMesh: () => focusMesh,
-  getFocusTarget: () => ({ type: focusType, obj: focusTargetObj }),
+  getFocusTarget: () => ({ type: focusedInfoType, obj: focusedInfoObj }),
   getLookAtMesh: () => lookAtBodyMesh,
   setLookAtMesh: (mesh) => { lookAtBodyMesh = mesh; }
 };

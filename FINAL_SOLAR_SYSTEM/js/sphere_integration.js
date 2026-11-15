@@ -1156,15 +1156,23 @@
     function focusOnSpherex() {
       if (!spherexMesh) return;
       const vdProbe = {
-        name: 'SPHEREx Observatory',
+        name: 'SPHEREx OBSERVATORY',
+        targetR: 6.0,
         ephemerisDriven: false,
         trajectory: [],
         color: 0x087EAC,
-        info: {
-          launch: '2025 (NASA MIDEX)',
-          speed: '7.50 km/s',
-          status: 'Operational (700 km Sun-Sync LEO)',
-          note: 'All-Sky Spectral Survey'
+        labels: ['INSTRUMENT', 'SURVEY COVERAGE', 'SPECTRAL RANGE', 'MISSION CLASS', 'ORBITAL SPEED', 'MISSION TYPE'],
+        data: {
+          diam: '0.2m f/3 Spectrophotometer',
+          dist: 'All-Sky (96+ passes/field)',
+          year: '0.75 to 5.0 µm (102 bands)',
+          moons: 'NASA MIDEX Space Astrophysics',
+          vel: '7.5 km/s',
+          type: 'All-Sky Spectral Survey',
+          peri: '700 km Sun-synchronous',
+          etaPeri: 'Ice Lines & Distant Transients',
+          ap: 'Multi-epoch differencing',
+          etaAp: 'NASA Astrophysics / JPL / Caltech'
         }
       };
       try {
@@ -1219,15 +1227,23 @@
     function focusOnNeossat() {
       if (!neossatMesh) return;
       const vdNeossat = {
-        name: 'NEOSSat (CSA)',
+        name: 'NEOSSat (CSA / DRDC)',
+        targetR: 6.0,
         ephemerisDriven: false,
         trajectory: [],
         color: 0xFF2A2A,
-        info: {
-          launch: '2013 (PSLV-C20)',
-          speed: '7.49 km/s',
-          status: 'Operational (720 km Polar LEO)',
-          note: 'Asteroid Surveillance'
+        labels: ['TELESCOPE', 'PRIMARY OBJECTIVE', 'ORBIT CLASSIFICATION', 'CADENCE', 'ORBITAL SPEED', 'MISSION TYPE'],
+        data: {
+          diam: '15 cm f/5.8 Maksutov (C00)',
+          dist: 'Near-Earth Asteroids & Debris',
+          year: '720 km Polar Sun-Sync (98.6°)',
+          moons: 'Asteroid Rate Tracking (Tracklets)',
+          vel: '7.49 km/s',
+          type: 'Surveillance Space Telescope',
+          peri: '99.1 minutes',
+          etaPeri: '99942 Apophis, 65803 Didymos',
+          ap: 'MPC C00 (Spacecraft Code)',
+          etaAp: 'Canadian Space Agency (CSA)'
         }
       };
       try {
@@ -1551,6 +1567,9 @@
 
     // ── 14. Animation Loop Integration ───────────────────────────────────────
     // Animate SPHEREx orbit and mover beacons
+    // Temporary vector to avoid GC pressure in render loop
+    const _earthWorldPosTmp = new THREE.Vector3();
+
     function updateSpherexAnimation() {
       requestAnimationFrame(updateSpherexAnimation);
 
@@ -1558,13 +1577,13 @@
       if (spherexGroup && sol.planets) {
         const earth = sol.planets.find(p => p.d.name === 'EARTH');
         if (earth && earth.mesh) {
-          const earthPos = earth.mesh.position;
+          earth.mesh.getWorldPosition(_earthWorldPosTmp);
           const t = Date.now() * 0.001;
           const orbitR = 2.4; // LEO scene distance
           spherexGroup.position.set(
-            earthPos.x + Math.cos(t * 0.8) * orbitR,
-            earthPos.y + Math.sin(t * 0.6) * (orbitR * 0.5),
-            earthPos.z + Math.sin(t * 0.8) * orbitR
+            _earthWorldPosTmp.x + Math.cos(t * 0.8) * orbitR,
+            _earthWorldPosTmp.y + Math.sin(t * 0.6) * (orbitR * 0.5),
+            _earthWorldPosTmp.z + Math.sin(t * 0.8) * orbitR
           );
         }
       }
@@ -1573,13 +1592,13 @@
       if (neossatGroup && sol.planets) {
         const earth = sol.planets.find(p => p.d.name === 'EARTH');
         if (earth && earth.mesh) {
-          const earthPos = earth.mesh.position;
+          earth.mesh.getWorldPosition(_earthWorldPosTmp);
           const t = Date.now() * 0.0009;
           const orbitR = 2.8; // 720 km Polar LEO scene distance
           neossatGroup.position.set(
-            earthPos.x + Math.sin(t * 0.85) * (orbitR * 0.18),
-            earthPos.y + Math.sin(t * 0.85) * orbitR,
-            earthPos.z + Math.cos(t * 0.85) * orbitR
+            _earthWorldPosTmp.x + Math.sin(t * 0.85) * (orbitR * 0.18),
+            _earthWorldPosTmp.y + Math.sin(t * 0.85) * orbitR,
+            _earthWorldPosTmp.z + Math.cos(t * 0.85) * orbitR
           );
         }
       }
