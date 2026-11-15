@@ -1464,6 +1464,14 @@ body:not(.mobile-ui) #focus-bar {
     <span class="nasa-title">EYES ON THE SOLAR SYSTEM</span>
   </div>
   <div class="nasa-header-actions">
+    <button class="nasa-head-btn" id="btn-head-skyviewer" title="SPHEREx Multi-Epoch Sky Video & Time-Lapse Viewer (K)" style="border-color:rgba(34,211,238,0.4); color:#22D3EE;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#22D3EE"/></svg>
+      <span>Sky Video</span>
+    </button>
+    <button class="nasa-head-btn" id="btn-head-irsa" title="NASA IRSA SPHEREx Mission Documentation & Tools (I)" style="border-color:rgba(224,165,38,0.4); color:#E0A526;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>IRSA Resources</span>
+    </button>
     <button class="nasa-head-btn" id="btn-head-search" title="Search objects ( / )">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     </button>
@@ -1593,6 +1601,12 @@ body:not(.mobile-ui) #focus-bar {
   </button>
   <button class="nasa-tool-btn" id="btn-tool-movers" data-tooltip="SPHEREx Candidates Catalog (25) (M)">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18h12"/><path d="M12 2v16"/><circle cx="12" cy="7" r="4"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-skyviewer" data-tooltip="SPHEREx Sky Time-Lapse & Video Tool (K)" style="border-color:rgba(34,211,238,0.4);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#22D3EE"/></svg>
+  </button>
+  <button class="nasa-tool-btn" id="btn-tool-irsa" data-tooltip="NASA IRSA SPHEREx Mission Documentation (I)" style="border-color:rgba(224,165,38,0.4);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E0A526" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
   </button>
   <button class="nasa-tool-btn" id="btn-tool-fullscreen" data-tooltip="Toggle Fullscreen (F)">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
@@ -1769,6 +1783,210 @@ body:not(.mobile-ui) #focus-bar {
   </div>
 </div>
 
+<!-- ── SPHEREx Multi-Epoch Sky Video & Time-Lapse Tool Modal ──────────────── -->
+<div id="spherex-sky-modal" role="dialog" aria-modal="true" aria-labelledby="sky-modal-title">
+  <div class="sky-modal-head">
+    <div>
+      <div class="sky-modal-title" id="sky-modal-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#22D3EE"/></svg>
+        SPHEREx Multi-Epoch Sky Video & Time-Lapse Viewer
+      </div>
+      <div class="sky-modal-subtitle">
+        Spot moving asteroids, comets, brown dwarfs & variable stars across 102 infrared bands (0.75 – 5.0 µm) via multi-epoch video, Pluto-style blink comparator, and difference imaging.
+      </div>
+    </div>
+    <button type="button" id="btn-close-sky-modal" class="nasa-chevron-btn" title="Close (Esc)">✕</button>
+  </div>
+
+  <!-- Search Coordinates & Challenge Targets Bar -->
+  <form id="sky-coords-form" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px;">
+    <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:260px;">
+      <span style="font-size:11px; color:#94a3b8; font-weight:600;">RA:</span>
+      <input type="text" id="sky-input-ra" class="nasa-tl-input" placeholder="e.g. 133.7951 or 08h55m10.83s" value="133.7951" style="flex:1;">
+      <span style="font-size:11px; color:#94a3b8; font-weight:600;">DEC:</span>
+      <input type="text" id="sky-input-dec" class="nasa-tl-input" placeholder="e.g. -7.2452 or -07d14m42.5s" value="-7.2452" style="flex:1;">
+      <button type="submit" class="nasa-tl-action-btn nasa-tl-btn-primary" style="flex:initial; padding:6px 14px;">🔍 GO</button>
+    </div>
+  </form>
+
+  <!-- Quick-Picks for Official NASA Challenge Targets -->
+  <div style="font-size:10px; color:#94a3b8; margin-bottom:4px; font-weight:600; letter-spacing:0.5px;">OFFICIAL NASA CHALLENGE TARGETS & BENCHMARKS:</div>
+  <div class="sky-quick-picks-bar">
+    <button type="button" class="sky-pick-btn active" data-target-id="wise-0855">✦ WISE 0855-0714 (Cold Brown Dwarf)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="barnards-star">✦ Barnard's Star (10.3"/yr Proper Motion)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="epsilon-indi-b">✦ Epsilon Indi B (Binary Brown Dwarf)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="rw-aurigae">✦ RW Aurigae (T Tauri Variable)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="r-draconis">✦ R Draconis (Mira Variable)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="spx-mov-0001">✦ 1 Ceres (Known Asteroid Mover)</button>
+    <button type="button" class="sky-pick-btn" data-target-id="spx-mov-0002" style="border-color:#E0A526; color:#E0A526;">⚠ SPX-MOV-0002 [Unknown Candidate]</button>
+  </div>
+
+  <!-- Two-Column Main Layout -->
+  <div class="sky-grid-layout">
+    <!-- Left Column: Video / Time-Lapse Canvas & Player -->
+    <div class="sky-viewer-panel">
+      <!-- Image Mode Tabs -->
+      <div class="sky-mode-tabs">
+        <button type="button" class="sky-mode-tab active" data-mode="movie">▶ VIDEO MOVIE</button>
+        <button type="button" class="sky-mode-tab" data-mode="blink">⚡ BLINK COMPARISON</button>
+        <button type="button" class="sky-mode-tab" data-mode="difference">⊖ DIFFERENCE (SUB)</button>
+        <button type="button" class="sky-mode-tab" data-mode="coadd">⊕ CO-ADD (SUM)</button>
+        <button type="button" class="sky-mode-tab" data-mode="aladin">🌌 ALADIN LITE</button>
+      </div>
+
+      <!-- Canvas Wrapper -->
+      <div class="sky-canvas-wrapper" id="sky-canvas-wrapper-inner">
+        <canvas id="sky-video-canvas" width="400" height="400"></canvas>
+        <div class="sky-canvas-overlay-badge" id="sky-meta-name">WISE 0855-0714</div>
+        <div class="sky-canvas-epoch-badge" id="sky-epoch-badge">Epoch 1 (2026-03-01) [2026-03-01 00:00 UTC]</div>
+      </div>
+      <iframe id="sky-aladin-iframe" style="display:none; width:100%; aspect-ratio:1/1; border:1px solid rgba(255,255,255,0.2); border-radius:4px;"></iframe>
+
+      <!-- Video Controls -->
+      <div class="sky-video-controls">
+        <button type="button" class="sky-ctrl-btn" id="sky-btn-prev" title="Step Previous Epoch">⏮</button>
+        <button type="button" class="sky-ctrl-btn" id="sky-btn-play" style="min-width:105px;"><span>▶</span> PLAY VIDEO</button>
+        <button type="button" class="sky-ctrl-btn" id="sky-btn-next" title="Step Next Epoch">⏭</button>
+        <div class="sky-timeline-scrubber" id="sky-timeline-scrubber" title="Click to scrub epochs">
+          <div class="sky-timeline-fill" id="sky-timeline-fill"></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:4px; font-size:10px; color:#cbd5e1;">
+          <input type="range" id="sky-fps-slider" min="1" max="10" value="2" style="width:55px;">
+          <span id="sky-fps-val" style="font-family:monospace; min-width:32px;">2 fps</span>
+        </div>
+      </div>
+
+      <!-- Overlays Bar -->
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.08); padding-top:6px;">
+        <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+          <input type="checkbox" id="sky-chk-tracklet" checked> Target Reticle
+        </label>
+        <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+          <input type="checkbox" id="sky-chk-gaia" checked> Gaia DR3 Vectors
+        </label>
+        <label style="display:flex; align-items:center; gap:4px; cursor:pointer;">
+          <input type="checkbox" id="sky-chk-wise" checked> WISE W1/W2 Overlay
+        </label>
+        <button type="button" id="sky-btn-open-wiseview" class="sky-pick-btn" style="padding:2px 6px; font-size:9px; border-color:#a855f7; color:#c084fc;">
+          Open in WiseView ↗
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column: Science, Detector Bands & 102-CH SED -->
+    <div class="sky-viewer-panel">
+      <!-- FOV Selection -->
+      <div>
+        <div style="font-size:10px; color:#94a3b8; font-weight:600; margin-bottom:4px;">FIELD OF VIEW (FOV):</div>
+        <div class="sky-chips-row">
+          <div class="sky-chip" data-fov="1">1' (Detail)</div>
+          <div class="sky-chip" data-fov="3">3' (Tracklet)</div>
+          <div class="sky-chip active" data-fov="5">5' (Standard)</div>
+          <div class="sky-chip" data-fov="10">10' (Wide)</div>
+          <div class="sky-chip" data-fov="15">15'</div>
+          <div class="sky-chip" data-fov="30">30' (0.5° Survey)</div>
+        </div>
+      </div>
+
+      <!-- SPHEREx 6 Detector Arrays Filter -->
+      <div>
+        <div style="font-size:10px; color:#94a3b8; font-weight:600; margin-bottom:4px;">SPHEREx DETECTOR ARRAYS (102 BANDS):</div>
+        <div class="sky-chips-row">
+          <div class="sky-chip active" data-array="all">All 102 Bands (Co-added)</div>
+          <div class="sky-chip" data-array="1">Array 1: 0.75-1.1µm</div>
+          <div class="sky-chip" data-array="2">Array 2: 1.1-1.6µm (H2O 1.5µm)</div>
+          <div class="sky-chip" data-array="3">Array 3: 1.6-2.4µm (H2O 2.0µm)</div>
+          <div class="sky-chip" data-array="4">Array 4: 2.4-3.8µm</div>
+          <div class="sky-chip" data-array="5">Array 5: 3.8-4.4µm (CO2 4.27µm)</div>
+          <div class="sky-chip" data-array="6">Array 6: 4.4-5.0µm (CO 4.67µm)</div>
+        </div>
+      </div>
+
+      <!-- 102-CH SED Chart -->
+      <div style="border:1px solid rgba(255,255,255,0.1); border-radius:4px; padding:6px; background:#060810;">
+        <canvas id="sky-sed-canvas" width="380" height="150" style="width:100%; height:130px; display:block;"></canvas>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+          <span style="font-size:9px; color:#64748b;">H2O ices at 1.5 & 2.0 µm | CO2 at 4.27 µm</span>
+          <button type="button" id="sky-btn-export-csv" class="sky-pick-btn" style="padding:2px 8px; font-size:9px; border-color:#22d3ee; color:#22d3ee;">
+            💾 Export SED CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Observation Metadata -->
+      <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:4px; padding:8px;">
+        <div class="sky-meta-row"><span class="sky-meta-label">COORDINATES:</span><span class="sky-meta-val" id="sky-meta-coords">RA 133.7951° / Dec -7.2452°</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">PROPER MOTION:</span><span class="sky-meta-val" id="sky-meta-pm">8.1 arcsec/yr</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">SPECTRAL TYPE:</span><span class="sky-meta-val" id="sky-meta-type">Y2 (Coldest known, ~250 K)</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">DISTANCE:</span><span class="sky-meta-val" id="sky-meta-dist">7.27 ly</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">EPOCH DATE:</span><span class="sky-meta-val" id="sky-meta-epoch">2026-03-01 00:00 UTC</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">SIGNAL-TO-NOISE:</span><span class="sky-meta-val" id="sky-meta-snr">28.4 dB</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">CONTAMINATION:</span><span class="sky-meta-val" style="color:#22D3EE;" id="sky-meta-flag">CLEAN (No artifact detected)</span></div>
+        <div class="sky-meta-row"><span class="sky-meta-label">DESCRIPTION:</span><span class="sky-meta-val" style="font-family:inherit; font-size:10px; max-width:65%;" id="sky-meta-desc">Coldest known sub-stellar brown dwarf with water-ice clouds.</span></div>
+      </div>
+
+      <!-- Sharing & URL Embedding -->
+      <div style="display:flex; gap:6px; align-items:center; margin-top:2px;">
+        <input type="text" id="sky-share-url" readonly class="nasa-tl-input" style="font-size:10px; padding:4px 8px; flex:1;" value="">
+        <button type="button" id="sky-btn-copy-url" class="sky-pick-btn" style="padding:4px 8px; font-size:10px;">📋 Copy Link</button>
+        <button type="button" id="sky-btn-copy-embed" class="sky-pick-btn" style="padding:4px 8px; font-size:10px;">&lt;/&gt; Embed</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── NASA IRSA SPHEREx Resources & Documentation Modal ──────────────────── -->
+<div id="nasa-irsa-resources-modal" role="dialog" aria-modal="true">
+  <div class="sky-modal-head">
+    <div>
+      <div class="sky-modal-title" style="color:#E0A526;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E0A526" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        NASA / IPAC Infrared Science Archive (IRSA) — SPHEREx Resources
+      </div>
+      <div class="sky-modal-subtitle">
+        Official mission specifications, public data release schedule, science tools, and archive access protocols.
+      </div>
+    </div>
+    <button type="button" id="btn-close-irsa-modal" class="nasa-chevron-btn" title="Close">✕</button>
+  </div>
+
+  <div class="irsa-ack-box">
+    <strong>Official NASA/IPAC IRSA Data Acknowledgement:</strong><br>
+    "This publication makes use of data products from the Spectro-Photometer for the History of the Universe, Epoch of Reionization and Ices Explorer (SPHEREx), which is funded by the National Aeronautics and Space Administration and operated by the California Institute of Technology."
+  </div>
+
+  <div class="irsa-section-title">1. Mission Characteristics</div>
+  <table class="irsa-table">
+    <tr><th>Planned Lifetime</th><td>2025 – 2027 (Active Survey Mission)</td></tr>
+    <tr><th>Wavelength Coverage</th><td>0.75 – 5.0 µm in 102 spectral channels across 6 detector arrays (Bands 1–6)</td></tr>
+    <tr><th>Spectral Resolution</th><td>R = 39 (0.75–1.1 µm), R = 41 (1.1–2.4 µm), R = 35 (2.4–3.8 µm), R = 112 (3.8–4.4 µm), R = 128 (4.4–5.0 µm)</td></tr>
+    <tr><th>Sky Coverage</th><td>100% of the entire celestial sphere mapped once every 6 months (4 complete all-sky passes)</td></tr>
+    <tr><th>Instrument</th><td>Wide Field Linear Variable Filter (LVF) Imaging Spectrograph</td></tr>
+    <tr><th>Funding Agency</th><td>NASA (Astrophysics Division)</td></tr>
+    <tr><th>Contributing Institutions</th><td>JPL, Caltech, RIT, Harvard/CfA, Arizona State University, University of Arizona, Ohio State University, KASI, UC Irvine, Johns Hopkins, ASIAA</td></tr>
+  </table>
+
+  <div class="irsa-section-title">2. IRSA Services & SPHEREx Data Releases</div>
+  <table class="irsa-table">
+    <tr><th>SPHEREx Data Release 1 (DR1)</th><td>November 2026: Full public release of all Level 2 and Level 3 spectral image mosaics and catalogs.</td></tr>
+    <tr><th>SPHEREx Quick Releases (QR1–QR3)</th><td>July 2025 (QR1), October 2025 (QR2), September 2026 (QR3) initial uncalibrated pipelines available at IRSA.</td></tr>
+    <tr><th>SPLICCES Catalog</th><td>SPHEREx Target List of Ice Sources catalog for water ice, CO2, and CO interstellar detections.</td></tr>
+    <tr><th>Interstellar Comet 3I/ATLAS</th><td>Spectral imagery of interstellar comets and Solar System small bodies.</td></tr>
+    <tr><th>AWS S3 Cloud Data Access</th><td>Direct programmatic cloud access to complete SPHEREx multi-extension FITS data cubes.</td></tr>
+    <tr><th>Moving Object Search Tool (MOST)</th><td>Determines solar system body orbits and matches them to SPHEREx observation epochs.</td></tr>
+  </table>
+
+  <div class="irsa-section-title">3. SPHEREx Science Tools & Tutorials</div>
+  <table class="irsa-table">
+    <tr><th>Spectrophotometry Tool</th><td>Extracts 102-channel calibrated spectra from SPHEREx spectral images using forced photometry.</td></tr>
+    <tr><th>Mosaic Tool</th><td>Creates custom multiwavelength spectral image mosaics across arbitrary user-defined sky patches.</td></tr>
+    <tr><th>Cutout Tool</th><td>Extracts spatial subsets from multi-extension FITS files for rapid multi-epoch blink analysis.</td></tr>
+    <tr><th>Source Discovery Tool</th><td>Identifies and characterizes significant detected sources without requiring positional priors.</td></tr>
+    <tr><th>WiseView & Backyard Worlds</th><td>Community citizen-science tool for viewing WISE and SPHEREx infrared time-lapse data.</td></tr>
+    <tr><th>Gaia DR3 Integration</th><td>Astrometric cross-matching with European Space Agency Gaia Data Release 3 for proper motion vectors.</td></tr>
+  </table>
+</div>
+
 <!-- ── NASA Eyes Menu Navigation Drawer ─────────────────────────────────── -->
 <nav id="nasa-menu-drawer">
   <div class="nasa-menu-head">
@@ -1785,6 +2003,8 @@ body:not(.mobile-ui) #focus-bar {
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-ceres-known')?.click(); document.getElementById('btn-close-menu').click();">1 Ceres (Known Asteroid)</div>
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-cand-unknown')?.click(); document.getElementById('btn-close-menu').click();">SPX-MOV-0002 (Candidate Mover)</div>
     <div class="nasa-menu-item" onclick="document.getElementById('fbtn-open-movers')?.click(); document.getElementById('btn-close-menu').click();">🔭 SPHEREx Discovery Catalog (25)</div>
+    <div class="nasa-menu-item" onclick="SphereSkyViewer?.open(); document.getElementById('btn-close-menu').click();" style="color:#22D3EE; font-weight:bold;">🛰 SPHEREx Sky Video & Time-Lapse Viewer (K)</div>
+    <div class="nasa-menu-item" onclick="document.getElementById('nasa-irsa-resources-modal').style.display='block'; document.getElementById('btn-close-menu').click();" style="color:#E0A526;">ℹ NASA IRSA SPHEREx Documentation (I)</div>
     <div class="nasa-menu-item" onclick="document.getElementById('btn-pitch-tour')?.click(); document.getElementById('btn-close-menu').click();" style="color:#E0A526; font-weight:bold;">▶ Run 3-Minute Scripted Tour</div>
   </div>
 </nav>
@@ -2049,6 +2269,7 @@ body:not(.mobile-ui) #focus-bar {
 <script src="js/solar_system.js"></script>
 <script src="js/sphere_engine.js"></script>
 <script src="js/sphere_integration.js"></script>
+<script src="js/sphere_sky_viewer.js"></script>
 <script src="js/timelapse_engine.js"></script>
 <script src="js/nasa_eyes_ui.js"></script>
 
