@@ -723,6 +723,56 @@
       });
     }
 
+    // ── HUD Toast Helper ───────────────────────────────────────────────────
+    function showHudToast(text) {
+      let toast = document.getElementById('nasa-hud-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'nasa-hud-toast';
+        toast.style.position = 'fixed';
+        toast.style.bottom = '84px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.background = 'rgba(7, 12, 22, 0.92)';
+        toast.style.border = '1px solid rgba(0, 229, 255, 0.5)';
+        toast.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 229, 255, 0.25)';
+        toast.style.borderRadius = '20px';
+        toast.style.padding = '8px 22px';
+        toast.style.color = '#E2E8F0';
+        toast.style.fontFamily = "'Barlow', 'Inter', -apple-system, sans-serif";
+        toast.style.fontSize = '12px';
+        toast.style.fontWeight = '600';
+        toast.style.letterSpacing = '1px';
+        toast.style.zIndex = '99999';
+        toast.style.pointerEvents = 'none';
+        toast.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = text;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(8px)';
+      }, 2400);
+    }
+
+    // ── Trajectory Inspect vs Free Navigation Mode Controller ────────────────
+    const btnHeadTrajMode = document.getElementById('btn-head-traj-mode');
+    const txtHeadTrajMode = document.getElementById('txt-head-traj-mode');
+
+    if (btnHeadTrajMode) {
+      btnHeadTrajMode.addEventListener('click', () => {
+        const nextState = typeof sol.toggleTrajectoryMode === 'function' ? sol.toggleTrajectoryMode() : true;
+        btnHeadTrajMode.classList.toggle('active', nextState);
+        if (txtHeadTrajMode) {
+          txtHeadTrajMode.textContent = nextState ? 'Trajectories: ON' : 'Free Cam (Traj: OFF)';
+        }
+        showHudToast(nextState ? '🛰️ TRAJECTORY INSPECT MODE: ON (Hover trajectory to inspect)' : '🕊️ FREE NAVIGATION MODE (Trajectories Passive)');
+      });
+    }
+
     // ── 9. Celestial Names & Objects Directory Controller ────────────────────
     const namesDrawer = document.getElementById('nasa-names-drawer');
     const btnHeadNames = document.getElementById('btn-head-names');
@@ -736,7 +786,8 @@
 
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    let show3DLabels = false;
+    let show3DLabels = true;
+    if (chk3DLabels) chk3DLabels.checked = true;
 
     const CELESTIAL_CATALOG = [
       // Major Planets & Sun
@@ -920,16 +971,20 @@
     // ── 10. Dynamic 3D Celestial Map Labels Controller ──────────────────────
     const LABEL_BODIES = [
       { id: 'SUN', name: 'SUN', color: '#FFE050', getPos: () => sol.sunMesh ? sol.sunMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => sol.focusObject('sun') },
-      { id: 'MERCURY', name: 'MERCURY', color: '#AAAAAA', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='MERCURY')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('MERCURY') },
-      { id: 'VENUS', name: 'VENUS', color: '#E8C068', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='VENUS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('VENUS') },
-      { id: 'EARTH', name: 'EARTH', color: '#3377BB', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='EARTH')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('EARTH') },
-      { id: 'MARS', name: 'MARS', color: '#C1440E', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='MARS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('MARS') },
-      { id: 'JUPITER', name: 'JUPITER', color: '#C99040', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='JUPITER')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('JUPITER') },
-      { id: 'SATURN', name: 'SATURN', color: '#E4D191', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='SATURN')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('SATURN') },
-      { id: 'URANUS', name: 'URANUS', color: '#7DCCCC', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='URANUS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('URANUS') },
-      { id: 'NEPTUNE', name: 'NEPTUNE', color: '#4466FF', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='NEPTUNE')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('NEPTUNE') },
-      { id: 'SPHEREX', name: 'SPHEREx', color: '#22D3EE', getPos: () => window.SPHEREx?.probeMesh ? window.SPHEREx.probeMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => document.getElementById('fbtn-spherex')?.click() },
-      { id: 'NEOSSAT', name: '🍁 NEOSSat', color: '#FF6B6B', getPos: () => window.SPHEREx?.neossatMesh ? window.SPHEREx.neossatMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => window.SPHEREx?.focusNeossat?.() }
+      { id: 'MERCURY', name: 'MERCURY', color: '#90CAF9', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='MERCURY')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('MERCURY') },
+      { id: 'VENUS', name: 'VENUS', color: '#FFE082', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='VENUS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('VENUS') },
+      { id: 'EARTH', name: 'EARTH', color: '#00E5FF', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='EARTH')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('EARTH') },
+      { id: 'MARS', name: 'MARS', color: '#FF5D38', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='MARS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('MARS') },
+      { id: 'JUPITER', name: 'JUPITER', color: '#FFAA33', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='JUPITER')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('JUPITER') },
+      { id: 'SATURN', name: 'SATURN', color: '#F5E29E', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='SATURN')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('SATURN') },
+      { id: 'URANUS', name: 'URANUS', color: '#4DEEEA', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='URANUS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('URANUS') },
+      { id: 'NEPTUNE', name: 'NEPTUNE', color: '#2979FF', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='NEPTUNE')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('NEPTUNE') },
+      { id: 'CERES', name: 'CERES', color: '#E2E8F0', getPos: () => sol.dwarfs?.find(d => d.d.name === 'CERES')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'CERES')) },
+      { id: 'PLUTO', name: 'PLUTO', color: '#E0AAFF', getPos: () => sol.dwarfs?.find(d => d.d.name === 'PLUTO')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'PLUTO')) },
+      { id: 'SPHEREX', name: 'SPHEREx', color: '#00E5FF', getPos: () => window.SPHEREx?.probeMesh ? window.SPHEREx.probeMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => document.getElementById('fbtn-spherex')?.click() },
+      { id: 'NEOSSAT', name: 'NEOSSat', color: '#FF6B6B', getPos: () => window.SPHEREx?.neossatMesh ? window.SPHEREx.neossatMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => window.SPHEREx?.focusNeossat?.() },
+      { id: 'VOYAGER 1', name: 'Voyager 1', color: '#AADDFF', getPos: () => sol.probes?.find(p => p.vd?.name?.includes('Voyager 1'))?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusObject('probe', sol.probes?.find(p => p.vd?.name?.includes('Voyager 1'))) },
+      { id: 'VOYAGER 2', name: 'Voyager 2', color: '#FFDDAA', getPos: () => sol.probes?.find(p => p.vd?.name?.includes('Voyager 2'))?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusObject('probe', sol.probes?.find(p => p.vd?.name?.includes('Voyager 2'))) }
     ];
 
     const labelElements = new Map();
@@ -976,9 +1031,27 @@
         return;
       }
 
+      const isTrajMode = typeof sol.isTrajectoryMode === 'function' ? sol.isTrajectoryMode() : true;
+      const activeHoveredName = (isTrajMode && typeof sol.getHoveredBodyName === 'function') ? sol.getHoveredBodyName() : null;
+
       LABEL_BODIES.forEach(item => {
         const el = labelElements.get(item.id);
         if (!el) return;
+
+        // Check if this body is currently hovered/highlighted by trajectory inspection
+        const isHighlighted = isTrajMode && activeHoveredName && (
+          item.id.toUpperCase() === activeHoveredName.toUpperCase() ||
+          item.name.toUpperCase() === activeHoveredName.toUpperCase() ||
+          activeHoveredName.toUpperCase().includes(item.id.toUpperCase()) ||
+          item.id.toUpperCase().includes(activeHoveredName.toUpperCase())
+        );
+
+        if (isHighlighted) {
+          el.classList.add('trajectory-highlighted');
+          el.style.setProperty('--traj-color', item.color || '#00E5FF');
+        } else {
+          el.classList.remove('trajectory-highlighted');
+        }
 
         const worldPos = item.getPos();
         if (!worldPos) {
@@ -1017,6 +1090,14 @@
         e.preventDefault();
         toggleNamesDrawer();
       } else if (key === 't') {
+        e.preventDefault();
+        if (btnHeadTrajMode) {
+          btnHeadTrajMode.click();
+        } else if (typeof sol.toggleTrajectoryMode === 'function') {
+          const state = sol.toggleTrajectoryMode();
+          showHudToast(state ? '🛰️ TRAJECTORY INSPECT MODE: ON (Hover trajectory to inspect)' : '🕊️ FREE NAVIGATION MODE (Trajectories Passive)');
+        }
+      } else if (key === 'l') {
         e.preventDefault();
         if (timelapseModal && timelapseModal.style.display === 'block') {
           closeTimelapseModal();

@@ -3122,8 +3122,8 @@ function updateComets() {
       cm.incGrp.updateWorldMatrix(true, false);
       cm.nucleus.position.copy(cm.incGrp.worldToLocal(_cometWorldPos));
     }
-    const isCometHovered = (hoveredTrajectory && (hoveredTrajectory.obj === cm || hoveredTrajectory.name === cm.cd.name)) ||
-                           (hoveredBodyObject && (hoveredBodyObject === cm || hoveredBodyObject.nucleus === cm.nucleus));
+    const isCometHovered = trajectoryInspectMode && ((hoveredTrajectory && (hoveredTrajectory.obj === cm || hoveredTrajectory.name === cm.cd.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === cm || hoveredBodyObject.nucleus === cm.nucleus)));
     cm.orbitLine.material.color.setHex(isCometHovered ? 0x9EE7FF : 0x2A4455);
     cm.orbitLine.material.opacity = isCometHovered ? 1.0 : 0.28;
     cm.orbitLine.renderOrder = isCometHovered ? 999 : 0;
@@ -3594,8 +3594,8 @@ function updateProbes() {
     const launched = currentYear >= vd.launchYear;
     pr.mesh.visible = launched && (viewMode === 'solar') && probesOn;
     pr.glowPt.visible = launched && (viewMode === 'solar') && !realSizeMode && probesOn;
-    const isProbeHovered = (hoveredTrajectory && (hoveredTrajectory.obj === pr || hoveredTrajectory.name === pr.vd.name)) ||
-                           (hoveredBodyObject && (hoveredBodyObject === pr || hoveredBodyObject.mesh === pr.mesh));
+    const isProbeHovered = trajectoryInspectMode && ((hoveredTrajectory && (hoveredTrajectory.obj === pr || hoveredTrajectory.name === pr.vd.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === pr || hoveredBodyObject.mesh === pr.mesh)));
     if (pr.trailLine && pr.trailLine.material) {
       pr.trailLine.material.opacity = isProbeHovered ? 1.0 : 0.65;
       pr.trailLine.renderOrder = isProbeHovered ? 999 : 0;
@@ -3840,19 +3840,24 @@ let simTime   = getCurrentSimTime();
 let sunZ      = 0; // galactic travel — derived after speed constants initialize, never accumulated
 
 // Camera: spherical coords around a target point
-// User rotates/zooms; target smoothly follows Sun in vortex mode
-let camTheta  = 0.4;   // azimuth
-let camPhi    = 1.08;  // polar
-let camR      = 800;   // radius
-const camTarget = new THREE.Vector3(0,0,0);
+// Calibrated to match NASA Eyes opening view: Sun center-right, Earth left, Mars below, Jupiter bottom right
+let camTheta  = 4.95;   // azimuth (frames inner planets + Jupiter lower right)
+let camPhi    = 1.12;   // polar angle (~64° elevation from pole, oblique downward pitch)
+let camR      = 175;    // radius framing Sun, Earth, Mars, and Jupiter orbit sweeping bottom right
+const camTarget = new THREE.Vector3(10, 0, -5);
 const lyValEl = document.getElementById('ly-val');
 // Per-view default phi/r (theta is user-controlled)
 const VIEW_DEFAULTS = {
-  solar:  { phi:1.08, r:800   },
-  vortex: { phi:1.18, r:5200  },
+  solar:  { phi: 1.12, r: 175, theta: 4.95 },
+  vortex: { phi: 1.18, r: 5200, theta: -0.72 },
 };
 let targetPhi = VIEW_DEFAULTS.solar.phi;
 let targetR   = VIEW_DEFAULTS.solar.r;
+
+// Trajectory Inspect Mode: when enabled, hovering over an orbit trajectory highlights it
+// and highlights the object's 3D name. When disabled, user moves freely in simulation
+// with names visible but no trajectory highlight on hover.
+let trajectoryInspectMode = true;
 
 // Speed: sim-years per real second
 const spdEl  = document.getElementById('spd');
@@ -4295,7 +4300,12 @@ function setView(mode) {
   targetPhi = def.phi;
   targetR   = def.r;
 
-  if (mode === 'vortex' && !focusMesh) camTheta = -0.72;
+  if (mode === 'solar' && !focusMesh) {
+    camTheta = def.theta !== undefined ? def.theta : 4.95;
+    camTarget.set(10, 0, -5);
+  } else if (mode === 'vortex' && !focusMesh) {
+    camTheta = -0.72;
+  }
 
   // Orbit rings only in solar mode
   for (const p of planets) p.orbitLine.visible = orbitsOn && (mode==='solar');
@@ -4445,8 +4455,8 @@ document.getElementById('probes-btn').addEventListener('click', () => {
     const launched = (2000 + simTime) >= pr.vd.launchYear;
     pr.mesh.visible      = launched && (viewMode === 'solar') && probesOn;
     pr.glowPt.visible    = launched && (viewMode === 'solar') && !realSizeMode && probesOn;
-    const isProbeHovered = (hoveredTrajectory && (hoveredTrajectory.obj === pr || hoveredTrajectory.name === pr.vd.name)) ||
-                           (hoveredBodyObject && (hoveredBodyObject === pr || hoveredBodyObject.mesh === pr.mesh));
+    const isProbeHovered = trajectoryInspectMode && ((hoveredTrajectory && (hoveredTrajectory.obj === pr || hoveredTrajectory.name === pr.vd.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === pr || hoveredBodyObject.mesh === pr.mesh)));
     if (pr.trailLine && pr.trailLine.material) {
       pr.trailLine.material.opacity = isProbeHovered ? 1.0 : 0.65;
       pr.trailLine.renderOrder = isProbeHovered ? 999 : 0;
@@ -5618,8 +5628,8 @@ function hoverCheck(cx,cy){
     return;
   }
 
-  // Trajectory hover detection & interactive glow
-  const trajHit = getTrajectoryHit(cx, cy);
+  // Trajectory hover detection & interactive glow (only active in Trajectory Mode)
+  const trajHit = trajectoryInspectMode ? getTrajectoryHit(cx, cy) : null;
   if(trajHit){
     hoveredTrajectory = trajHit;
     hoveredBodyObject = trajHit.obj;
@@ -5665,8 +5675,8 @@ function suppressSceneClick(durationMs = 400) {
 function handleSceneClick(cx, cy) {
   const h=getHit(cx,cy);
   if(!h){
-    // Test if user clicked directly on an orbital trajectory
-    const trajHit = getTrajectoryHit(cx, cy);
+    // Test if user clicked directly on an orbital trajectory (when trajectoryInspectMode is active)
+    const trajHit = trajectoryInspectMode ? getTrajectoryHit(cx, cy) : null;
     if(trajHit){
       if(trajHit.type === 'planet'){
         setFocus(trajHit.obj.d.name);
@@ -6018,8 +6028,10 @@ function getOrbitLineColorHex(bodyLike, atSim = simTime) {
   if (!bodyLike) return 0x334455;
   const name = (bodyLike.d?.name || bodyLike.cd?.name || bodyLike.vd?.name || bodyLike.md?.name || '').toUpperCase();
   const pal = TRAJECTORY_COLORS[name];
-  const isHovered = (hoveredTrajectory && (hoveredTrajectory.obj === bodyLike || hoveredTrajectory.name === name)) ||
-                    (hoveredBodyObject && (hoveredBodyObject === bodyLike || (bodyLike.mesh && hoveredBodyObject.mesh === bodyLike.mesh)));
+  const isHovered = trajectoryInspectMode && (
+    (hoveredTrajectory && (hoveredTrajectory.obj === bodyLike || hoveredTrajectory.name === name)) ||
+    (hoveredBodyObject && (hoveredBodyObject === bodyLike || (bodyLike.mesh && hoveredBodyObject.mesh === bodyLike.mesh)))
+  );
   if (pal) {
     return isHovered ? pal.bright : pal.dim;
   }
@@ -6030,8 +6042,10 @@ function getOrbitLineColorHex(bodyLike, atSim = simTime) {
 function getOrbitLineOpacity(bodyLike) {
   if (!bodyLike) return 0.32;
   const name = (bodyLike.d?.name || bodyLike.cd?.name || bodyLike.vd?.name || bodyLike.md?.name || '').toUpperCase();
-  const isHovered = (hoveredTrajectory && (hoveredTrajectory.obj === bodyLike || hoveredTrajectory.name === name)) ||
-                    (hoveredBodyObject && (hoveredBodyObject === bodyLike || (bodyLike.mesh && hoveredBodyObject.mesh === bodyLike.mesh)));
+  const isHovered = trajectoryInspectMode && (
+    (hoveredTrajectory && (hoveredTrajectory.obj === bodyLike || hoveredTrajectory.name === name)) ||
+    (hoveredBodyObject && (hoveredBodyObject === bodyLike || (bodyLike.mesh && hoveredBodyObject.mesh === bodyLike.mesh)))
+  );
   return isHovered ? 1.0 : 0.32;
 }
 
@@ -6647,8 +6661,8 @@ function animate(){
       p.mesh.material.transparent = false;
       p.mesh.material.needsUpdate = true;
     }
-    const isPlanetHovered = (hoveredTrajectory && (hoveredTrajectory.obj === p || hoveredTrajectory.name === p.d.name)) ||
-                            (hoveredBodyObject && (hoveredBodyObject === p || hoveredBodyObject.mesh === p.mesh));
+    const isPlanetHovered = trajectoryInspectMode && ((hoveredTrajectory && (hoveredTrajectory.obj === p || hoveredTrajectory.name === p.d.name)) ||
+                            (hoveredBodyObject && (hoveredBodyObject === p || hoveredBodyObject.mesh === p.mesh)));
     const pPalette = TRAJECTORY_COLORS[p.d.name] || { bright: p.d.color, dim: 0x334455 };
     p.orbitLine.material.color.setHex(isPlanetHovered ? pPalette.bright : pPalette.dim);
     p.orbitLine.material.opacity = isPlanetHovered ? 1.0 : 0.32;
@@ -6683,8 +6697,8 @@ function animate(){
     p.axialAngle = (p.axialAngle || 0) + rotStepAngle * dwarfRotRatio;
     p.mesh.rotation.y = p.axialAngle;
 
-    const isDwarfHovered = (hoveredTrajectory && (hoveredTrajectory.obj === p || hoveredTrajectory.name === p.d.name)) ||
-                           (hoveredBodyObject && (hoveredBodyObject === p || hoveredBodyObject.mesh === p.mesh));
+    const isDwarfHovered = trajectoryInspectMode && ((hoveredTrajectory && (hoveredTrajectory.obj === p || hoveredTrajectory.name === p.d.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === p || hoveredBodyObject.mesh === p.mesh)));
     const dPalette = TRAJECTORY_COLORS[p.d.name] || { bright: p.d.color, dim: 0x334455 };
     p.orbitLine.material.color.setHex(isDwarfHovered ? dPalette.bright : dPalette.dim);
     p.orbitLine.material.opacity = isDwarfHovered ? 1.0 : 0.30;
@@ -7736,6 +7750,31 @@ window.SOL_APP = {
   unhighlightTrajectory: function() {
     hoveredTrajectory = null;
     hoveredBodyObject = null;
+  },
+  isTrajectoryMode: () => trajectoryInspectMode,
+  setTrajectoryMode: (val) => {
+    trajectoryInspectMode = !!val;
+    if (!trajectoryInspectMode) {
+      hoveredTrajectory = null;
+      hoveredBodyObject = null;
+    }
+    return trajectoryInspectMode;
+  },
+  toggleTrajectoryMode: () => {
+    trajectoryInspectMode = !trajectoryInspectMode;
+    if (!trajectoryInspectMode) {
+      hoveredTrajectory = null;
+      hoveredBodyObject = null;
+    }
+    return trajectoryInspectMode;
+  },
+  getHoveredBodyName: () => {
+    if (!trajectoryInspectMode) return null;
+    if (hoveredTrajectory) return hoveredTrajectory.name;
+    if (hoveredBodyObject) {
+      return hoveredBodyObject.d?.name || hoveredBodyObject.vd?.name || hoveredBodyObject.cd?.name || (hoveredBodyObject === sunMesh ? 'SUN' : null);
+    }
+    return null;
   }
 };
 
