@@ -22,6 +22,8 @@
 
   function initNasaEyesUI() {
     const sol = window.SOL_APP;
+    let show3DLabels = true;
+    const labelElements = new Map();
 
     // ── HUD Notification Toast ──────────────────────────────────────────────
     function showHudToast(text) {
@@ -1009,7 +1011,6 @@
       { id: 'VOYAGER 2', name: 'Voyager 2', color: '#FFDDAA', getPos: () => sol.probes?.find(p => p.vd?.name?.includes('Voyager 2'))?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusObject('probe', sol.probes?.find(p => p.vd?.name?.includes('Voyager 2'))) }
     ];
 
-    const labelElements = new Map();
     if (labelsOverlay) {
       LABEL_BODIES.forEach(item => {
         const el = document.createElement('div');
