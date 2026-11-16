@@ -1311,34 +1311,47 @@ body {
 .nasa-3d-label {
   position: absolute;
   transform: translate(-50%, -100%);
-  margin-top: -12px;
+  margin-top: -10px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  background: rgba(10, 14, 22, 0.78);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  gap: 5px;
+  padding: 2px 7px;
+  background: rgba(4, 7, 14, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 3px;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1.8px;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: var(--nasa-font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
   text-transform: uppercase;
   white-space: nowrap;
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
-  transition: border-color 0.2s, background 0.2s, transform 0.15s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.9);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease, text-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
 .nasa-3d-label:hover {
-  border-color: rgba(204, 160, 106, 0.7);
-  background: rgba(18, 24, 38, 0.94);
+  border-color: rgba(34, 211, 238, 0.7);
+  background: rgba(8, 14, 26, 0.85);
   color: #ffffff;
-  transform: translate(-50%, -105%) scale(1.05);
+  transform: translate(-50%, -105%) scale(1.15);
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.8), 0 2px 4px rgba(0, 0, 0, 0.95);
+}
+
+.nasa-3d-label.trajectory-highlighted {
+  border-color: var(--traj-color, #00E5FF) !important;
+  background: rgba(6, 12, 24, 0.9) !important;
+  color: #ffffff !important;
+  transform: translate(-50%, -105%) scale(1.28) !important;
+  text-shadow: 0 0 14px var(--traj-color, #00E5FF), 0 0 28px var(--traj-color, #00E5FF), 0 2px 6px rgba(0, 0, 0, 0.95) !important;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.9), 0 0 15px var(--traj-color, rgba(34, 211, 238, 0.5)) !important;
+  z-index: 120 !important;
 }
 
 .nasa-3d-label .label-dot {
@@ -1346,6 +1359,14 @@ body {
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nasa-3d-label.trajectory-highlighted .label-dot,
+.nasa-3d-label:hover .label-dot {
+  transform: scale(1.4);
+  box-shadow: 0 0 12px var(--traj-color, #00E5FF), 0 0 20px var(--traj-color, #00E5FF);
 }
 
 /* ── Celestial Names & Objects Directory Modal/Drawer ─────────────────────── */
