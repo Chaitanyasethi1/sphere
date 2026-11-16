@@ -573,7 +573,7 @@
         border-radius: 4px;
         padding: 14px 16px;
         color: #fff;
-        font-family: 'Courier New', monospace;
+        font-family: var(--nasa-font-sans, 'Barlow', sans-serif);
         z-index: 100;
         display: none;
         flex-direction: column;
@@ -587,7 +587,7 @@
             <div style="font-size:12px; letter-spacing:2px; font-weight:bold; color:#22D3EE;">SPHEREx SKY DIARY</div>
             <div style="font-size:10px; color:#8899aa; letter-spacing:1px; margin-top:2px;">DETECTED MOVERS <span style="background:rgba(224,165,38,0.2); color:#E0A526; padding:1px 5px; border-radius:2px; font-size:9px; border:1px solid #E0A526;">TEST DATA</span></div>
           </div>
-          <button id="close-movers-drawer" style="background:none; border:1px solid rgba(255,255,255,0.2); color:#fff; cursor:pointer; padding:2px 8px; font-family:'Courier New',monospace; font-size:11px;">✕</button>
+          <button id="close-movers-drawer" style="background:none; border:1px solid rgba(255,255,255,0.2); color:#fff; cursor:pointer; padding:2px 8px; font-family:var(--nasa-font-sans, sans-serif); font-size:11px;">✕</button>
         </div>
 
         <div style="display:flex; gap:6px; margin-bottom:8px;">
@@ -597,7 +597,7 @@
         </div>
 
         <div style="margin-bottom:8px;">
-          <input type="text" id="movers-search-input" placeholder="Search ID / name..." style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; font-family:'Courier New',monospace; font-size:11px; padding:5px 8px; border-radius:2px;">
+          <input type="text" id="movers-search-input" placeholder="Search ID / name..." style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#fff; font-family:var(--nasa-font-sans, sans-serif); font-size:11px; padding:5px 8px; border-radius:2px;">
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#8899aa; margin-bottom:4px;">
@@ -1440,7 +1440,7 @@
         border-radius: 4px;
         padding: 12px 18px;
         color: #fff;
-        font-family: 'Courier New', monospace;
+        font-family: var(--nasa-font-sans, sans-serif);
         z-index: 110;
         display: none;
         box-shadow: 0 4px 24px rgba(0,0,0,0.8);

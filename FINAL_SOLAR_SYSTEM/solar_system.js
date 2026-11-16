@@ -7325,6 +7325,7 @@ window.SOL_APP = {
   showInfo,
   renderInfoContent,
   clearFocusSelection,
+  projectWorldToScreen,
   getSimTime: () => simTime,
   setSimTime: (t) => { simTime = t; },
   isPaused: () => paused,

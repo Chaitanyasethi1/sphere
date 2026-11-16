@@ -723,13 +723,279 @@
       });
     }
 
-    // ── 9. Global Keyboard Shortcuts ─────────────────────────────────────────
+    // ── 9. Celestial Names & Objects Directory Controller ────────────────────
+    const namesDrawer = document.getElementById('nasa-names-drawer');
+    const btnHeadNames = document.getElementById('btn-head-names');
+    const btnToolNames = document.getElementById('btn-tool-names');
+    const btnCloseNames = document.getElementById('btn-close-names');
+    const namesSearchInput = document.getElementById('names-search-input');
+    const namesGrid = document.getElementById('nasa-names-grid');
+    const chk3DLabels = document.getElementById('chk-3d-labels');
+    const filterPills = document.querySelectorAll('.nasa-names-filter-tabs .nasa-filter-pill');
+    const labelsOverlay = document.getElementById('nasa-3d-labels-overlay');
+
+    let currentFilter = 'all';
+    let currentSearchTerm = '';
+    let show3DLabels = false;
+
+    const CELESTIAL_CATALOG = [
+      // Major Planets & Sun
+      { id: 'sun', name: 'SUN', category: 'planet', color: '#FFE050', type: 'STAR · G2V SPECTRAL CLASS', dist: '0.00 AU', diam: '1,392,700 km', focus: () => sol.focusObject('sun') },
+      { id: 'mercury', name: 'MERCURY', category: 'planet', color: '#AAAAAA', type: 'TERRESTRIAL PLANET', dist: '0.39 AU', diam: '4,879 km', focus: () => sol.focusByName('MERCURY') },
+      { id: 'venus', name: 'VENUS', category: 'planet', color: '#E8C068', type: 'TERRESTRIAL PLANET', dist: '0.72 AU', diam: '12,104 km', focus: () => sol.focusByName('VENUS') },
+      { id: 'earth', name: 'EARTH', category: 'planet', color: '#3377BB', type: 'TERRESTRIAL PLANET · HOME', dist: '1.00 AU', diam: '12,742 km', focus: () => sol.focusByName('EARTH') },
+      { id: 'mars', name: 'MARS', category: 'planet', color: '#C1440E', type: 'TERRESTRIAL PLANET', dist: '1.52 AU', diam: '6,779 km', focus: () => sol.focusByName('MARS') },
+      { id: 'jupiter', name: 'JUPITER', category: 'planet', color: '#C99040', type: 'GAS GIANT', dist: '5.20 AU', diam: '139,820 km', focus: () => sol.focusByName('JUPITER') },
+      { id: 'saturn', name: 'SATURN', category: 'planet', color: '#E4D191', type: 'RINGED GAS GIANT', dist: '9.58 AU', diam: '116,460 km', focus: () => sol.focusByName('SATURN') },
+      { id: 'uranus', name: 'URANUS', category: 'planet', color: '#7DCCCC', type: 'ICE GIANT', dist: '19.2 AU', diam: '50,724 km', focus: () => sol.focusByName('URANUS') },
+      { id: 'neptune', name: 'NEPTUNE', category: 'planet', color: '#4466FF', type: 'ICE GIANT', dist: '30.1 AU', diam: '49,244 km', focus: () => sol.focusByName('NEPTUNE') },
+
+      // Spacecraft & Observatories
+      { id: 'spherex', name: 'SPHEREx', category: 'probe', color: '#22D3EE', type: 'NASA ALL-SKY IR TELESCOPE · 700 KM POLAR', dist: '700 km LEO', diam: '102 BANDS', focus: () => { const b = document.getElementById('fbtn-spherex'); if (b) b.click(); else window.SPHEREx?.focusSpherex?.(); } },
+      { id: 'neossat', name: 'NEOSSat (CSA)', category: 'probe', color: '#FF6B6B', type: 'CSA ASTEROID TRACKER · 720 KM POLAR', dist: '720 km LEO', diam: '15 cm TEL', focus: () => { if (window.SPHEREx?.focusNeossat) window.SPHEREx.focusNeossat(); else document.getElementById('fbtn-neossat')?.click(); } },
+      { id: 'voyager1', name: 'VOYAGER 1', category: 'probe', color: '#AADDFF', type: 'INTERSTELLAR PROBE · HELIOPAUSE', dist: '162+ AU', diam: 'LAUNCH 1977', focus: () => sol.focusObject('probe', sol.probes?.find(p => p.vd?.name?.includes('Voyager 1'))) },
+      { id: 'voyager2', name: 'VOYAGER 2', category: 'probe', color: '#FFDDAA', type: 'INTERSTELLAR PROBE · HELIOSPHERE', dist: '136+ AU', diam: 'LAUNCH 1977', focus: () => sol.focusObject('probe', sol.probes?.find(p => p.vd?.name?.includes('Voyager 2'))) },
+
+      // Dwarf Planets
+      { id: 'ceres', name: '1 CERES', category: 'dwarf', color: '#998877', type: 'ASTEROID BELT DWARF PLANET', dist: '2.77 AU', diam: '939 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'CERES')) },
+      { id: 'pluto', name: 'PLUTO', category: 'dwarf', color: '#BBAA88', type: 'KUIPER BELT DWARF PLANET', dist: '39.5 AU', diam: '2,376 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'PLUTO')) },
+      { id: 'eris', name: 'ERIS', category: 'dwarf', color: '#CCCCCC', type: 'SCATTERED DISC DWARF PLANET', dist: '67.7 AU', diam: '2,326 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'ERIS')) },
+      { id: 'makemake', name: 'MAKEMAKE', category: 'dwarf', color: '#BB9966', type: 'KUIPER BELT DWARF PLANET', dist: '45.8 AU', diam: '1,430 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'MAKEMAKE')) },
+      { id: 'haumea', name: 'HAUMEA', category: 'dwarf', color: '#DDDDCC', type: 'FAST-SPINNING ELONGATED DWARF', dist: '43.2 AU', diam: '1,595 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'HAUMEA')) },
+      { id: 'sedna', name: 'SEDNA', category: 'dwarf', color: '#CC6644', type: 'EXTREME TRANS-NEPTUNIAN OBJECT', dist: '85.5 AU', diam: '995 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'SEDNA')) },
+      { id: 'gonggong', name: 'GONGGONG', category: 'dwarf', color: '#AA8877', type: 'RESONANT TNO DWARF PLANET', dist: '88.7 AU', diam: '1,230 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'GONGGONG')) },
+      { id: 'quaoar', name: 'QUAOAR', category: 'dwarf', color: '#997766', type: 'CUBEWANO DWARF PLANET', dist: '43.7 AU', diam: '1,110 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'QUAOAR')) },
+      { id: 'orcus', name: 'ORCUS', category: 'dwarf', color: '#888899', type: 'PLUTINO MINOR PLANET', dist: '39.4 AU', diam: '910 km', focus: () => sol.focusObject('dwarf', sol.dwarfs?.find(d => d.d.name === 'ORCUS')) },
+
+      // Comets
+      { id: 'halley', name: "HALLEY'S", category: 'comet', color: '#AADDFF', type: '1P/HALLEY PERIODIC COMET', dist: '0.59–35 AU', diam: '11 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === "Halley's")) },
+      { id: 'halebopp', name: 'HALE-BOPP', category: 'comet', color: '#CCEEFF', type: 'C/1995 O1 GREAT COMET', dist: '0.91–370 AU', diam: '60 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Hale-Bopp')) },
+      { id: 'hyakutake', name: 'HYAKUTAKE', category: 'comet', color: '#BBEEFF', type: 'C/1996 B2 LONG-PERIOD COMET', dist: '0.23–3400 AU', diam: '4.2 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Hyakutake')) },
+      { id: 'encke', name: 'ENCKE', category: 'comet', color: '#DDEEAA', type: '2P/ENCKE SHORT-PERIOD COMET', dist: '0.33–4.1 AU', diam: '4.8 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Encke')) },
+      { id: '67p', name: '67P/C-G', category: 'comet', color: '#BBBBAA', type: '67P/CHURYUMOV-GERASIMENKO', dist: '1.24–5.7 AU', diam: '4.1 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === '67P/C-G')) },
+      { id: 'tempel1', name: 'TEMPEL 1', category: 'comet', color: '#CCBBAA', type: '9P/TEMPEL 1 DEEP IMPACT TARGET', dist: '1.54–5.4 AU', diam: '6.0 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Tempel 1')) },
+      { id: 'wild2', name: 'WILD 2', category: 'comet', color: '#BBCCAA', type: '81P/WILD 2 STARDUST MISSION', dist: '1.60–5.3 AU', diam: '5.5 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Wild 2')) },
+      { id: 'sl9', name: 'SHOEMAKER-LEVY 9', category: 'comet', color: '#DDCCBB', type: 'D/1993 F2 JUPITER COLLISION', dist: 'COLLIDED 1994', diam: 'FRAGMENTS', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Shoemaker-Levy 9')) },
+      { id: 'neowise', name: 'NEOWISE', category: 'comet', color: '#AADDEE', type: 'C/2020 F3 RETROGRADE COMET', dist: '0.29–715 AU', diam: '5.0 km', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'NEOWISE')) },
+      { id: 'ikeyaseki', name: 'IKEYA-SEKI', category: 'comet', color: '#FFEEBB', type: 'C/1965 S1 KREUTZ SUNGRAZER', dist: '0.008–183 AU', diam: 'SUN-GRAZER', focus: () => sol.focusObject('comet', sol.comets?.find(c => c.cd.name === 'Ikeya-Seki')) },
+
+      // SPHEREx Benchmark & Discovery Targets
+      { id: 'wise0855', name: 'WISE 0855-0714', category: 'spherex', color: '#22D3EE', type: 'SUB-STELLAR BROWN DWARF (Y2)', dist: '7.27 ly · H2O ICE', diam: '250 K TEMP', focus: () => { window.SphereSkyViewer?.selectTarget?.('wise-0855'); window.SphereSkyViewer?.open?.(); } },
+      { id: 'barnard', name: "BARNARD'S STAR", category: 'spherex', color: '#FF7766', type: 'HIGH PROPER MOTION STAR (10.3″/YR)', dist: '5.96 ly', diam: 'M4.0V RED DWARF', focus: () => { window.SphereSkyViewer?.selectTarget?.('barnards-star'); window.SphereSkyViewer?.open?.(); } },
+      { id: 'epsindi', name: 'EPSILON INDI B', category: 'spherex', color: '#E0A526', type: 'BINARY BROWN DWARF SYSTEM (T1+T6)', dist: '11.8 ly', diam: 'DUAL DWARF', focus: () => { window.SphereSkyViewer?.selectTarget?.('eps-indi-b'); window.SphereSkyViewer?.open?.(); } },
+      { id: 'rwaur', name: 'RW AURIGAE', category: 'spherex', color: '#FFAA44', type: 'ACTIVE T TAURI VARIABLE STAR', dist: '530 ly', diam: 'YSO PROTO-STAR', focus: () => { window.SphereSkyViewer?.selectTarget?.('rw-aurigae'); window.SphereSkyViewer?.open?.(); } },
+      { id: 'rdraconis', name: 'R DRACONIS', category: 'spherex', color: '#EE5577', type: 'MIRA-TYPE PULSATING VARIABLE STAR', dist: '2,100 ly', diam: 'PERIOD 245d', focus: () => { window.SphereSkyViewer?.selectTarget?.('r-draconis'); window.SphereSkyViewer?.open?.(); } },
+      { id: 'spx0002', name: 'SPX-MOV-0002', category: 'spherex', color: '#22D3EE', type: 'SPHEREx FAST-MOVING ASTEROID CANDIDATE', dist: '1.42 AU · SCORE 98.4%', diam: 'DIFFERENCE HIT', focus: () => { document.getElementById('fbtn-cand-unknown')?.click(); } },
+      { id: 'spx0003', name: 'SPX-MOV-0003', category: 'spherex', color: '#22D3EE', type: 'SPHEREx TRANS-NEPTUNIAN CANDIDATE', dist: '41.8 AU · SCORE 95.1%', diam: 'SNR 24.2', focus: () => { document.getElementById('btn-tool-movers')?.click(); } },
+      { id: 'spx0004', name: 'SPX-MOV-0004', category: 'spherex', color: '#E0A526', type: 'SPHEREx HIGH-PM TRANSIENT CANDIDATE', dist: 'SCORE 93.8%', diam: 'SNR 19.5', focus: () => { document.getElementById('btn-tool-movers')?.click(); } },
+      { id: 'spx0005', name: 'SPX-MOV-0005', category: 'spherex', color: '#E0A526', type: 'SPHEREx INFRARED VARIABLE CANDIDATE', dist: 'SCORE 91.2%', diam: 'SNR 18.0', focus: () => { document.getElementById('btn-tool-movers')?.click(); } }
+    ];
+
+    function renderNamesDirectory() {
+      if (!namesGrid) return;
+      namesGrid.innerHTML = '';
+
+      const term = currentSearchTerm.trim().toLowerCase();
+      const filtered = CELESTIAL_CATALOG.filter(item => {
+        const matchCategory = currentFilter === 'all' || item.category === currentFilter;
+        if (!matchCategory) return false;
+        if (!term) return true;
+        return item.name.toLowerCase().includes(term) ||
+               item.type.toLowerCase().includes(term) ||
+               (item.dist && item.dist.toLowerCase().includes(term)) ||
+               (item.diam && item.diam.toLowerCase().includes(term));
+      });
+
+      if (filtered.length === 0) {
+        namesGrid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align:center; padding:32px 16px; color:#64748b; font-size:12px; letter-spacing:1px;">
+            NO CELESTIAL BODIES FOUND MATCHING "${term.toUpperCase()}"
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'nasa-name-card';
+        card.setAttribute('data-id', item.id);
+        card.setAttribute('data-category', item.category);
+
+        card.innerHTML = `
+          <div class="nasa-name-info">
+            <div class="nasa-name-dot" style="background:${item.color};"></div>
+            <div class="nasa-name-text">
+              <span class="nasa-name-title">${item.name}</span>
+              <span class="nasa-name-meta">${item.type}</span>
+            </div>
+          </div>
+          <button type="button" class="nasa-name-action" title="Focus ${item.name} in 3D">⊕ FOCUS</button>
+        `;
+
+        card.addEventListener('click', () => {
+          if (typeof item.focus === 'function') {
+            item.focus();
+          }
+          // Highlight active card
+          document.querySelectorAll('.nasa-name-card').forEach(c => c.classList.remove('active'));
+          card.classList.add('active');
+          if (window.innerWidth < 768) {
+            namesDrawer?.classList.remove('open');
+            btnToolNames?.classList.remove('active');
+          }
+        });
+
+        namesGrid.appendChild(card);
+      });
+    }
+
+    function toggleNamesDrawer() {
+      if (!namesDrawer) return;
+      const isOpen = namesDrawer.classList.toggle('open');
+      if (btnToolNames) btnToolNames.classList.toggle('active', isOpen);
+      if (btnHeadNames) btnHeadNames.classList.toggle('active', isOpen);
+      if (isOpen) {
+        renderNamesDirectory();
+        namesSearchInput?.focus();
+      }
+    }
+
+    if (btnHeadNames) {
+      btnHeadNames.addEventListener('click', toggleNamesDrawer);
+    }
+    if (btnToolNames) {
+      btnToolNames.addEventListener('click', toggleNamesDrawer);
+    }
+    if (btnCloseNames) {
+      btnCloseNames.addEventListener('click', () => {
+        namesDrawer?.classList.remove('open');
+        btnToolNames?.classList.remove('active');
+        btnHeadNames?.classList.remove('active');
+      });
+    }
+
+    if (namesSearchInput) {
+      namesSearchInput.addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value;
+        renderNamesDirectory();
+      });
+    }
+
+    filterPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        filterPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentFilter = pill.getAttribute('data-filter') || 'all';
+        renderNamesDirectory();
+      });
+    });
+
+    // Close names drawer on outside click
+    document.addEventListener('click', (e) => {
+      if (namesDrawer && namesDrawer.classList.contains('open')) {
+        if (!namesDrawer.contains(e.target) &&
+            e.target !== btnHeadNames && !btnHeadNames?.contains(e.target) &&
+            e.target !== btnToolNames && !btnToolNames?.contains(e.target)) {
+          namesDrawer.classList.remove('open');
+          btnToolNames?.classList.remove('active');
+          btnHeadNames?.classList.remove('active');
+        }
+      }
+    });
+
+    // Initial render of directory items
+    renderNamesDirectory();
+
+    // ── 10. Dynamic 3D Celestial Map Labels Controller ──────────────────────
+    const LABEL_BODIES = [
+      { id: 'SUN', name: 'SUN', color: '#FFE050', getPos: () => sol.sunMesh ? sol.sunMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => sol.focusObject('sun') },
+      { id: 'MERCURY', name: 'MERCURY', color: '#AAAAAA', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='MERCURY')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('MERCURY') },
+      { id: 'VENUS', name: 'VENUS', color: '#E8C068', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='VENUS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('VENUS') },
+      { id: 'EARTH', name: 'EARTH', color: '#3377BB', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='EARTH')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('EARTH') },
+      { id: 'MARS', name: 'MARS', color: '#C1440E', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='MARS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('MARS') },
+      { id: 'JUPITER', name: 'JUPITER', color: '#C99040', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='JUPITER')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('JUPITER') },
+      { id: 'SATURN', name: 'SATURN', color: '#E4D191', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='SATURN')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('SATURN') },
+      { id: 'URANUS', name: 'URANUS', color: '#7DCCCC', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='URANUS')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('URANUS') },
+      { id: 'NEPTUNE', name: 'NEPTUNE', color: '#4466FF', getPos: () => sol.planets?.find(p=>p.d && p.d.name==='NEPTUNE')?.mesh?.getWorldPosition(new THREE.Vector3()), focus: () => sol.focusByName('NEPTUNE') },
+      { id: 'SPHEREX', name: 'SPHEREx', color: '#22D3EE', getPos: () => window.SPHEREx?.probeMesh ? window.SPHEREx.probeMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => document.getElementById('fbtn-spherex')?.click() },
+      { id: 'NEOSSAT', name: '🍁 NEOSSat', color: '#FF6B6B', getPos: () => window.SPHEREx?.neossatMesh ? window.SPHEREx.neossatMesh.getWorldPosition(new THREE.Vector3()) : null, focus: () => window.SPHEREx?.focusNeossat?.() }
+    ];
+
+    const labelElements = new Map();
+    if (labelsOverlay) {
+      LABEL_BODIES.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'nasa-3d-label';
+        el.style.display = 'none';
+        el.innerHTML = `<span class="label-dot" style="background:${item.color};"></span><span>${item.name}</span>`;
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          item.focus();
+        });
+        labelsOverlay.appendChild(el);
+        labelElements.set(item.id, el);
+      });
+    }
+
+    if (chk3DLabels) {
+      chk3DLabels.addEventListener('change', (e) => {
+        show3DLabels = e.target.checked;
+        if (!show3DLabels) {
+          labelElements.forEach(el => { el.style.display = 'none'; });
+        }
+      });
+    }
+
+    function update3DMapLabels() {
+      requestAnimationFrame(update3DMapLabels);
+      if (!show3DLabels || !sol.camera) {
+        if (!show3DLabels) {
+          labelElements.forEach(el => { el.style.display = 'none'; });
+        }
+        return;
+      }
+
+      LABEL_BODIES.forEach(item => {
+        const el = labelElements.get(item.id);
+        if (!el) return;
+
+        const worldPos = item.getPos();
+        if (!worldPos) {
+          el.style.display = 'none';
+          return;
+        }
+
+        const screenV = worldPos.clone().project(sol.camera);
+        if (screenV.z > 1.0 || screenV.z < -1.0) {
+          el.style.display = 'none';
+          return;
+        }
+
+        const sx = (screenV.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-screenV.y * 0.5 + 0.5) * window.innerHeight;
+
+        if (sx < -40 || sx > window.innerWidth + 40 || sy < -40 || sy > window.innerHeight + 40) {
+          el.style.display = 'none';
+          return;
+        }
+
+        el.style.left = `${Math.round(sx)}px`;
+        el.style.top = `${Math.round(sy)}px`;
+        el.style.display = 'flex';
+      });
+    }
+    update3DMapLabels();
+
+    // ── 11. Global Keyboard Shortcuts ────────────────────────────────────────
     window.addEventListener('keydown', (e) => {
       const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
       const key = e.key.toLowerCase();
-      if (key === 't') {
+      if (key === 'n') {
+        e.preventDefault();
+        toggleNamesDrawer();
+      } else if (key === 't') {
         e.preventDefault();
         if (timelapseModal && timelapseModal.style.display === 'block') {
           closeTimelapseModal();

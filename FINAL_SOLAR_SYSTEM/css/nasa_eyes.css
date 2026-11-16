@@ -18,7 +18,9 @@
 #tl-hardpoints,
 #tl-modebtns,
 #timeline-year,
-#timeline-label {
+#timeline-label,
+#focus-bar,
+#objects-panel {
   display: none !important;
 }
 
@@ -1244,4 +1246,354 @@ body {
   font-style: italic;
   margin: 12px 0;
   line-height: 1.5;
+}
+
+/* ── Professional Celestial Object Typography ──────────────────────────────── */
+#pi-name,
+.pi-name,
+.nasa-name-title,
+.nasa-3d-label,
+.sr-title,
+.search-item,
+.constellation-label,
+#tooltip,
+.fbtn {
+  font-family: var(--nasa-font-sans) !important;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+#pi-name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+
+#tooltip {
+  font-family: var(--nasa-font-sans) !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: rgba(8, 11, 18, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: #ffffff;
+}
+
+/* ── 3D Floating Celestial Labels Overlay ─────────────────────────────────── */
+#nasa-3d-labels-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 25;
+  overflow: hidden;
+  transition: opacity 0.25s ease;
+}
+
+.nasa-3d-label {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: rgba(10, 14, 22, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.nasa-3d-label:hover {
+  border-color: rgba(204, 160, 106, 0.7);
+  background: rgba(18, 24, 38, 0.94);
+  color: #ffffff;
+  transform: translate(-50%, -105%) scale(1.05);
+}
+
+.nasa-3d-label .label-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Celestial Names & Objects Directory Modal/Drawer ─────────────────────── */
+#nasa-names-drawer {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92vw;
+  max-width: 980px;
+  max-height: calc(100vh - 110px);
+  background: rgba(10, 13, 20, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 28px rgba(204, 160, 106, 0.14);
+  border-radius: 8px;
+  z-index: 100;
+  flex-direction: column;
+  color: #fff;
+  font-family: var(--nasa-font-sans);
+  overflow: hidden;
+}
+
+#nasa-names-drawer.open {
+  display: flex;
+  animation: nasaFadeScale 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nasa-names-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nasa-names-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nasa-names-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #cca06a;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nasa-names-subtitle {
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.nasa-names-toolbar {
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.nasa-names-search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.nasa-names-search-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nasa-names-search-box svg {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.nasa-names-search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 4px;
+  color: #ffffff;
+  font-family: var(--nasa-font-sans);
+  font-size: 12px;
+  letter-spacing: 1px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.nasa-names-search-input:focus {
+  border-color: #cca06a;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.nasa-names-toggle-labels {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #cbd5e1;
+  letter-spacing: 1px;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s;
+}
+
+.nasa-names-toggle-labels:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(204, 160, 106, 0.4);
+}
+
+.nasa-names-filter-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.nasa-filter-pill {
+  padding: 5px 12px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.18s;
+  user-select: none;
+}
+
+.nasa-filter-pill:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.nasa-filter-pill.active {
+  color: #0b0e14;
+  background: #cca06a;
+  border-color: #cca06a;
+}
+
+.nasa-names-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  max-height: calc(100vh - 270px);
+}
+
+.nasa-name-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.nasa-name-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(204, 160, 106, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.nasa-name-card.active {
+  background: rgba(204, 160, 106, 0.15);
+  border-color: #cca06a;
+}
+
+.nasa-name-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nasa-name-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+}
+
+.nasa-name-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nasa-name-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nasa-name-meta {
+  font-size: 9px;
+  color: #94a3b8;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nasa-name-action {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 3px 6px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.nasa-name-card:hover .nasa-name-action {
+  border-color: #cca06a;
+  color: #cca06a;
+  background: rgba(204, 160, 106, 0.1);
 }
