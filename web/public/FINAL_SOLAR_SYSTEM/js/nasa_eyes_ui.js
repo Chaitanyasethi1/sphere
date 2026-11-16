@@ -832,6 +832,17 @@
           <button type="button" class="nasa-name-action" title="Focus ${item.name} in 3D">⊕ FOCUS</button>
         `;
 
+        card.addEventListener('mouseenter', () => {
+          if (typeof window.SOL_APP?.highlightTrajectory === 'function') {
+            window.SOL_APP.highlightTrajectory(item.name);
+          }
+        });
+        card.addEventListener('mouseleave', () => {
+          if (typeof window.SOL_APP?.unhighlightTrajectory === 'function') {
+            window.SOL_APP.unhighlightTrajectory();
+          }
+        });
+
         card.addEventListener('click', () => {
           if (typeof item.focus === 'function') {
             item.focus();
@@ -928,6 +939,16 @@
         el.className = 'nasa-3d-label';
         el.style.display = 'none';
         el.innerHTML = `<span class="label-dot" style="background:${item.color};"></span><span>${item.name}</span>`;
+        el.addEventListener('mouseenter', () => {
+          if (typeof window.SOL_APP?.highlightTrajectory === 'function') {
+            window.SOL_APP.highlightTrajectory(item.id);
+          }
+        });
+        el.addEventListener('mouseleave', () => {
+          if (typeof window.SOL_APP?.unhighlightTrajectory === 'function') {
+            window.SOL_APP.unhighlightTrajectory();
+          }
+        });
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           item.focus();
