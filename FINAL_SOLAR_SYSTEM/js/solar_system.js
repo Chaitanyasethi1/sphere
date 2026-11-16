@@ -3122,7 +3122,11 @@ function updateComets() {
       cm.incGrp.updateWorldMatrix(true, false);
       cm.nucleus.position.copy(cm.incGrp.worldToLocal(_cometWorldPos));
     }
-    cm.orbitLine.material.color.setHex(getOrbitLineColorHex(cm));
+    const isCometHovered = (hoveredTrajectory && (hoveredTrajectory.obj === cm || hoveredTrajectory.name === cm.cd.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === cm || hoveredBodyObject.nucleus === cm.nucleus));
+    cm.orbitLine.material.color.setHex(isCometHovered ? 0x9EE7FF : 0x2A4455);
+    cm.orbitLine.material.opacity = isCometHovered ? 1.0 : 0.28;
+    cm.orbitLine.renderOrder = isCometHovered ? 999 : 0;
     cm.orbitLine.visible = isCometOrbitVisibleAtTime(cm) && orbitsOn && probesOn && (viewMode === 'solar');
 
     if (cm.fragments) {
@@ -3590,6 +3594,12 @@ function updateProbes() {
     const launched = currentYear >= vd.launchYear;
     pr.mesh.visible = launched && (viewMode === 'solar') && probesOn;
     pr.glowPt.visible = launched && (viewMode === 'solar') && !realSizeMode && probesOn;
+    const isProbeHovered = (hoveredTrajectory && (hoveredTrajectory.obj === pr || hoveredTrajectory.name === pr.vd.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === pr || hoveredBodyObject.mesh === pr.mesh));
+    if (pr.trailLine && pr.trailLine.material) {
+      pr.trailLine.material.opacity = isProbeHovered ? 1.0 : 0.65;
+      pr.trailLine.renderOrder = isProbeHovered ? 999 : 0;
+    }
     pr.trailLine.visible = launched && (viewMode === 'solar') && orbitsOn && probesOn;
     pr.dotLine.visible   = false;
     pr.focusReticle.visible = launched && (viewMode === 'solar') && realSizeMode && probeFocused && probesOn;
@@ -3768,6 +3778,46 @@ window.SOL_DEBUG = Object.assign(window.SOL_DEBUG || {}, {
 });
 setEarthOrientationMarkerVisible(DEBUG_FLAGS.earthOrientationMarker);
 setEarthTravelMarkerVisible(DEBUG_FLAGS.earthTravelMarker);
+
+// Baseline Earth angular rotation velocity in visual time
+// Authentic physical rotation: Earth completes 1 majestic rotation in ~35 seconds visually
+const BASE_EARTH_ROT_VELOCITY = (Math.PI * 2) / 35.0; // ~0.1795 rad/sec
+const EARTH_SIDEREAL_DAYS = 0.99726968;
+let sunAxialAngle = 0;
+
+// Signature astronomical color palettes for trajectories (bright highlight vs subtle baseline)
+const TRAJECTORY_COLORS = {
+  // Major Planets
+  MERCURY: { bright: 0xB8C2CC, dim: 0x485058 },
+  VENUS:   { bright: 0xFFD269, dim: 0x6E5624 },
+  EARTH:   { bright: 0x00E5FF, dim: 0x1A5B73 }, // Signature NASA Electric Cyan
+  MARS:    { bright: 0xFF5D38, dim: 0x6E2514 },
+  JUPITER: { bright: 0xFFAA33, dim: 0x6E4412 },
+  SATURN:  { bright: 0xF5E29E, dim: 0x6E6238 }, // Signature Saturn Pale Gold
+  URANUS:  { bright: 0x6EE7E7, dim: 0x225E5E },
+  NEPTUNE: { bright: 0x4D82FF, dim: 0x1A387E },
+  
+  // Dwarf Planets
+  PLUTO:    { bright: 0xE8CCA4, dim: 0x5C4D38 },
+  CERES:    { bright: 0xC4B8A6, dim: 0x50483E },
+  HAUMEA:   { bright: 0xDCE6EE, dim: 0x4A5560 },
+  MAKEMAKE: { bright: 0xEB9B75, dim: 0x5E3A2A },
+  ERIS:     { bright: 0xE5ECF0, dim: 0x485258 },
+  
+  // Probes & Spacecraft Missions
+  SPHEREX:  { bright: 0x00F0FF, dim: 0x125866 },
+  NEOSSAT:  { bright: 0xFF4757, dim: 0x661820 },
+  VOYAGER1: { bright: 0x64B5F6, dim: 0x22486A },
+  VOYAGER2: { bright: 0x81D4FA, dim: 0x24546A },
+  'NEW HORIZONS': { bright: 0xFFA726, dim: 0x6A4210 },
+  JWST:     { bright: 0xFFD54F, dim: 0x66521A },
+  PARKER:   { bright: 0xFF8A65, dim: 0x6A3220 }
+};
+
+let hoveredTrajectory = null;
+let hoveredBodyObject = null;
+let lastMouseX = -1;
+let lastMouseY = -1;
 
 const J2000_MS = Date.UTC(2000, 0, 1, 12, 0, 0);
 const MS_PER_YEAR = 365.25 * 24 * 3600 * 1000;
@@ -4395,6 +4445,12 @@ document.getElementById('probes-btn').addEventListener('click', () => {
     const launched = (2000 + simTime) >= pr.vd.launchYear;
     pr.mesh.visible      = launched && (viewMode === 'solar') && probesOn;
     pr.glowPt.visible    = launched && (viewMode === 'solar') && !realSizeMode && probesOn;
+    const isProbeHovered = (hoveredTrajectory && (hoveredTrajectory.obj === pr || hoveredTrajectory.name === pr.vd.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === pr || hoveredBodyObject.mesh === pr.mesh));
+    if (pr.trailLine && pr.trailLine.material) {
+      pr.trailLine.material.opacity = isProbeHovered ? 1.0 : 0.65;
+      pr.trailLine.renderOrder = isProbeHovered ? 999 : 0;
+    }
     pr.trailLine.visible = launched && (viewMode === 'solar') && orbitsOn && probesOn;
     pr.dotLine.visible   = false;
   }
@@ -5303,6 +5359,141 @@ function pointSegmentDistanceSq(px, py, ax, ay, bx, by) {
   return dx * dx + dy * dy;
 }
 
+function getTrajectoryHit(cx, cy) {
+  if (!orbitsOn || viewMode !== 'solar') return null;
+
+  let bestHit = null;
+  let bestDistSq = 144; // 12px interaction threshold squared
+
+  const candidates = [];
+
+  // 1. Planets
+  for (let i = 0; i < planets.length; i++) {
+    const p = planets[i];
+    if (p.orbitLine && p.orbitLine.visible) {
+      const pal = TRAJECTORY_COLORS[p.d.name] || { bright: p.d.color || 0x00E5FF, dim: 0x334455 };
+      candidates.push({
+        type: 'planet',
+        obj: p,
+        name: p.d.name,
+        line: p.orbitLine,
+        brightColor: pal.bright,
+        dimColor: pal.dim,
+        info: `SMA: ${p.d.dist || (p.d.sma + ' AU')} • Orbital Period: ${p.d.year || (p.d.period + ' yr')}`
+      });
+    }
+  }
+
+  // 2. Dwarf planets
+  for (let i = 0; i < dwarfs.length; i++) {
+    const d = dwarfs[i];
+    if (d.orbitLine && d.orbitLine.visible) {
+      const pal = TRAJECTORY_COLORS[d.d.name] || { bright: d.d.color || 0xE8CCA4, dim: 0x334455 };
+      candidates.push({
+        type: 'dwarf',
+        obj: d,
+        name: d.d.name,
+        line: d.orbitLine,
+        brightColor: pal.bright,
+        dimColor: pal.dim,
+        info: `Dwarf Planet • ${d.d.dist || (d.d.sma + ' AU')} • Period: ${d.d.year || (d.d.period + ' yr')}`
+      });
+    }
+  }
+
+  // 3. Comets
+  for (let i = 0; i < comets.length; i++) {
+    const cm = comets[i];
+    if (cm.orbitLine && cm.orbitLine.visible && isCometOrbitVisibleAtTime(cm)) {
+      candidates.push({
+        type: 'comet',
+        obj: cm,
+        name: cm.cd.name,
+        line: cm.orbitLine,
+        brightColor: 0x9EE7FF,
+        dimColor: 0x2A4455,
+        info: `Comet Orbit • Period: ${cm.cd.period || 'Variable'}`
+      });
+    }
+  }
+
+  // 4. Probes / Spacecraft
+  if (probesOn) {
+    for (let i = 0; i < probes.length; i++) {
+      const pr = probes[i];
+      if (pr.trailLine && pr.trailLine.visible) {
+        const uName = pr.vd.name.toUpperCase();
+        const pal = TRAJECTORY_COLORS[uName] || { bright: pr.vd.color || 0x00F0FF, dim: 0x1A4050 };
+        candidates.push({
+          type: 'probe',
+          obj: pr,
+          name: pr.vd.name,
+          line: pr.trailLine,
+          brightColor: pal.bright,
+          dimColor: pal.dim,
+          info: `${pr.vd.target || 'Spacecraft'} Trajectory • ${pr.vd.desc || 'Active Mission'}`
+        });
+      }
+    }
+  }
+
+  for (let cIdx = 0; cIdx < candidates.length; cIdx++) {
+    const cand = candidates[cIdx];
+    const line = cand.line;
+    if (!line || !line.geometry) continue;
+
+    const posAttr = line.geometry.getAttribute('position');
+    if (!posAttr || posAttr.count < 2) continue;
+
+    const count = posAttr.count;
+    const isSegments = !!line.isLineSegments;
+    line.updateWorldMatrix(true, false);
+
+    // Fast screen AABB pre-filtering:
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    let anyVisible = false;
+    const sampleStep = Math.max(1, Math.floor(count / 16));
+
+    for (let s = 0; s < count; s += sampleStep) {
+      _hoverWorldA.fromBufferAttribute(posAttr, s);
+      line.localToWorld(_hoverWorldA);
+      if (projectWorldToScreen(_hoverWorldA, _hoverScreenA)) {
+        anyVisible = true;
+        if (_hoverScreenA.x < minX) minX = _hoverScreenA.x;
+        if (_hoverScreenA.x > maxX) maxX = _hoverScreenA.x;
+        if (_hoverScreenA.y < minY) minY = _hoverScreenA.y;
+        if (_hoverScreenA.y > maxY) maxY = _hoverScreenA.y;
+      }
+    }
+
+    if (!anyVisible) continue;
+    const margin = 20;
+    if (cx < minX - margin || cx > maxX + margin || cy < minY - margin || cy > maxY + margin) {
+      continue;
+    }
+
+    const stride = isSegments ? 2 : 1;
+    for (let i = 0; i < count - 1; i += stride) {
+      _hoverWorldA.fromBufferAttribute(posAttr, i);
+      _hoverWorldB.fromBufferAttribute(posAttr, isSegments ? (i + 1) : (i + 1));
+      line.localToWorld(_hoverWorldA);
+      line.localToWorld(_hoverWorldB);
+
+      if (!projectWorldToScreen(_hoverWorldA, _hoverScreenA) || !projectWorldToScreen(_hoverWorldB, _hoverScreenB)) {
+        continue;
+      }
+
+      const dSq = pointSegmentDistanceSq(cx, cy, _hoverScreenA.x, _hoverScreenA.y, _hoverScreenB.x, _hoverScreenB.y);
+      if (dSq < bestDistSq) {
+        bestDistSq = dSq;
+        bestHit = cand;
+      }
+    }
+  }
+
+  return bestHit;
+}
+
 function getSkyHover(cx, cy) {
   let bestStarIndex = -1;
   let bestStarDistSq = STAR_HOVER_RADIUS_PX * STAR_HOVER_RADIUS_PX;
@@ -5405,25 +5596,64 @@ function updateConstellationLabels() {
 function hoverCheck(cx,cy){
   const h=getHit(cx,cy);
   if(h){
+    hoveredTrajectory = null;
     const p=planets.find(p=>p.mesh===h);
     const mn=moons.find(m=>m.moonMesh===h);
     const dw=dwarfs.find(d=>d.mesh===h);
     const cm=comets.find(c=>c.nucleus===h);
     const pr=probes.find(p=>p.mesh===h||p.mesh.children.includes(h));
-    tooltip.textContent=h===sunMesh?'THE SUN':p?p.d.name:mn?(mn.md.name+' ('+mn.md.planet+')'):dw?dw.d.name:cm?cm.cd.name+' (comet)':pr?pr.vd.name:'';
-    tooltip.style.display='block';tooltip.style.left=(cx+12)+'px';tooltip.style.top=(cy-8)+'px';
+    hoveredBodyObject = p || mn || dw || cm || pr || (h===sunMesh ? sunMesh : null);
+
+    const name = h===sunMesh?'THE SUN':p?p.d.name:mn?(mn.md.name+' ('+mn.md.planet+')'):dw?dw.d.name:cm?cm.cd.name+' (comet)':pr?pr.vd.name:'';
+    const pal = p ? TRAJECTORY_COLORS[p.d.name] : dw ? TRAJECTORY_COLORS[dw.d.name] : pr ? TRAJECTORY_COLORS[pr.vd.name.toUpperCase()] : null;
+    const hexColor = pal ? pal.bright : (p ? p.d.color : 0x00E5FF);
+    const hexStr = hexColor.toString(16).padStart(6, '0');
+
+    tooltip.className = 'has-traj';
+    tooltip.innerHTML = `<div style="display:flex;align-items:center;gap:7px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#${hexStr};box-shadow:0 0 8px #${hexStr};"></span><strong style="color:#ffffff;font-family:'Barlow',sans-serif;font-size:12px;letter-spacing:1.8px;">${name}</strong></div>`;
+    tooltip.style.display='block';
+    tooltip.style.left=(cx+14)+'px';
+    tooltip.style.top=(cy-10)+'px';
     renderer.domElement.style.cursor='pointer';
+    return;
+  }
+
+  // Trajectory hover detection & interactive glow
+  const trajHit = getTrajectoryHit(cx, cy);
+  if(trajHit){
+    hoveredTrajectory = trajHit;
+    hoveredBodyObject = trajHit.obj;
+
+    const hexStr = trajHit.brightColor.toString(16).padStart(6, '0');
+    tooltip.className = 'has-traj';
+    tooltip.innerHTML = `
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#${hexStr};box-shadow:0 0 10px #${hexStr};"></span>
+        <strong style="color:#ffffff;font-family:'Barlow',sans-serif;font-size:11.5px;letter-spacing:2px;">${trajHit.name} TRAJECTORY</strong>
+      </div>
+      <div style="font-size:10.5px;color:rgba(255,255,255,0.85);letter-spacing:1px;font-family:'Barlow',sans-serif;">${trajHit.info}</div>
+    `;
+    tooltip.style.display='block';
+    tooltip.style.left=(cx+14)+'px';
+    tooltip.style.top=(cy-10)+'px';
+    renderer.domElement.style.cursor='pointer';
+    return;
+  }
+
+  hoveredTrajectory = null;
+  hoveredBodyObject = null;
+  tooltip.className = '';
+
+  const skyHover = getSkyHover(cx,cy);
+  if (skyHover) {
+    tooltip.textContent = skyHover.text;
+    tooltip.style.display='block';
+    tooltip.style.left=(cx+14)+'px';
+    tooltip.style.top=(cy-10)+'px';
+    renderer.domElement.style.cursor = skyHover.interactive ? 'pointer' : 'default';
   } else {
-    const skyHover = getSkyHover(cx,cy);
-    if (skyHover) {
-      tooltip.textContent = skyHover.text;
-      tooltip.style.display='block';
-      tooltip.style.left=(cx+12)+'px';
-      tooltip.style.top=(cy-8)+'px';
-      renderer.domElement.style.cursor = skyHover.interactive ? 'pointer' : 'default';
-    } else {
-      tooltip.style.display='none';renderer.domElement.style.cursor='default';
-    }
+    tooltip.style.display='none';
+    renderer.domElement.style.cursor='default';
   }
 }
 let suppressSceneClickUntil = 0;
@@ -5434,7 +5664,57 @@ function suppressSceneClick(durationMs = 400) {
 
 function handleSceneClick(cx, cy) {
   const h=getHit(cx,cy);
-  if(!h){ clearFocusSelection(); return; }
+  if(!h){
+    // Test if user clicked directly on an orbital trajectory
+    const trajHit = getTrajectoryHit(cx, cy);
+    if(trajHit){
+      if(trajHit.type === 'planet'){
+        setFocus(trajHit.obj.d.name);
+        return;
+      } else if(trajHit.type === 'dwarf'){
+        geoLock = false;
+        btnGeoLock.classList.remove('active');
+        focusMesh = trajHit.obj.mesh;
+        clearPanOffsets();
+        targetR = getFocusTargetRadius(focusMesh);
+        camR = targetR;
+        focusTransitioning = true;
+        lookAtBodyMesh = null;
+        selLookAt.value = '';
+        document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+        showInfo('dwarf', trajHit.obj);
+        return;
+      } else if(trajHit.type === 'probe'){
+        geoLock = false;
+        btnGeoLock.classList.remove('active');
+        focusMesh = trajHit.obj.mesh;
+        clearPanOffsets();
+        targetR = getFocusTargetRadius(focusMesh);
+        camR = targetR;
+        focusTransitioning = true;
+        lookAtBodyMesh = null;
+        selLookAt.value = '';
+        document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+        showInfo('probe', trajHit.obj);
+        return;
+      } else if(trajHit.type === 'comet'){
+        geoLock = false;
+        btnGeoLock.classList.remove('active');
+        focusMesh = trajHit.obj.nucleus;
+        clearPanOffsets();
+        targetR = getFocusTargetRadius(focusMesh);
+        camR = targetR;
+        focusTransitioning = true;
+        lookAtBodyMesh = null;
+        selLookAt.value = '';
+        document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+        showInfo('comet', trajHit.obj);
+        return;
+      }
+    }
+    clearFocusSelection();
+    return;
+  }
   if(h===sunMesh){
     if(focusMesh===sunMesh){ clearFocusSelection(); return; }
     setFocus('sun');
@@ -5735,7 +6015,24 @@ function isBodyUsingEphemerisNow(bodyLike, atSim = simTime) {
 }
 
 function getOrbitLineColorHex(bodyLike, atSim = simTime) {
-  return isBodyUsingEphemerisNow(bodyLike, atSim) ? 0x1155aa : 0x334455;
+  if (!bodyLike) return 0x334455;
+  const name = (bodyLike.d?.name || bodyLike.cd?.name || bodyLike.vd?.name || bodyLike.md?.name || '').toUpperCase();
+  const pal = TRAJECTORY_COLORS[name];
+  const isHovered = (hoveredTrajectory && (hoveredTrajectory.obj === bodyLike || hoveredTrajectory.name === name)) ||
+                    (hoveredBodyObject && (hoveredBodyObject === bodyLike || (bodyLike.mesh && hoveredBodyObject.mesh === bodyLike.mesh)));
+  if (pal) {
+    return isHovered ? pal.bright : pal.dim;
+  }
+  if (isHovered) return 0x00E5FF;
+  return isBodyUsingEphemerisNow(bodyLike, atSim) ? 0x1A5B73 : 0x334455;
+}
+
+function getOrbitLineOpacity(bodyLike) {
+  if (!bodyLike) return 0.32;
+  const name = (bodyLike.d?.name || bodyLike.cd?.name || bodyLike.vd?.name || bodyLike.md?.name || '').toUpperCase();
+  const isHovered = (hoveredTrajectory && (hoveredTrajectory.obj === bodyLike || hoveredTrajectory.name === name)) ||
+                    (hoveredBodyObject && (hoveredBodyObject === bodyLike || (bodyLike.mesh && hoveredBodyObject.mesh === bodyLike.mesh)));
+  return isHovered ? 1.0 : 0.32;
 }
 
 function setOrbitLineGeometryFromWorldPoints(line, points, exclusionRadius = SOLAR_ORBIT_EXCLUSION_RADIUS, clipToBoundary = false) {
@@ -6270,6 +6567,24 @@ function animate(){
     sunZ     = simTime * GALACTIC_SCENE_SPEED; // deterministic — no float accumulation
   }
 
+  // ── Authentic Physical Axial Rotation Advance ─────────────────────────────
+  // Realistic baseline: Earth rotates 1 full turn (360°) every ~35 seconds visually
+  // All other celestial bodies rotate in strict accordance with their physical sidereal periods:
+  // (Earth Sidereal Day / Object Sidereal Day) * rotStepAngle
+  let rotStepAngle = 0;
+  if (!paused) {
+    let speedFactor = 1.0;
+    if (realtimeMode) {
+      speedFactor = 1.0;
+    } else {
+      const simDaysPerSec = getSimSpeed() * 365.25;
+      const mag = Math.abs(simDaysPerSec);
+      // Gentle perceptual compression: keeps rotation visible, majestic, and never strobing
+      speedFactor = Math.sign(simDaysPerSec) * Math.min(2.5, Math.max(0.35, Math.pow(mag, 0.16)));
+    }
+    rotStepAngle = dt * BASE_EARTH_ROT_VELOCITY * speedFactor;
+  }
+
   // ── Ephemeris auto-refetch ─────────────────────────────────────────────────
   if (EphemerisSystem.getMode() === 'ephemeris' && EphemerisSystem.isReady() && !EphemerisSystem.isFetching()) {
     if (EphemerisSystem.needsRefetch(simTime, EPHEMERIS_REFETCH_MARGIN_YEARS)) {
@@ -6305,11 +6620,11 @@ function animate(){
       getPlanetScenePositionAtTime(p, simTime, p.tiltGroup.position);
       if (p.ephemerisBodyId != null) EphemerisSystem.applyAnchor(p.ephemerisBodyId, simTime, p.tiltGroup.position);
     }
-    // Axial rotation around correctly tilted axis
-    const planetRotation = p.d.name === 'EARTH'
-      ? getEarthRotationAngle(simTime)
-      : (simTime * 365.25 / p.d.rotPeriod) * Math.PI * 2;
-    p.mesh.rotation.y = planetRotation;
+    // Authentic physical relative rotation around correctly tilted axis
+    const rotRatio = EARTH_SIDEREAL_DAYS / p.d.rotPeriod;
+    p.axialAngle = (p.axialAngle || 0) + rotStepAngle * rotRatio;
+    p.mesh.rotation.y = p.axialAngle;
+
     // Update Earth day/night shader: sun is always at world origin
     if (p.d.name === 'EARTH' && p.mesh.material.isShaderMaterial) {
       p.tiltGroup.getWorldPosition(_earthSunDirTmp);
@@ -6317,9 +6632,7 @@ function animate(){
     }
     if (p.mesh.userData.travelMarker) updateEarthTravelMarker(p);
     if (p.cloudMesh) {
-      p.cloudMesh.rotation.y = p.d.name === 'EARTH'
-        ? getEarthCloudRotationAngle(simTime, p.d.rotPeriod)
-        : (simTime * 365.25 / (p.d.rotPeriod * 1.08)) * Math.PI * 2;
+      p.cloudMesh.rotation.y = p.axialAngle * 1.03;
       if (p.cloudMesh.userData.updateClouds && !paused) p.cloudMesh.userData.updateClouds(simTime, dt);
       if (p.cloudMesh.userData.cloudMeshB) {
         p.cloudMesh.userData.cloudMeshB.rotation.y = p.cloudMesh.rotation.y;
@@ -6334,7 +6647,12 @@ function animate(){
       p.mesh.material.transparent = false;
       p.mesh.material.needsUpdate = true;
     }
-    p.orbitLine.material.color.setHex(getOrbitLineColorHex(p));
+    const isPlanetHovered = (hoveredTrajectory && (hoveredTrajectory.obj === p || hoveredTrajectory.name === p.d.name)) ||
+                            (hoveredBodyObject && (hoveredBodyObject === p || hoveredBodyObject.mesh === p.mesh));
+    const pPalette = TRAJECTORY_COLORS[p.d.name] || { bright: p.d.color, dim: 0x334455 };
+    p.orbitLine.material.color.setHex(isPlanetHovered ? pPalette.bright : pPalette.dim);
+    p.orbitLine.material.opacity = isPlanetHovered ? 1.0 : 0.32;
+    p.orbitLine.renderOrder = isPlanetHovered ? 999 : 0;
     p.orbitLine.visible = orbitsOn && (viewMode==='solar');
     p.trailLine.visible = trailsOn && (viewMode!=='solar');
   }
@@ -6361,8 +6679,16 @@ function animate(){
       getDwarfScenePositionAtTime(p, simTime, p.mesh.position);
       if (p.ephemerisBodyId != null) EphemerisSystem.applyAnchor(p.ephemerisBodyId, simTime, p.mesh.position);
     }
-    p.mesh.rotation.y = (simTime * 365.25 / p.d.rotPeriod) * Math.PI * 2;
-    p.orbitLine.material.color.setHex(getOrbitLineColorHex(p));
+    const dwarfRotRatio = EARTH_SIDEREAL_DAYS / p.d.rotPeriod;
+    p.axialAngle = (p.axialAngle || 0) + rotStepAngle * dwarfRotRatio;
+    p.mesh.rotation.y = p.axialAngle;
+
+    const isDwarfHovered = (hoveredTrajectory && (hoveredTrajectory.obj === p || hoveredTrajectory.name === p.d.name)) ||
+                           (hoveredBodyObject && (hoveredBodyObject === p || hoveredBodyObject.mesh === p.mesh));
+    const dPalette = TRAJECTORY_COLORS[p.d.name] || { bright: p.d.color, dim: 0x334455 };
+    p.orbitLine.material.color.setHex(isDwarfHovered ? dPalette.bright : dPalette.dim);
+    p.orbitLine.material.opacity = isDwarfHovered ? 1.0 : 0.30;
+    p.orbitLine.renderOrder = isDwarfHovered ? 999 : 0;
     p.orbitLine.visible = orbitsOn && (viewMode==='solar');
     // Charon orbits Pluto
     if (p.charon) {
@@ -6573,8 +6899,9 @@ function animate(){
   }
 
   sunMesh.scale.setScalar(realSizeMode ? SUN_REAL_SIZE_SCALE : 1);
-  // Sun sidereal rotation: 25.38 days at equator
-  sunMesh.rotation.y = (simTime * 365.25 / 25.38) * Math.PI * 2;
+  // Sun sidereal rotation: 25.38 days at equator (physically relative to Earth)
+  sunAxialAngle += rotStepAngle * (EARTH_SIDEREAL_DAYS / 25.38);
+  sunMesh.rotation.y = sunAxialAngle;
 
   // ── HUD ────────────────────────────────────────────────────────────────────
   const lyT = simTime*7.25;
@@ -7376,6 +7703,39 @@ window.SOL_APP = {
   getFocusMesh: () => focusMesh,
   getFocusTarget: () => ({ type: focusedInfoType, obj: focusedInfoObj }),
   getLookAtMesh: () => lookAtBodyMesh,
-  setLookAtMesh: (mesh) => { lookAtBodyMesh = mesh; }
+  setLookAtMesh: (mesh) => { lookAtBodyMesh = mesh; },
+  highlightTrajectory: function(name) {
+    if (!name) {
+      hoveredTrajectory = null;
+      hoveredBodyObject = null;
+      return;
+    }
+    const upper = name.toUpperCase();
+    const p = planets.find(x => x.d.name === upper);
+    if (p) {
+      hoveredBodyObject = p;
+      const pal = TRAJECTORY_COLORS[p.d.name] || { bright: p.d.color };
+      hoveredTrajectory = { obj: p, name: p.d.name, brightColor: pal.bright };
+      return;
+    }
+    const dw = dwarfs.find(x => x.d.name === upper);
+    if (dw) {
+      hoveredBodyObject = dw;
+      const pal = TRAJECTORY_COLORS[dw.d.name] || { bright: dw.d.color };
+      hoveredTrajectory = { obj: dw, name: dw.d.name, brightColor: pal.bright };
+      return;
+    }
+    const pr = probes.find(x => x.vd.name.toUpperCase() === upper);
+    if (pr) {
+      hoveredBodyObject = pr;
+      const pal = TRAJECTORY_COLORS[upper] || { bright: pr.vd.color };
+      hoveredTrajectory = { obj: pr, name: pr.vd.name, brightColor: pal.bright };
+      return;
+    }
+  },
+  unhighlightTrajectory: function() {
+    hoveredTrajectory = null;
+    hoveredBodyObject = null;
+  }
 };
 
