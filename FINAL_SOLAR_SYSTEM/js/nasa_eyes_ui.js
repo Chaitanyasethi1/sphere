@@ -23,7 +23,42 @@
   function initNasaEyesUI() {
     const sol = window.SOL_APP;
 
-    // ── 1. Connect Header Actions ───────────────────────────────────────────
+    // ── HUD Notification Toast ──────────────────────────────────────────────
+    function showHudToast(text) {
+      let toast = document.getElementById('nasa-hud-toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'nasa-hud-toast';
+        toast.style.position = 'fixed';
+        toast.style.bottom = '84px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.background = 'rgba(7, 12, 22, 0.94)';
+        toast.style.border = '1px solid rgba(0, 229, 255, 0.5)';
+        toast.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 229, 255, 0.25)';
+        toast.style.borderRadius = '20px';
+        toast.style.padding = '8px 22px';
+        toast.style.color = '#E2E8F0';
+        toast.style.fontFamily = "'Barlow', 'Inter', -apple-system, sans-serif";
+        toast.style.fontSize = '12px';
+        toast.style.fontWeight = '600';
+        toast.style.letterSpacing = '1px';
+        toast.style.zIndex = '99999';
+        toast.style.pointerEvents = 'none';
+        toast.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = text;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(8px)';
+      }, 2400);
+    }
+
+    // ── 1. Connect Minimal Header Actions ───────────────────────────────────
     const btnSearch = document.getElementById('btn-head-search');
     const btnShare = document.getElementById('btn-head-share');
     const btnMenu = document.getElementById('btn-head-menu');
@@ -32,11 +67,7 @@
 
     if (btnSearch) {
       btnSearch.addEventListener('click', () => {
-        const searchInput = sol.searchInputEl || document.getElementById('search-input');
-        if (searchInput) {
-          searchInput.focus();
-          searchInput.select();
-        }
+        toggleNamesDrawer();
       });
     }
 
@@ -49,7 +80,7 @@
           }).catch(() => {});
         } else {
           navigator.clipboard.writeText(window.location.href).then(() => {
-            alert('Mission view URL copied to clipboard!');
+            showHudToast('Mission view URL copied to clipboard!');
           });
         }
       });
@@ -72,17 +103,26 @@
     const toggleStoriesBtn = document.getElementById('btn-toggle-stories');
     const storiesToggleTab = document.getElementById('nasa-stories-toggle-tab');
 
-    if (toggleStoriesBtn && storiesPanel) {
-      toggleStoriesBtn.addEventListener('click', () => {
-        storiesPanel.classList.add('collapsed');
-        if (storiesToggleTab) storiesToggleTab.style.display = 'flex';
+    function toggleStoriesSidebar(forceState) {
+      if (!storiesPanel) return;
+      const willCollapse = (forceState !== undefined) ? forceState : !storiesPanel.classList.contains('collapsed');
+      storiesPanel.classList.toggle('collapsed', willCollapse);
+      if (storiesToggleTab) {
+        storiesToggleTab.style.display = willCollapse ? 'flex' : 'none';
+      }
+    }
+
+    if (toggleStoriesBtn) {
+      toggleStoriesBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleStoriesSidebar(true);
       });
     }
 
-    if (storiesToggleTab && storiesPanel) {
-      storiesToggleTab.addEventListener('click', () => {
-        storiesPanel.classList.remove('collapsed');
-        storiesToggleTab.style.display = 'none';
+    if (storiesToggleTab) {
+      storiesToggleTab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleStoriesSidebar(false);
       });
     }
 
@@ -313,6 +353,50 @@
     connectLayerToggle('layer-row-fov', 'toggle-fov', 'btn-toggle-fov', true);
     connectLayerToggle('layer-row-grid', 'toggle-grid', 'btn-toggle-grid', false);
     connectLayerToggle('layer-row-movers', 'toggle-movers', 'btn-toggle-movers-3d', true);
+
+    // Trajectory Hover Inspect Mode Switch (Visual Layers & Menu Drawer)
+    const rowTraj = document.getElementById('layer-row-traj');
+    const swTraj = document.getElementById('toggle-traj-inspect');
+    const menuTraj = document.getElementById('menu-opt-traj');
+
+    function syncTrajectoryModeUI(enabled) {
+      if (swTraj) swTraj.classList.toggle('on', enabled);
+      if (menuTraj) {
+        menuTraj.textContent = enabled ? '🛰️ Trajectory Inspect Mode: ON (T)' : '🕊️ Free Navigation Mode (T)';
+      }
+      showHudToast(enabled ? '🛰️ TRAJECTORY INSPECT MODE: ON (Hover trajectory to inspect)' : '🕊️ FREE NAVIGATION MODE (Trajectories Passive)');
+    }
+
+    if (rowTraj) {
+      rowTraj.addEventListener('click', () => {
+        const nextState = typeof sol.toggleTrajectoryMode === 'function' ? sol.toggleTrajectoryMode() : true;
+        syncTrajectoryModeUI(nextState);
+      });
+    }
+
+    if (menuTraj) {
+      menuTraj.addEventListener('click', () => {
+        const nextState = typeof sol.toggleTrajectoryMode === 'function' ? sol.toggleTrajectoryMode() : true;
+        syncTrajectoryModeUI(nextState);
+        if (menuDrawer) menuDrawer.classList.remove('open');
+      });
+    }
+
+    // 3D Object Names Switch (Visual Layers)
+    const row3DLabels = document.getElementById('layer-row-3d-labels');
+    const sw3DLabels = document.getElementById('toggle-3d-labels');
+    if (row3DLabels && sw3DLabels) {
+      row3DLabels.addEventListener('click', () => {
+        show3DLabels = !show3DLabels;
+        sw3DLabels.classList.toggle('on', show3DLabels);
+        const chk = document.getElementById('chk-3d-labels');
+        if (chk) chk.checked = show3DLabels;
+        if (!show3DLabels && labelElements) {
+          labelElements.forEach(el => { el.style.display = 'none'; });
+        }
+        showHudToast(show3DLabels ? '🏷️ 3D Object Names: Visible' : '🏷️ 3D Object Names: Hidden');
+      });
+    }
 
     const layerPitchTour = document.getElementById('layer-row-pitch-tour');
     if (layerPitchTour) {
@@ -723,60 +807,8 @@
       });
     }
 
-    // ── HUD Toast Helper ───────────────────────────────────────────────────
-    function showHudToast(text) {
-      let toast = document.getElementById('nasa-hud-toast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'nasa-hud-toast';
-        toast.style.position = 'fixed';
-        toast.style.bottom = '84px';
-        toast.style.left = '50%';
-        toast.style.transform = 'translateX(-50%)';
-        toast.style.background = 'rgba(7, 12, 22, 0.92)';
-        toast.style.border = '1px solid rgba(0, 229, 255, 0.5)';
-        toast.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.7), 0 0 16px rgba(0, 229, 255, 0.25)';
-        toast.style.borderRadius = '20px';
-        toast.style.padding = '8px 22px';
-        toast.style.color = '#E2E8F0';
-        toast.style.fontFamily = "'Barlow', 'Inter', -apple-system, sans-serif";
-        toast.style.fontSize = '12px';
-        toast.style.fontWeight = '600';
-        toast.style.letterSpacing = '1px';
-        toast.style.zIndex = '99999';
-        toast.style.pointerEvents = 'none';
-        toast.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
-        document.body.appendChild(toast);
-      }
-      toast.textContent = text;
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateX(-50%) translateY(0)';
-      clearTimeout(toast._timer);
-      toast._timer = setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(8px)';
-      }, 2400);
-    }
-
-    // ── Trajectory Inspect vs Free Navigation Mode Controller ────────────────
-    const btnHeadTrajMode = document.getElementById('btn-head-traj-mode');
-    const txtHeadTrajMode = document.getElementById('txt-head-traj-mode');
-
-    if (btnHeadTrajMode) {
-      btnHeadTrajMode.addEventListener('click', () => {
-        const nextState = typeof sol.toggleTrajectoryMode === 'function' ? sol.toggleTrajectoryMode() : true;
-        btnHeadTrajMode.classList.toggle('active', nextState);
-        if (txtHeadTrajMode) {
-          txtHeadTrajMode.textContent = nextState ? 'Trajectories: ON' : 'Free Cam (Traj: OFF)';
-        }
-        showHudToast(nextState ? '🛰️ TRAJECTORY INSPECT MODE: ON (Hover trajectory to inspect)' : '🕊️ FREE NAVIGATION MODE (Trajectories Passive)');
-      });
-    }
-
     // ── 9. Celestial Names & Objects Directory Controller ────────────────────
     const namesDrawer = document.getElementById('nasa-names-drawer');
-    const btnHeadNames = document.getElementById('btn-head-names');
-    const btnToolNames = document.getElementById('btn-tool-names');
     const btnCloseNames = document.getElementById('btn-close-names');
     const namesSearchInput = document.getElementById('names-search-input');
     const namesGrid = document.getElementById('nasa-names-grid');
@@ -786,7 +818,7 @@
 
     let currentFilter = 'all';
     let currentSearchTerm = '';
-    let show3DLabels = true;
+    show3DLabels = true;
     if (chk3DLabels) chk3DLabels.checked = true;
 
     const CELESTIAL_CATALOG = [
@@ -914,25 +946,17 @@
     function toggleNamesDrawer() {
       if (!namesDrawer) return;
       const isOpen = namesDrawer.classList.toggle('open');
-      if (btnToolNames) btnToolNames.classList.toggle('active', isOpen);
-      if (btnHeadNames) btnHeadNames.classList.toggle('active', isOpen);
+      if (btnSearch) btnSearch.classList.toggle('active', isOpen);
       if (isOpen) {
         renderNamesDirectory();
         namesSearchInput?.focus();
       }
     }
 
-    if (btnHeadNames) {
-      btnHeadNames.addEventListener('click', toggleNamesDrawer);
-    }
-    if (btnToolNames) {
-      btnToolNames.addEventListener('click', toggleNamesDrawer);
-    }
     if (btnCloseNames) {
       btnCloseNames.addEventListener('click', () => {
         namesDrawer?.classList.remove('open');
-        btnToolNames?.classList.remove('active');
-        btnHeadNames?.classList.remove('active');
+        if (btnSearch) btnSearch.classList.remove('active');
       });
     }
 
@@ -956,11 +980,9 @@
     document.addEventListener('click', (e) => {
       if (namesDrawer && namesDrawer.classList.contains('open')) {
         if (!namesDrawer.contains(e.target) &&
-            e.target !== btnHeadNames && !btnHeadNames?.contains(e.target) &&
-            e.target !== btnToolNames && !btnToolNames?.contains(e.target)) {
+            e.target !== btnSearch && !btnSearch?.contains(e.target)) {
           namesDrawer.classList.remove('open');
-          btnToolNames?.classList.remove('active');
-          btnHeadNames?.classList.remove('active');
+          if (btnSearch) btnSearch.classList.remove('active');
         }
       }
     });
@@ -1086,24 +1108,30 @@
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
       const key = e.key.toLowerCase();
-      if (key === 'n') {
+      if (key === 'n' || key === '/') {
         e.preventDefault();
         toggleNamesDrawer();
       } else if (key === 't') {
         e.preventDefault();
-        if (btnHeadTrajMode) {
-          btnHeadTrajMode.click();
-        } else if (typeof sol.toggleTrajectoryMode === 'function') {
-          const state = sol.toggleTrajectoryMode();
-          showHudToast(state ? '🛰️ TRAJECTORY INSPECT MODE: ON (Hover trajectory to inspect)' : '🕊️ FREE NAVIGATION MODE (Trajectories Passive)');
-        }
+        const nextState = typeof sol.toggleTrajectoryMode === 'function' ? sol.toggleTrajectoryMode() : true;
+        syncTrajectoryModeUI(nextState);
+      } else if (key === 'h') {
+        e.preventDefault();
+        toggleStoriesSidebar();
       } else if (key === 'l') {
         e.preventDefault();
-        if (timelapseModal && timelapseModal.style.display === 'block') {
-          closeTimelapseModal();
-        } else {
-          openTimelapseModal();
+        if (layersPopover) {
+          const isShown = layersPopover.style.display === 'flex';
+          layersPopover.style.display = isShown ? 'none' : 'flex';
+          if (btnToolLayers) btnToolLayers.classList.toggle('active', !isShown);
         }
+      } else if (key === 'k') {
+        e.preventDefault();
+        if (window.SphereSkyViewer?.open) window.SphereSkyViewer.open();
+      } else if (key === 'i') {
+        e.preventDefault();
+        const irsaModal = document.getElementById('nasa-irsa-resources-modal');
+        if (irsaModal) irsaModal.style.display = (irsaModal.style.display === 'block') ? 'none' : 'block';
       } else if (key === 'v') {
         e.preventDefault();
         if (cameraPopover) {
