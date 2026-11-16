@@ -1,0 +1,7 @@
+"""Entry point for python -m matching."""
+
+from matching.pipeline import main
+
+if __name__ == "__main__":
+    main()
+

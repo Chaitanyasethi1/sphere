@@ -175,6 +175,25 @@ export function MenuDrawer({
             </div>
           </section>
 
+          {/* 3.5 3D Solar System & Celestial Names Directory */}
+          <section className="space-y-2 pt-2 border-t border-white/[0.08]">
+            <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.22em] uppercase text-[#cca06a]">
+              <span>🪐 3D Solar System &amp; Names Directory</span>
+            </div>
+            <a
+              href="/FINAL_SOLAR_SYSTEM/index.html"
+              className="w-full flex items-center justify-between p-3 rounded-[3px] bg-[#cca06a]/10 hover:bg-[#cca06a]/20 border border-[#cca06a]/30 transition-colors text-left group"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs font-medium text-white">Full NASA Eyes 3D Solar System</span>
+                <span className="text-[10px] text-[#B8BCC4]">
+                  Interactive 41-body catalog, SPHEREx, NEOSSat &amp; 3D map labels
+                </span>
+              </div>
+              <span className="text-xs text-[#cca06a] group-hover:translate-x-0.5 transition-transform">→</span>
+            </a>
+          </section>
+
           {/* 4. Data & Attributions */}
           <section className="space-y-2 pt-2 border-t border-white/[0.08]">
             <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.22em] uppercase text-[#E0A526]">

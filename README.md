@@ -160,6 +160,48 @@ For science demonstrations and pitch presentations where internet connectivity i
 
 ---
 
+## 🪐 3D Solar System & NASA Eyes Visualization Platform
+
+Developed in collaboration (*Made by Shiv and Chaitanya*), the platform provides an interactive 3D solar system simulation inspired by NASA's "Eyes on the Solar System":
+
+- **41 Celestial Bodies:**
+  - **Sun & 8 Major Planets:** Accurate Keplerian orbits, orbital velocity, and real physical diameters.
+  - **Spacecraft & Observatories:** NASA SPHEREx (700 km sun-synchronous polar orbit), CSA NEOSSat (720 km asteroid tracking polar orbit · MPC C00), and Voyager 1 & 2.
+  - **9 Dwarf Planets:** 1 Ceres, Pluto, Eris, Makemake, Haumea, Sedna, Gonggong, Quaoar, Orcus.
+  - **10 Comets:** Halley's, Hale-Bopp, Hyakutake, Encke, 67P/C-G, Tempel 1, Wild 2, Shoemaker-Levy 9, NEOWISE, Ikeya-Seki.
+  - **SPHEREx Benchmark & Moving Targets:** WISE 0855, Barnard's Star, Epsilon Indi B, RW Aurigae, R Draconis, and moving candidates.
+- **Dedicated Celestial Names & Objects Directory (`N`):**
+  - All object names are organized cleanly in a dedicated directory drawer, keeping the main 3D viewport clean and uncluttered.
+  - Real-time search filter and category pills (`ALL`, `PLANETS`, `SPACECRAFT`, `DWARF PLANETS`, `COMETS`, `SPHEREx TARGETS`).
+  - Toggleable 3D Map Labels on the orbital canvas.
+- **Professional Astronomical Typography:**
+  - Standardized modern NASA sans-serif typography (`Barlow` / `-apple-system`), uppercase letter-spaced styling, and crisp monospace telemetry readouts.
+- **SPHEREx Multi-Epoch Sky Video Viewer (`K`):**
+  - Multi-epoch blink comparator, difference image subtraction, and co-add stacking.
+  - 102-channel spectrophotometry SED graph ($0.75 – 5.0\,\mu\text{m}$) and CSV export.
+  - Official Minor Planet Center (MPC) 80-column astrometry report export.
+- **NASA IRSA SPHEREx & CSA NEOSSat Documentation Modal (`I`):**
+  - Complete specifications for SPHEREx IRSA services, Caltech tutorial notebooks, Gaia DR3, and Canadian Space Agency CADC open data.
+- **Date-to-Date Timelapse Simulation (`T`):**
+  - High-precision orbital propagation across custom historical or future date ranges.
+
+### Quick Start
+To launch the 3D Solar System simulation:
+```bash
+# Option 1: Standalone HTTP Server
+cd FINAL_SOLAR_SYSTEM
+python -m http.server 8000
+# Open http://localhost:8000/index.html in browser
+
+# Option 2: Next.js Integrated App
+cd web
+npm install
+npm run dev
+# Open http://localhost:3000 (access 3D Solar System via header link or /FINAL_SOLAR_SYSTEM/index.html)
+```
+
+---
+
 ## 🎯 Challenge Targets & Adding Regions
 
 The five official NASA Space Apps Challenge targets are pre-registered as one-click quick-picks:

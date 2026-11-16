@@ -168,6 +168,15 @@ export function AppHeader({
 
       {/* 3. Right-hand Actions: Search, Share, Menu (Plain line icon + text, no filled buttons) */}
       <div className="flex items-center gap-4 md:gap-6 shrink-0 text-xs font-sans text-white/85">
+        {/* Full 3D Solar System & Names Directory Link */}
+        <a
+          href="/FINAL_SOLAR_SYSTEM/index.html"
+          className="hidden md:flex items-center gap-1.5 text-[#cca06a] hover:text-[#e4d191] border border-[#cca06a]/40 hover:border-[#cca06a] px-2.5 py-1 rounded-[2px] text-[11px] font-sans tracking-[0.18em] uppercase transition-all"
+          title="Open Full 3D Solar System & Celestial Names Directory"
+        >
+          <span>🪐 Names &amp; 3D Solar System</span>
+        </a>
+
         {/* Search */}
         {onOpenSearch && (
           <button
