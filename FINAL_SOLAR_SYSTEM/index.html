@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no">
 <title>SOL — Solar System & SPHEREx Sky Diary</title>
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="stylesheet" href="css/nasa_eyes.css?v=4.5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/nasa_eyes.css?v=4.6">
 <style>
 html {
   -webkit-text-size-adjust:none;
@@ -830,10 +833,12 @@ body.mobile-ui #fullscreen-btn {
 }
 
 #planet-info {
-  position:fixed; top:16px; left:16px; pointer-events:none;
-  background:rgba(0,0,0,0.72); border:1px solid rgba(255,255,255,0.1);
-  border-radius:4px; padding:14px 16px; display:none; min-width:210px;
-  max-height:520px; overflow-y:auto;
+  position:fixed; top:76px; right:76px; left:auto; pointer-events:none;
+  background:rgba(10,15,26,0.92); border:1px solid rgba(255,255,255,0.16);
+  border-radius:10px; padding:16px 18px; display:none; min-width:270px; max-width:340px;
+  max-height:540px; overflow-y:auto; z-index:46;
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.65);
 }
 #planet-info.show { display:block; pointer-events:auto; }
 #planet-info-head {
@@ -843,35 +848,30 @@ body.mobile-ui #fullscreen-btn {
   gap:12px;
   margin-bottom:12px;
 }
-#pi-name { font-size:14px; letter-spacing:3px; margin-bottom:0; }
+#pi-name { font-size:15px; font-weight:700; letter-spacing:2px; margin-bottom:0; font-family:var(--nasa-font-celestial, 'Orbitron', sans-serif); color:#ffffff; }
 .pi-btn,
 #info-toggle-btn {
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.12);
-  color:rgba(255,255,255,0.72);
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.16);
+  color:rgba(255,255,255,0.85);
   font-family:var(--nasa-font-sans);
   font-size:10px;
   letter-spacing:1.8px;
   text-transform:uppercase;
-  padding:6px 10px;
+  padding:6px 12px;
+  border-radius:4px;
   cursor:pointer;
   touch-action:manipulation;
 }
 .pi-btn:hover,
 #info-toggle-btn:hover {
-  color:rgba(255,255,255,0.92);
-  border-color:rgba(255,255,255,0.28);
+  color:rgba(255,255,255,1);
+  border-color:rgba(34,211,238,0.6);
+  background:rgba(34,211,238,0.12);
 }
 #info-toggle-btn {
-  position:fixed;
-  top:16px;
-  left:16px;
-  z-index:27;
-  display:none;
-  border-radius:999px;
-  backdrop-filter:blur(10px);
+  display:none !important;
 }
-#info-toggle-btn.show { display:inline-flex; }
 .pi-row { display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.35); margin-bottom:5px; gap:18px; }
 .pi-val { color:rgba(255,255,255,0.8); }
 
@@ -1452,7 +1452,7 @@ body.mobile-ui #fullscreen-btn {
 <!-- ── NASA Eyes Top Header ─────────────────────────────────────────────── -->
 <header id="nasa-header">
   <div class="nasa-brand" onclick="location.reload();" title="Eyes on the Solar System & SPHEREx Sky Diary">
-    <svg class="nasa-meatball" width="34" height="34" viewBox="0 0 100 100">
+    <svg class="nasa-meatball" width="36" height="36" viewBox="0 0 100 100">
       <circle cx="50" cy="50" r="48" fill="#0B3D91" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
       <circle cx="26" cy="30" r="2" fill="white" opacity="0.9"/>
       <circle cx="74" cy="28" r="1.6" fill="white" opacity="0.8"/>
@@ -1464,18 +1464,22 @@ body.mobile-ui #fullscreen-btn {
       <path d="M18 68 L50 22 L65 52 L54 52 L48 38 L30 68 Z" fill="#FC3D21"/>
       <text x="50" y="55" font-family="'Barlow', Arial, sans-serif" font-weight="900" font-size="14" fill="white" text-anchor="middle" letter-spacing="-0.04em">NASA</text>
     </svg>
-    <span class="nasa-title">EYES ON THE SOLAR SYSTEM</span>
+    <div class="nasa-brand-text">
+      <span class="nasa-title">EYES ON THE SOLAR SYSTEM</span>
+      <span class="nasa-subbadge">SPHEREx 2026</span>
+    </div>
   </div>
   <div class="nasa-header-actions">
     <button class="nasa-head-btn" id="btn-head-search" title="Search objects & celestial directory ( / or N )">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span>Search</span>
     </button>
     <button class="nasa-head-btn" id="btn-head-share" title="Share mission view">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
       <span>Share</span>
     </button>
     <button class="nasa-head-btn" id="btn-head-menu" title="Navigation menu">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       <span>Menu</span>
     </button>
   </div>
@@ -1485,7 +1489,9 @@ body.mobile-ui #fullscreen-btn {
 <aside id="nasa-stories-panel">
   <div class="nasa-stories-header">
     <span class="nasa-stories-title">Featured Stories and Events</span>
-    <button id="btn-toggle-stories" class="nasa-chevron-btn" title="Collapse sidebar">«</button>
+    <button id="btn-toggle-stories" class="nasa-chevron-btn" title="Collapse sidebar" aria-label="Collapse sidebar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
   </div>
   <div class="nasa-stories-list">
     <!-- Story 1: Voyager 1 -->
