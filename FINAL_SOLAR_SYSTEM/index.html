@@ -1621,7 +1621,10 @@ body.mobile-ui #fullscreen-btn {
 
 <!-- ── NASA Camera Views Popover ─────────────────────────────────────────── -->
 <div id="nasa-camera-popover">
-  <div style="font-size:12px; font-weight:600; color:#fff; letter-spacing:1px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">CAMERA VIEWS</div>
+  <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700; color:#fff; letter-spacing:1.5px; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:6px;">
+    <span>CAMERA VIEWS</span>
+    <button id="btn-close-cam" class="nasa-chevron-btn" style="width:22px; height:22px; font-size:11px;" title="Close camera views">✕</button>
+  </div>
   <button class="nasa-cam-btn" id="btn-cam-reset"><span>⌂</span> Solar System Overview</button>
   <button class="nasa-cam-btn" id="btn-cam-top"><span>⬇</span> Top View (Ecliptic North)</button>
   <button class="nasa-cam-btn" id="btn-cam-side"><span>➔</span> Side View (Orbital Plane)</button>
@@ -1643,7 +1646,10 @@ body.mobile-ui #fullscreen-btn {
 
 <!-- ── NASA Eyes Layers Popover ─────────────────────────────────────────── -->
 <div id="nasa-layers-popover">
-  <div style="font-size:12px; font-weight:600; color:#fff; letter-spacing:1px; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">VISUAL LAYERS</div>
+  <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700; color:#fff; letter-spacing:1.5px; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:6px;">
+    <span>VISUAL LAYERS</span>
+    <button id="btn-close-layers" class="nasa-chevron-btn" style="width:22px; height:22px; font-size:11px;" title="Close visual layers">✕</button>
+  </div>
   <div class="nasa-layer-row" id="layer-row-traj">
     <span>Trajectory Hover Inspect (T)</span>
     <div class="nasa-toggle-switch on" id="toggle-traj-inspect"><div class="nasa-toggle-thumb"></div></div>
@@ -1654,8 +1660,6 @@ body.mobile-ui #fullscreen-btn {
   </div>
   <div class="nasa-layer-row" id="layer-row-orbits">
     <span>Planetary Orbits</span>
-    <div class="nasa-toggle-switch on" id="toggle-orbits"><div class="nasa-toggle-thumb"></div></div>
-  </div>
     <div class="nasa-toggle-switch on" id="toggle-orbits"><div class="nasa-toggle-thumb"></div></div>
   </div>
   <div class="nasa-layer-row" id="layer-row-const">
@@ -2352,7 +2356,7 @@ body.mobile-ui #fullscreen-btn {
 <div id="planet-info">
   <div id="planet-info-head">
     <div id="pi-name">—</div>
-    <button class="pi-btn" id="pi-hide-btn" type="button" aria-label="Hide info panel">Hide</button>
+    <button class="pi-btn" id="pi-hide-btn" type="button" aria-label="Hide info panel" title="Hide object telemetry panel">Hide ✕</button>
   </div>
   <div class="pi-action-row">
     <button class="pi-action-btn" id="pi-btn-focus" title="Zoom and center on this object">⊕ FOCUS</button>

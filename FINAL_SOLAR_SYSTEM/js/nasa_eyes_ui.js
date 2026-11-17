@@ -286,6 +286,20 @@
       });
     }
 
+    // Connect Info Hide Button (Top-Right / Right Side)
+    const piHideBtn = document.getElementById('pi-hide-btn');
+    if (piHideBtn) {
+      piHideBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const info = sol.infoPanel || document.getElementById('planet-info');
+        if (info) {
+          info.classList.remove('show');
+        }
+        if (btnToolInfo) btnToolInfo.classList.remove('active');
+      });
+    }
+
     // Zoom In
     if (btnToolZoomIn) {
       btnToolZoomIn.addEventListener('click', () => {
@@ -313,12 +327,22 @@
       });
     }
 
-    // Layers Popover toggle
+    // Layers Popover toggle & close button
     if (btnToolLayers && layersPopover) {
       btnToolLayers.addEventListener('click', () => {
         const isShown = layersPopover.style.display === 'flex';
         layersPopover.style.display = isShown ? 'none' : 'flex';
         btnToolLayers.classList.toggle('active', !isShown);
+      });
+    }
+
+    const btnCloseLayers = document.getElementById('btn-close-layers');
+    if (btnCloseLayers && layersPopover) {
+      btnCloseLayers.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        layersPopover.style.display = 'none';
+        if (btnToolLayers) btnToolLayers.classList.remove('active');
       });
     }
 
@@ -441,6 +465,37 @@
         btnToolCamera.classList.toggle('active', !isShown);
       });
     }
+
+    const btnCloseCam = document.getElementById('btn-close-cam');
+    if (btnCloseCam && cameraPopover) {
+      btnCloseCam.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cameraPopover.style.display = 'none';
+        if (btnToolCamera) btnToolCamera.classList.remove('active');
+      });
+    }
+
+    // Dismiss popovers when clicking outside
+    document.addEventListener('click', (e) => {
+      if (layersPopover && layersPopover.style.display === 'flex') {
+        if (!layersPopover.contains(e.target) && !btnToolLayers?.contains(e.target)) {
+          layersPopover.style.display = 'none';
+          btnToolLayers?.classList.remove('active');
+        }
+      }
+      if (cameraPopover && cameraPopover.style.display === 'flex') {
+        if (!cameraPopover.contains(e.target) && !btnToolCamera?.contains(e.target)) {
+          cameraPopover.style.display = 'none';
+          btnToolCamera?.classList.remove('active');
+        }
+      }
+      if (menuDrawer && menuDrawer.classList.contains('open')) {
+        if (!menuDrawer.contains(e.target) && !document.getElementById('btn-head-menu')?.contains(e.target)) {
+          menuDrawer.classList.remove('open');
+        }
+      }
+    });
 
     if (btnCamReset) {
       btnCamReset.addEventListener('click', () => {
@@ -806,6 +861,7 @@
         if (sol.clearFocusSelection) sol.clearFocusSelection();
         const info = sol.infoPanel || document.getElementById('planet-info');
         if (info) info.classList.remove('show');
+        if (btnToolInfo) btnToolInfo.classList.remove('active');
       });
     }
 
